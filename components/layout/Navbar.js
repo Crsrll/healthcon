@@ -8,10 +8,10 @@ export default function Navbar() {
   ];
 
   return (
-    <nav className="bg-white-800 p-4 flex items-center">
+    <nav className="bg-teal-800 p-4 flex items-center">
       
       {/* LEFT: Logo */}
-      <Link href="/" className="text-black text-lg font-bold">
+      <Link href="/" className="text-white text-lg font-bold">
         Healthcon
       </Link>
 
@@ -21,7 +21,7 @@ export default function Navbar() {
           <li key={link.name}>
             <Link
               href={link.href}
-              className="text-black-300 hover:text-black"
+              className="text-white hover:text-teal-300 transition-colors duration-300"
             >
               {link.name}
             </Link>
