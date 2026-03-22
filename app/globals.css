@@ -7,11 +7,13 @@
   --deepnavy: #1a365d;
 }
 
-@theme inline {
+@theme {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+  --color-healthcon-blue: #1a365d;
+  --color-healthcon-teal: #b2f5ea;
 }
 
 @media (prefers-color-scheme: dark) {
