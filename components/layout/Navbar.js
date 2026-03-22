@@ -8,11 +8,12 @@ export default function Navbar() {
   ];
 
   return (
-    <nav className="bg-teal-800 p-4 flex items-center">
+    <nav className="bg-[#1a365d] p-4 flex items-center text-sm font-medium">
       
       {/* LEFT: Logo */}
-      <Link href="/" className="text-white text-lg font-bold">
-        Healthcon
+      <Link href="/" className="text-[#f7fafc] text-xl font-bold flex gap-0 items-center">
+      <img src="./logo.png" alt="Healthcon Logo" className="inline-block w-8 h-8 mr-2" />
+        Health<span className="text-[#b2f5ea]">con</span>
       </Link>
 
       {/* CENTER: Nav Links */}
@@ -21,7 +22,7 @@ export default function Navbar() {
           <li key={link.name}>
             <Link
               href={link.href}
-              className="text-white hover:text-teal-300 transition-colors duration-300"
+              className="text-[#f7fafcb3] hover:text-[#b2f5ea] transition-colors duration-300"
             >
               {link.name}
             </Link>
@@ -32,7 +33,7 @@ export default function Navbar() {
       {/* RIGHT: Login */}
       <Link
         href="./auth/login"
-        className="text-white hover:text-white bg-blue-500 px-3 py-1 rounded-xl"
+        className="text-[#1a365d] bg-[#b2f5ea] hover:bg-[#b2f5eac2] px-3 py-1.5 rounded-xl"
       >
         Login
       </Link>
