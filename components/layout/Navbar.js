@@ -24,7 +24,7 @@ export default function Navbar() {
     : publicLinks;
 
   return (
-    <nav className="bg-[#1a365d] border-b border-slate-700 px-6 py-3">
+    <nav className="bg-[#1a365d] border-b border-slate-700 px-6 py-3 sticky-top">
       <div className="max-w-7xl mx-auto flex items-center justify-between">
         
         {/* LEFT: Logo */}
