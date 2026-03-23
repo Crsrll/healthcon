@@ -132,7 +132,7 @@ export default function LandingPage() {
   return (
     <>
       {/* NAV */}
-      <nav className={scrolled ? styles.scrolled : ""}>
+      <nav className={`${styles.nav} ${scrolled ? styles.scrolled : ""}`}>
         <a className={styles.navLogo} href="#">
           <div className={styles.logoCircle}>✚</div>
           HealthCon
