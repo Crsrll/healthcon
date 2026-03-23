@@ -59,7 +59,7 @@ export default function PatientDashboard() {
     <main className="min-h-screen bg-slate-100 pb-12 font-sans">
 
       {/* ── HERO HEADER ── */}
-      <div className="relative bg-[#1a365d] overflow-hidden">
+      <div className="relative bg-healthcon-blue overflow-hidden">
         {/* Subtle grid texture */}
         <div
           className="absolute inset-0 opacity-10"
@@ -146,7 +146,7 @@ export default function PatientDashboard() {
                     className="flex items-center gap-4 p-4 rounded-xl border border-slate-100 hover:border-teal-200 hover:bg-teal-50/40 transition-all group"
                   >
                     {/* Date block */}
-                    <div className="shrink-0 w-12 h-12 bg-[#1a365d] rounded-xl flex flex-col items-center justify-center text-white">
+                    <div className="shrink-0 w-12 h-12 bg-healthcon-blue rounded-xl flex flex-col items-center justify-center text-white">
                       <span className="text-[9px] font-bold uppercase opacity-70 leading-none">
                         {apt.date.split(" ")[0]}
                       </span>
@@ -195,7 +195,7 @@ export default function PatientDashboard() {
                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                         alt={clinic.name}
                       />
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
+                      <div className="absolute inset-0 bg-linear-to-t from-black/40 to-transparent" />
                       <span className="absolute bottom-2 left-3 text-[10px] font-bold text-white bg-teal-600/80 px-2 py-0.5 rounded-full uppercase tracking-wider">
                         {clinic.specialty}
                       </span>
@@ -250,7 +250,7 @@ export default function PatientDashboard() {
             </section>
 
             {/* HEALTH TIP CARD */}
-            <div className="bg-gradient-to-br from-[#1a365d] to-[#1e4976] rounded-2xl p-5 text-white shadow-md relative overflow-hidden">
+            <div className="bg-linear-to-br from-healthcon-blue to-[#1e4976] rounded-2xl p-5 text-white shadow-md relative overflow-hidden">
               <div className="absolute -bottom-4 -right-4 w-24 h-24 bg-teal-400/10 rounded-full blur-2xl" />
               <p className="text-teal-300 text-[10px] font-bold uppercase tracking-widest mb-2">Health Tip</p>
               <p className="text-sm font-semibold leading-snug">Stay hydrated — drink at least 8 glasses of water daily for optimal health.</p>
