@@ -1,73 +1,129 @@
 'use client';
-import FilterSection from '@/components/layout/FilterSidebar';
-import {ClinicCard} from '@/components/ui/ClinicCard';
+import FilterSidebar from '@/components/layout/FilterSidebar';
+import { ClinicCard } from '@/components/ui/ClinicCard';
+import { DoctorCard } from '@/components/clinic/DoctorCard';
 import { useState, useEffect } from 'react';
 
+// ── Dummy data — matches your group's agreed Firestore shape ──
+const DUMMY_CLINICS = [
+  { id: '1',  name: 'Melissa General Outpatient Clinic', location: 'Cagayan de Oro',
+    status: 'approved', specialization: ['General Practice', 'Pediatrics'],
+    doctorCount: 3,
+    image: 'https://images.unsplash.com/photo-1538108149393-fbbd81895907?w=600&q=80' },
+
+  { id: '2',  name: 'Jade Kyll Medical Center',    location: 'Iligan City',
+    status: 'approved', specialization: ['Internal Medicine', 'Cardiology'],
+    doctorCount: 5,
+    image: 'https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?w=600&q=80' },
+
+  { id: '3',  name: 'Judel Community Health',     location: 'Malaybalay',
+    status: 'approved', specialization: ['General Practice'],
+    doctorCount: 1,
+    image: 'https://images.unsplash.com/photo-1586773860418-d37222d8fce3?w=600&q=80' },
+
+  { id: '4',  name: 'Nova Community Health',         location: 'Dapitan',
+    status: 'approved', specialization: ['General Practice', 'Pediatrics'],
+    doctorCount: 4,
+    image: 'https://images.unsplash.com/photo-1527613426441-4da17471b66d?w=600&q=80' },
+
+  { id: '5',  name: 'Joseph Community Health',       location: 'Dapitan',
+    status: 'approved', specialization: ['Internal Medicine'],
+    doctorCount: 6,
+    image: 'https://images.unsplash.com/photo-1631815589968-fdb09a223b1e?w=600&q=80' },
+
+  { id: '6',  name: 'Che Ann Community Health',      location: 'Dapitan',
+    status: 'approved', specialization: ['Ob-Gyne', 'General Practice'],
+    doctorCount: 7,
+    image: 'https://images.unsplash.com/photo-1504813184591-01572f98c85f?w=600&q=80' },
+
+  { id: '7',  name: 'Sheila Community Health',       location: 'Dapitan',
+    status: 'approved', specialization: ['General Practice'],
+    doctorCount: 6,
+    image: 'https://images.unsplash.com/photo-1586773860418-d37222d8fce3?w=600&q=80' },
+
+  { id: '8',  name: 'Xhyndy Community Health',       location: 'Dapitan',
+    status: 'approved', specialization: ['Internal Medicine', 'Pediatrics'],
+    doctorCount: 9,
+    image: 'https://images.unsplash.com/photo-1579684385127-1ef15d508118?w=600&q=80' },
+
+  { id: '9',  name: 'Jashtenne Community Health',    location: 'Dapitan',
+    status: 'approved', specialization: ['General Practice', 'Ob-Gyne'],
+    doctorCount: 11,
+    image: 'https://images.unsplash.com/photo-1551076805-e1869033e561?w=600&q=80' },
+];
+
+const DUMMY_DOCTORS = [
+  { id: '1',  name: 'Dr. Rosa Macaraeg',    specialization: 'General Practice', clinicID: '1', clinicName: 'CDO General Outpatient Clinic'},
+  { id: '2',  name: 'Dr. Jun Dela Cruz',     specialization: 'Pediatrics',       clinicID: '1', clinicName: 'CDO General Outpatient Clinic' },
+  { id: '3',  name: 'Dr. Sofia Castillo',    specialization: 'Internal Medicine', clinicID: '2', clinicName: 'Iligan City Medical Center' },
+  { id: '4',  name: 'Dr. Marco Reyes',       specialization: 'Cardiology',        clinicID: '2', clinicName: 'Iligan City Medical Center' },
+  { id: '5',  name: 'Dr. Ana Santos',        specialization: 'General Practice',  clinicID: '3', clinicName: 'Bukidnon Community Health' },
+  { id: '6',  name: 'Dr. Lena Cruz',         specialization: 'Pediatrics',        clinicID: '4', clinicName: 'Nova Community Health' },
+  { id: '7',  name: 'Dr. Ben Villanueva',    specialization: 'Internal Medicine', clinicID: '5', clinicName: 'Joseph Community Health' },
+  { id: '8',  name: 'Dr. Claire Mendoza',    specialization: 'Ob-Gyne',           clinicID: '6', clinicName: 'Che Ann Community Health' },
+  { id: '9',  name: 'Dr. Paolo Gutierrez',   specialization: 'General Practice',  clinicID: '7', clinicName: 'Sheila Community Health' },
+  { id: '10', name: 'Dr. Mia Fernandez',     specialization: 'Internal Medicine', clinicID: '8', clinicName: 'Xhyndy Community Health' },
+  { id: '11', name: 'Dr. James Ramos',       specialization: 'Pediatrics',        clinicID: '8', clinicName: 'Xhyndy Community Health' },
+  { id: '12', name: 'Dr. Tina Navarro',      specialization: 'Ob-Gyne',           clinicID: '9', clinicName: 'Jashtenne Community Health' },
+];
+
+const SPECIALTIES = ['All', 'General Practice', 'Pediatrics', 'Internal Medicine', 'Ob-Gyne', 'Cardiology'];
+const CITIES      = ['All cities', 'Cagayan de Oro', 'Iligan City', 'Dapitan', 'Malaybalay'];
+
 export default function ClinicDirectory() {
-  const [clinics,         setClinics]         = useState([]);
-  const [filteredClinics, setFilteredClinics] = useState([]);
+  const [mode,            setMode]            = useState('clinics'); // 'clinics' | 'doctors'
   const [search,          setSearch]          = useState('');
   const [specialty,       setSpecialty]       = useState('All');
   const [city,            setCity]            = useState('All cities');
+  const [results,         setResults]         = useState([]);
   const [loading,         setLoading]         = useState(true);
 
+  // ── Load data on mount ──
   useEffect(() => {
-    const dummy = [
-        { id: '1',  name: 'CDO General Outpatient Clinic', city: 'Cagayan de Oro', doctors: 3,  specialty: 'Ob-Gyne',
-          image: 'https://images.unsplash.com/photo-1538108149393-fbbd81895907?w=600&q=80' },
-      
-        { id: '2',  name: 'Iligan City Medical Center',    city: 'Iligan City',    doctors: 5,  specialty: 'Cardiology',
-          image: 'https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?w=600&q=80' },
-      
-        { id: '3',  name: 'Bukidnon Community Health',     city: 'Malaybalay',     doctors: 1,  specialty: 'General Practice',
-          image: 'https://images.unsplash.com/photo-1586773860418-d37222d8fce3?w=600&q=80' },
-      
-        { id: '4',  name: 'Nova Community Health',         city: 'Dapitan City',        doctors: 4,  specialty: 'Pediatrics',
-          image: 'https://images.unsplash.com/photo-1527613426441-4da17471b66d?w=600&q=80' },
-      
-        { id: '5',  name: 'Joseph Community Health',       city: 'Dipolog City',        doctors: 6,  specialty: 'Internal Medicine',
-          image: 'https://images.unsplash.com/photo-1631815589968-fdb09a223b1e?w=600&q=80' },
-      
-        { id: '6',  name: 'Che Ann Community Health',      city: 'Polanco, Dipolog City',        doctors: 7,  specialty: 'Ob-Gyne',
-          image: 'https://images.unsplash.com/photo-1504813184591-01572f98c85f?w=600&q=80' },
-      
-        { id: '7',  name: 'Sheila Community Health',       city: 'Dapitan City',        doctors: 9,  specialty: 'Internal Medicine',
-          image: 'https://images.unsplash.com/photo-1579684385127-1ef15d508118?w=600&q=80' },
-      
-        { id: '8',  name: 'Jashtenne Community Health',    city: 'Dapitan City',        doctors: 11, specialty: 'Cardiology',
-          image: 'https://images.unsplash.com/photo-1551076805-e1869033e561?w=600&q=80' },
-      
-        { id: '9', name: 'Judel Community Health',        city: 'Sibutad City',        doctors: 9,  specialty: 'Pediatrics',
-          image: 'https://images.unsplash.com/photo-1538108149393-fbbd81895907?w=600&q=80' },
-      
-        { id: '10', name: 'Leo Community Health',          city: 'Rizal City',        doctors: 6,  specialty: 'General Practice',
-          image: 'https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?w=600&q=80' },
-      
-        { id: '11', name: 'Jade Community Health',         city: 'Roxas City',        doctors: 6,  specialty: 'Ob-Gyne',
-          image: 'https://images.unsplash.com/photo-1586773860418-d37222d8fce3?w=600&q=80' },
-        {
-            id: '12', name: 'Melissa Community Health',        city: 'Gudodaismo',        doctors: 3,  specialty: 'Pediatrics', image: 'https://images.unsplash.com/photo-1579684385127-1ef15d508118?w=600&q=80'
-        },
-        {
-            id: '13', name: 'Xhyndy Community Health',     city: 'Manoquack City',        doctors: 4,  specialty: 'Internal Medicine', image: 'https://images.unsplash.com/photo-1551076805-e1869033e561?w=600&q=80'
-        },
-      ];
-    setClinics(dummy);
-    setFilteredClinics(dummy);
     setLoading(false);
   }, []);
 
+  // ── Filter whenever mode, search, specialty, or city changes ──
   useEffect(() => {
     const q = search.toLowerCase();
-    setFilteredClinics(
-      clinics.filter(c => {
-        const matchSearch    = c.name.toLowerCase().includes(q) || c.city.toLowerCase().includes(q);
-        const matchSpecialty = specialty === 'All' || c.specialty === specialty;
-        const matchCity      = city === 'All cities' || c.city === city;
-        return matchSearch && matchSpecialty && matchCity;
-      })
-    );
-  }, [search, specialty, city, clinics]);
+
+    if (mode === 'clinics') {
+      setResults(
+        DUMMY_CLINICS.filter(c => {
+          // only show approved clinics — matches your Firestore status field
+          if (c.status !== 'approved') return false;
+
+          const matchSearch    = c.name.toLowerCase().includes(q) ||
+                                 c.location.toLowerCase().includes(q);
+
+          // specialization is an array — use .includes() like Firestore array-contains
+          const matchSpecialty = specialty === 'All' ||
+                                 c.specialization.includes(specialty);
+
+          const matchCity      = city === 'All cities' || c.location === city;
+
+          return matchSearch && matchSpecialty && matchCity;
+        })
+      );
+    } else {
+      setResults(
+        DUMMY_DOCTORS.filter(d => {
+          const matchSearch    = d.name.toLowerCase().includes(q) ||
+                                 d.specialization.toLowerCase().includes(q) ||
+                                 d.clinicName.toLowerCase().includes(q);
+
+          const matchSpecialty = specialty === 'All' ||
+                                 d.specialization === specialty;
+
+          // filter doctors by their clinic's city — needs clinicLocation in real data
+          // for now city filter is skipped for doctors (add when Firebase connected)
+          const matchCity      = city === 'All cities';
+
+          return matchSearch && matchSpecialty && matchCity;
+        })
+      );
+    }
+  }, [mode, search, specialty, city]);
 
   function resetFilters() {
     setSearch('');
@@ -75,27 +131,42 @@ export default function ClinicDirectory() {
     setCity('All cities');
   }
 
-  const SPECIALTIES = ['All', 'General Practice', 'Pediatrics', 'Internal Medicine', 'Ob-Gyne', 'Cardiology'];
-  const CITIES      = ['All cities', 'Cagayan de Oro', 'Iligan City', 'Dapitan', 'Malaybalay'];
+  function handleModeChange(newMode) {
+    setMode(newMode);
+    setSearch('');
+    setSpecialty('All');
+    setCity('All cities');
+  }
+
+  const label = mode === 'clinics'
+    ? `${results.length} clinic${results.length !== 1 ? 's' : ''}`
+    : `${results.length} doctor${results.length !== 1 ? 's' : ''}`;
 
   return (
     <div className="min-h-screen bg-[#f7fafc]">
 
-      {/* ── HERO ── */}
+      {/* ── Hero ── */}
       <div className="bg-[#1a355d] px-8 py-8">
         <p className="text-healthcon-teal font-semibold uppercase text-xs tracking-widest mb-2">
           Mindanao · Verified Clinics
         </p>
         <h1 className="text-3xl text-[#f7fafc] font-bold mb-2">
-          Find a Clinic Near You
+          {mode === 'clinics' ? 'Find a Clinic Near You' : 'Find a Doctor'}
         </h1>
         <p className="text-[#f7fafc]/60 mb-6 max-w-md text-sm">
-          Browse verified clinics across Mindanao. See real-time doctor availability before you travel.
+          {mode === 'clinics'
+            ? 'Browse verified clinics across Mindanao.'
+            : 'Search doctors by name or specialization.'}
         </p>
+
         <div className="flex gap-2 max-w-lg">
           <input
             type="text"
-            placeholder="Search by clinic name or city..."
+            placeholder={
+              mode === 'clinics'
+                ? 'Search by clinic name or city...'
+                : 'Search by doctor name or specialization...'
+            }
             value={search}
             onChange={e => setSearch(e.target.value)}
             className="flex-1 bg-white/10 border border-white/20 rounded-xl px-4 py-2.5
@@ -109,80 +180,29 @@ export default function ClinicDirectory() {
         </div>
       </div>
 
-      {/* ── BODY: sidebar + grid ── */}
+      {/* ── Body ── */}
       <div className="flex items-start">
 
-        {/* ── SIDEBAR ── sticky, full height, scrollable */}
-        <aside className="w-56 shrink-0 sticky top-0 h-[calc(100vh-0px)]
-                          overflow-y-auto bg-white border-r border-gray-200 p-4">
+        {/* ── Sidebar ── */}
+        <FilterSidebar
+          mode={mode}
+          onModeChange={handleModeChange}
+          specialty={specialty}
+          onSpecialtyChange={setSpecialty}
+          city={city}
+          onCityChange={setCity}
+          onReset={resetFilters}
+          SPECIALTIES={SPECIALTIES}
+          CITIES={CITIES}
+        />
 
-          <div className="flex items-center justify-between mb-4">
-            <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">
-              Filters
-            </span>
-            <button
-              onClick={resetFilters}
-              className="text-xs text-[#3182ce] hover:underline font-medium"
-            >
-              Reset all
-            </button>
-          </div>
-
-          <FilterSection title="Specialty" hasActive={specialty !== 'All'}>
-            {SPECIALTIES.map(s => (
-              <button
-                key={s}
-                onClick={() => setSpecialty(s)}
-                className={`w-full text-left flex items-center gap-2 px-2 py-2
-                            rounded-lg text-sm transition-colors mb-0.5
-                            ${specialty === s
-                              ? 'bg-blue-50 text-[#1a355d] font-medium'
-                              : 'text-gray-500 hover:bg-gray-50'}`}
-              >
-                <span className={`w-3.5 h-3.5 rounded-full border shrink-0 transition-all
-                                  ${specialty === s
-                                    ? 'border-[#1a355d] bg-[#1a355d]'
-                                    : 'border-gray-300'}`}
-                />
-                {s}
-              </button>
-            ))}
-          </FilterSection>
-
-          <FilterSection title="Location" hasActive={city !== 'All cities'}>
-            {CITIES.map(c => (
-              <button
-                key={c}
-                onClick={() => setCity(c)}
-                className={`w-full text-left flex items-center gap-2 px-2 py-2
-                            rounded-lg text-sm transition-colors mb-0.5
-                            ${city === c
-                              ? 'bg-blue-50 text-[#1a355d] font-medium'
-                              : 'text-gray-500 hover:bg-gray-50'}`}
-              >
-                <span className={`w-3.5 h-3.5 rounded-full border shrink-0 transition-all
-                                  ${city === c
-                                    ? 'border-[#1a355d] bg-[#1a355d]'
-                                    : 'border-gray-300'}`}
-                />
-                {c}
-              </button>
-            ))}
-          </FilterSection>
-
-        </aside>
-
-        {/* ── MAIN GRID ── */}
+        {/* ── Main ── */}
         <main className="flex-1 p-6 min-w-0">
 
           {/* Result count + sort */}
           <div className="flex items-center justify-between mb-5">
             <p className="text-sm text-gray-500">
-              Showing{' '}
-              <span className="font-semibold text-[#1a355d]">
-                {filteredClinics.length}
-              </span>{' '}
-              clinics
+              Showing <span className="font-semibold text-[#1a355d]">{label}</span>
             </p>
             <select className="text-xs border border-gray-200 rounded-lg px-3 py-2
                                text-gray-600 bg-white outline-none cursor-pointer
@@ -202,7 +222,6 @@ export default function ClinicDirectory() {
                   <div className="p-4 space-y-3">
                     <div className="h-3.5 bg-gray-100 rounded-full w-3/4" />
                     <div className="h-3 bg-gray-100 rounded-full w-1/2" />
-                    <div className="h-3 bg-gray-100 rounded-full w-1/3" />
                   </div>
                 </div>
               ))}
@@ -210,7 +229,7 @@ export default function ClinicDirectory() {
           )}
 
           {/* Empty state */}
-          {!loading && filteredClinics.length === 0 && (
+          {!loading && results.length === 0 && (
             <div className="flex flex-col items-center justify-center py-24 text-center">
               <div className="w-14 h-14 rounded-2xl bg-[#ebf8ff] flex items-center
                               justify-center mb-4">
@@ -220,7 +239,9 @@ export default function ClinicDirectory() {
                   <line x1="21" y1="21" x2="16.65" y2="16.65"/>
                 </svg>
               </div>
-              <p className="font-semibold text-[#1a355d] mb-1">No clinics found</p>
+              <p className="font-semibold text-[#1a355d] mb-1">
+                No {mode} found
+              </p>
               <p className="text-sm text-gray-400">Try adjusting your search or filters</p>
               <button
                 onClick={resetFilters}
@@ -231,12 +252,17 @@ export default function ClinicDirectory() {
             </div>
           )}
 
-          {/* Clinic grid — 3 cols → 2 cols → 1 col */}
-          {!loading && filteredClinics.length > 0 && (
+          {/* Grid — switches between clinic cards and doctor cards */}
+          {!loading && results.length > 0 && (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {filteredClinics.map(clinic => (
-                <ClinicCard key={clinic.id} clinic={clinic} />
-              ))}
+              {mode === 'clinics'
+                ? results.map(clinic => (
+                    <ClinicCard key={clinic.id} clinic={clinic} />
+                  ))
+                : results.map(doctor => (
+                    <DoctorCard key={doctor.id} doctor={doctor} />
+                  ))
+              }
             </div>
           )}
 

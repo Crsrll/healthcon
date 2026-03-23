@@ -23,18 +23,18 @@ export function ClinicCard({ clinic }) {
 
         <div className="absolute top-3 left-3 bg-[#1a355d]/80 backdrop-blur-sm
                         rounded-lg px-2.5 py-1 text-xs font-semibold text-healthcon-teal">
-          {clinic.specialty}
+          {clinic.specialization[0]}
         </div>
 
         <div className="absolute bottom-3 left-3 flex items-center gap-1.5">
           <span className="w-2 h-2 rounded-full bg-green-400 border border-white" />
           <span className="text-xs font-semibold text-white">
-            {clinic.doctors} doctor{clinic.doctors > 1 ? 's' : ''} available
+            {clinic.doctorCount} doctor{clinic.doctorCount > 1 ? 's' : ''} available
           </span>
         </div>
       </div>
       <h2 className="text-medium font-semibold pt-3"><Link href={`/clinics/${clinic.id}`}>{clinic.name}</Link></h2>
-      <p className="text-gray-600">{clinic.city}</p>
+      <p className="text-gray-600">{clinic.location}</p>
     </GeneralCard>
   );
 }
