@@ -13,7 +13,7 @@ export function ClinicCard({ clinic }) {
         ) : (
           <div className="w-full h-full bg-linear-to-br from-[#1a355d] to-[#2a4a7f]
                           flex items-center justify-center">
-            <span className="text-4xl font-bold text-[#b2f5ea]/30">
+            <span className="text-4xl font-bold text-healthcon-teal/30">
               {clinic.name[0]}
             </span>
           </div>
@@ -22,7 +22,7 @@ export function ClinicCard({ clinic }) {
         <div className="absolute inset-0 bg-linear-to-t from-[#1a355d]/70 to-transparent" />
 
         <div className="absolute top-3 left-3 bg-[#1a355d]/80 backdrop-blur-sm
-                        rounded-lg px-2.5 py-1 text-xs font-semibold text-[#b2f5ea]">
+                        rounded-lg px-2.5 py-1 text-xs font-semibold text-healthcon-teal">
           {clinic.specialty}
         </div>
 
