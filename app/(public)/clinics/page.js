@@ -83,7 +83,7 @@ export default function ClinicDirectory() {
 
       {/* ── HERO ── */}
       <div className="bg-[#1a355d] px-8 py-8">
-        <p className="text-[#b2f5ea] font-semibold uppercase text-xs tracking-widest mb-2">
+        <p className="text-healthcon-teal font-semibold uppercase text-xs tracking-widest mb-2">
           Mindanao · Verified Clinics
         </p>
         <h1 className="text-3xl text-[#f7fafc] font-bold mb-2">
@@ -100,7 +100,7 @@ export default function ClinicDirectory() {
             onChange={e => setSearch(e.target.value)}
             className="flex-1 bg-white/10 border border-white/20 rounded-xl px-4 py-2.5
                        text-white placeholder-white/40 text-sm outline-none
-                       focus:border-[#b2f5ea]/50 focus:bg-white/15 transition-all"
+                       focus:border-healthcon-teal/50 focus:bg-white/15 transition-all"
           />
           <button className="bg-[#3182ce] hover:bg-[#2b6cb0] text-white font-semibold
                              text-sm px-5 py-2.5 rounded-xl transition-colors">
