@@ -8,7 +8,8 @@ export default function Navbar() {
 
   const isPatient = pathname?.startsWith("/patient");
   const isClinic = pathname?.startsWith("/clinic");
-  const isLoggedIn = isPatient || isClinic;
+  const isAdmin = pathname?.startsWith("/admin");
+  const isLoggedIn = isPatient || isClinic || isAdmin;
 
   // State to handle dropdown visibility
   const [isProfileOpen, setIsProfileOpen] = useState(false);
@@ -44,11 +45,21 @@ export default function Navbar() {
     { name: "Patients", href: "/clinic/patients" }, 
   ];
 
+  const adminLinks = [
+  { name: "Overview", href: "/admin/dashboard" },
+  { name: "Clinics", href: "/clinic" },
+  { name: "Revenue", href: "/revenue" }, 
+  { name: "System", href: "/system" },
+];
+
   const activeLinks = isPatient 
   ? patientLinks 
   : isClinic 
     ? clinicLinks 
-    : publicLinks;
+      : isAdmin
+        ? adminLinks
+        : publicLinks;
+    
 
   return (
     <nav className="bg-healthcon-blue border-b border-slate-700 px-6 py-3 relative z-50"> 
@@ -108,7 +119,7 @@ export default function Navbar() {
                     onClick={() => setIsProfileOpen(!isProfileOpen)}
                     className="w-9 h-9 bg-teal-500 rounded-full border border-slate-300 cursor-pointer hover:ring-2 ring-teal-300 transition-all flex items-center justify-center text-white font-bold text-xs"
                   >
-                    {isPatient ? "M" : "J"}
+                    {isPatient ? "M" : isClinic ? "J" : "AD"}
                   </button>
                 </div>
 
@@ -118,20 +129,20 @@ export default function Navbar() {
                     <div className="px-4 py-2 border-b border-slate-100">
                       {/* Dynamic Role Label */}
                       <p className="text-[10px] font-bold text-teal-600 uppercase">
-                        {isPatient ? "Patient" : "Clinic Staff"}
+                        {isPatient ? "Patient" : isClinic ? "Clinic Staff" : "Admin"}
                       </p>
                       <p className="text-sm font-bold text-slate-800">
-                        {isPatient ? "Melissa 👋" : "Joseph Health 🏥"}
+                        {isPatient ? "Melissa 👋" : isClinic ? "Joseph Health 🏥" : "Admin User"}
                       </p>
                     </div>
                     
                     <Link 
                       href={isPatient ? "/patient/profile" : "/clinic/profile"} 
                       className="flex items-center gap-2 px-4 py-2 text-xs text-slate-700 hover:bg-slate-50 transition-colors">
-                      {isPatient ? "My Profile" : "Clinic Profile"}
+                      {isPatient ? "My Profile" : isClinic ? "Clinic Profile" : "Admin Profile"}
                     </Link>
                     <Link href="/settings" className="flex items-center gap-2 px-4 py-2 text-xs text-slate-700 hover:bg-slate-50 transition-colors">
-                      {isPatient ? "Account Settings" : "Clinic Settings"}
+                      {isPatient ? "Account Settings" : isClinic ? "Clinic Settings" : "System Settings"}
                     </Link>
                     <Link href="/help" className="flex items-center gap-2 px-4 py-2 text-xs text-slate-700 hover:bg-slate-50 transition-colors">
                       Help & Support
