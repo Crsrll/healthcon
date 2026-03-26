@@ -15,3 +15,4 @@ export default function SidebarWrapper({children, className = '', buttons, mode,
     </div>
   )
 }
+
