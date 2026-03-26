@@ -47,9 +47,8 @@ export default function Navbar() {
 
   const adminLinks = [
   { name: "Overview", href: "/admin/dashboard" },
-  { name: "Clinics", href: "/clinic" },
-  { name: "Revenue", href: "/revenue" }, 
-  { name: "System", href: "/system" },
+  { name: "Clinics", href: "/clinic" }, 
+  { name: "Users", href: "/users" },
 ];
 
   const activeLinks = isPatient 
