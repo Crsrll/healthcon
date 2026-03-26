@@ -1,10 +1,22 @@
 "use client";
 import { useState } from "react";
 import Link from "next/link";
+import { Sidebar } from "lucide-react";
+import SidebarWrapper from "@/components/dashboard/SidebarWrapper";
+import { Pencil, Calendar, MessageCircle, User, Home } from "lucide-react";
 
 export default function ClinicDashboard() {
+  const [mode, setMode] = useState("Dashboard");
     const [search, setSearch] = useState("");
-  const [activeTab, setActiveTab] = useState("queue");
+  const [activeTab, setActiveTab] = useState("All");
+
+  const buttons = [
+    { label: "Dashboard", icon: <Home size={20} /> },
+    { label: "Edit", icon: <Pencil size={20}/> },
+    { label: "Doctors", icon: <User size={20}/> },
+    { label: "Booking", icon: <Calendar size={20}/> },
+    { label: "Inquiries", icon: <MessageCircle size={20}/> }
+  ];
 
   const stats = [
     {
@@ -87,7 +99,7 @@ export default function ClinicDashboard() {
     <div className="min-h-screen bg-slate-100 font-sans">
 
       {/* ── PAGE HEADER BANNER ── */}
-      <div className="relative bg-[#1a365d] overflow-hidden">
+      <div className="relative bg-healthcon-blue overflow-hidden">
         <div
           className="absolute inset-0 opacity-10"
           style={{
@@ -149,7 +161,15 @@ export default function ClinicDashboard() {
         </div>
       </div>
 
+      <div className="flex">
+        <SidebarWrapper mode={mode} setMode={setMode} buttons={buttons}>
+            </SidebarWrapper>
+
+            
+
       {/* ── MAIN CONTENT ── */}
+      
+      {mode === "Dashboard" &&
       <main className="max-w-7xl mx-auto px-6 py-8 space-y-6">
 
         {/* STATS ROW */}
@@ -183,7 +203,7 @@ export default function ClinicDashboard() {
             <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
             <div className="flex items-center gap-3">
                 <h2 className="font-bold text-slate-800">Today's Queue</h2>
-                <span className="bg-[#1a365d] text-white text-[10px] font-bold px-2.5 py-0.5 rounded-full">
+                <span className="bg-healthcon-blue text-white text-[10px] font-bold px-2.5 py-0.5 rounded-full">
                 {todayAppointments.length}
                 </span>
             </div>
@@ -304,7 +324,7 @@ export default function ClinicDashboard() {
           <div className="space-y-5">
 
             {/* QUICK ACTIONS */}
-            <section className="bg-[#1a365d] rounded-2xl p-5 text-white shadow-lg shadow-blue-900/20 relative overflow-hidden">
+            <section className="bg-healthcon-blue rounded-2xl p-5 text-white shadow-lg shadow-blue-900/20 relative overflow-hidden">
               <div className="absolute -bottom-6 -right-6 w-28 h-28 bg-teal-400/10 rounded-full blur-2xl pointer-events-none" />
               <div className="relative">    
                 <div className="flex items-center gap-2 mb-4">
@@ -347,7 +367,7 @@ export default function ClinicDashboard() {
                     className={`p-4 cursor-pointer transition-colors group ${inq.unread ? "hover:bg-teal-50/50" : "hover:bg-slate-50"}`}
                   >
                     <div className="flex items-start gap-3">
-                      <div className={`w-8 h-8 rounded-full flex items-center justify-center text-[10px] font-black shrink-0 ${inq.unread ? "bg-[#1a365d] text-white" : "bg-slate-100 text-slate-500"}`}>
+                      <div className={`w-8 h-8 rounded-full flex items-center justify-center text-[10px] font-black shrink-0 ${inq.unread ? "bg-healthcon-blue text-white" : "bg-slate-100 text-slate-500"}`}>
                         {inq.initials}
                       </div>
                       <div className="flex-1 min-w-0">
@@ -379,7 +399,565 @@ export default function ClinicDashboard() {
             </section>
           </div>
         </div>
-      </main>
+      </main>}
+
+{mode === "Edit" && (
+  <main className="max-w-7xl mx-auto px-6 py-8 space-y-6">
+
+    <div className="flex items-center justify-between">
+      <div>
+        <h2 className="text-lg font-bold text-slate-800">Clinic Information</h2>
+        <p className="text-xs text-slate-400 mt-0.5">Update your clinic's public profile</p>
+      </div>
+      <button className="bg-healthcon-blue hover:bg-blue-800 text-white text-sm
+                         font-semibold px-5 py-2.5 rounded-xl transition-colors">
+        Save Changes
+      </button>
+    </div>
+
+    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+      {/* LEFT — main form */}
+      <div className="lg:col-span-2 space-y-4">
+
+        {/* Basic info */}
+        <section className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 space-y-5">
+          <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider">
+            Basic Information
+          </h3>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label className="text-xs font-semibold text-slate-600 mb-1.5 block">
+                Clinic Name
+              </label>
+              <input
+                defaultValue="Joseph Community Health"
+                className="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm
+                           text-slate-800 outline-none focus:border-teal-400 transition-colors"
+              />
+            </div>
+            <div>
+              <label className="text-xs font-semibold text-slate-600 mb-1.5 block">
+                Location / City
+              </label>
+              <input
+                defaultValue="Dapitan"
+                className="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm
+                           text-slate-800 outline-none focus:border-teal-400 transition-colors"
+              />
+            </div>
+            <div>
+              <label className="text-xs font-semibold text-slate-600 mb-1.5 block">
+                Contact Number
+              </label>
+              <input
+                defaultValue="(065) 123-4567"
+                className="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm
+                           text-slate-800 outline-none focus:border-teal-400 transition-colors"
+              />
+            </div>
+            <div>
+              <label className="text-xs font-semibold text-slate-600 mb-1.5 block">
+                Email Address
+              </label>
+              <input
+                defaultValue="joseph@healthcon.ph"
+                className="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm
+                           text-slate-800 outline-none focus:border-teal-400 transition-colors"
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className="text-xs font-semibold text-slate-600 mb-1.5 block">
+              Full Address
+            </label>
+            <input
+              defaultValue="Sunrise St., Dapitan City, Zamboanga del Norte"
+              className="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm
+                         text-slate-800 outline-none focus:border-teal-400 transition-colors"
+            />
+          </div>
+
+          <div>
+            <label className="text-xs font-semibold text-slate-600 mb-1.5 block">
+              About / Description
+            </label>
+            <textarea
+              rows={4}
+              defaultValue="A community health clinic serving Dapitan City and nearby areas."
+              className="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm
+                         text-slate-800 outline-none focus:border-teal-400 transition-colors
+                         resize-none"
+            />
+          </div>
+        </section>
+
+        {/* Operating hours */}
+        <section className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 space-y-4">
+          <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider">
+            Operating Hours
+          </h3>
+          {['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'].map(day => (
+            <div key={day} className="flex items-center gap-4">
+              <span className="text-sm font-medium text-slate-700 w-24 shrink-0">{day}</span>
+              <input
+                defaultValue={day === 'Sunday' ? 'Closed' : '8:00 AM'}
+                className="flex-1 border border-slate-200 rounded-lg px-3 py-2 text-sm
+                           text-slate-800 outline-none focus:border-teal-400 transition-colors"
+              />
+              <span className="text-slate-400 text-sm shrink-0">to</span>
+              <input
+                defaultValue={day === 'Sunday' ? 'Closed' : '5:00 PM'}
+                className="flex-1 border border-slate-200 rounded-lg px-3 py-2 text-sm
+                           text-slate-800 outline-none focus:border-teal-400 transition-colors"
+              />
+            </div>
+          ))}
+        </section>
+
+      </div>
+
+      {/* RIGHT — specializations + services */}
+      <div className="space-y-4">
+
+        {/* Specializations */}
+        <section className="bg-white rounded-2xl border border-slate-200 shadow-sm p-5">
+          <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-4">
+            Specializations
+          </h3>
+          <div className="flex flex-wrap gap-2 mb-3">
+            {['Internal Medicine', 'General Practice'].map(s => (
+              <span key={s}
+                className="flex items-center gap-1.5 bg-teal-50 text-teal-700 text-xs
+                           font-semibold rounded-full px-3 py-1.5">
+                {s}
+                <button className="text-teal-400 hover:text-red-400 transition-colors">✕</button>
+              </span>
+            ))}
+          </div>
+          <div className="flex gap-2">
+            <input
+              placeholder="Add specialization..."
+              className="flex-1 border border-slate-200 rounded-lg px-3 py-2 text-sm
+                         outline-none focus:border-teal-400 transition-colors"
+            />
+            <button className="bg-teal-500 hover:bg-teal-400 text-white text-sm font-bold
+                               px-3 py-2 rounded-lg transition-colors">
+              +
+            </button>
+          </div>
+        </section>
+
+        {/* Services */}
+        <section className="bg-white rounded-2xl border border-slate-200 shadow-sm p-5">
+          <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-4">
+            Services Offered
+          </h3>
+          <div className="space-y-2 mb-3">
+            {['General Consultation', 'Laboratory Services', 'Minor Surgery'].map(s => (
+              <div key={s}
+                className="flex items-center justify-between text-sm py-1.5
+                           border-b border-slate-50 last:border-0">
+                <span className="text-slate-700">{s}</span>
+                <button className="text-slate-300 hover:text-red-400 transition-colors text-xs">
+                  Remove
+                </button>
+              </div>
+            ))}
+          </div>
+          <div className="flex gap-2">
+            <input
+              placeholder="Add service..."
+              className="flex-1 border border-slate-200 rounded-lg px-3 py-2 text-sm
+                         outline-none focus:border-teal-400 transition-colors"
+            />
+            <button className="bg-teal-500 hover:bg-teal-400 text-white text-sm font-bold
+                               px-3 py-2 rounded-lg transition-colors">
+              +
+            </button>
+          </div>
+        </section>
+
+        {/* Status toggle */}
+        <section className="bg-white rounded-2xl border border-slate-200 shadow-sm p-5">
+          <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-4">
+            Clinic Status
+          </h3>
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-semibold text-slate-700">Currently Open</p>
+              <p className="text-xs text-slate-400 mt-0.5">Visible in the public directory</p>
+            </div>
+            <div className="w-11 h-6 bg-teal-500 rounded-full relative cursor-pointer">
+              <div className="absolute right-1 top-1 w-4 h-4 bg-white rounded-full shadow" />
+            </div>
+          </div>
+        </section>
+
+      </div>
+    </div>
+  </main>
+)}
+
+{mode === "Doctors" && (
+  <main className="max-w-7xl mx-auto px-6 py-8 space-y-6">
+
+    <div className="flex items-center justify-between">
+      <div>
+        <h2 className="text-lg font-bold text-slate-800">Manage Doctors</h2>
+        <p className="text-xs text-slate-400 mt-0.5">Add, edit, or toggle doctor availability</p>
+      </div>
+      <button className="bg-teal-500 hover:bg-teal-400 text-white text-sm font-semibold
+                         px-5 py-2.5 rounded-xl transition-colors flex items-center gap-2">
+        <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2}
+             viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15"/>
+        </svg>
+        Add Doctor
+      </button>
+    </div>
+
+    <section className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+      <div className="px-6 py-4 border-b border-slate-100 flex items-center gap-3">
+        <div className="relative flex-1 max-w-xs">
+          <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400
+                         fill-none stroke-current stroke-2" viewBox="0 0 24 24">
+            <circle cx="11" cy="11" r="8"/>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+          </svg>
+          <input
+            placeholder="Search doctors..."
+            className="w-full border border-slate-200 rounded-xl pl-9 pr-4 py-2 text-sm
+                       outline-none focus:border-teal-400 transition-colors"
+          />
+        </div>
+      </div>
+
+      <table className="w-full text-left">
+        <thead>
+          <tr className="bg-slate-50 border-b border-slate-100">
+            {['Doctor', 'Specialization', 'Schedule', 'Availability', 'Actions'].map(h => (
+              <th key={h} className="px-6 py-3 text-[10px] font-bold text-slate-400
+                                     uppercase tracking-widest">
+                {h}
+              </th>
+            ))}
+          </tr>
+        </thead>
+        <tbody className="divide-y divide-slate-50">
+          {[
+            { id: '1', name: 'Dr. Ben Villanueva',  spec: 'Internal Medicine', schedule: 'Mon–Fri, 8AM–12PM',  available: true  },
+            { id: '2', name: 'Dr. Claire Mendoza',  spec: 'Ob-Gyne',           schedule: 'Tue, Thu, 1PM–5PM', available: true  },
+            { id: '3', name: 'Dr. Paolo Gutierrez', spec: 'General Practice',  schedule: 'Mon, Wed, Fri',      available: false },
+          ].map(doc => (
+            <tr key={doc.id} className="hover:bg-slate-50/70 transition-colors group">
+
+              {/* Doctor */}
+              <td className="px-6 py-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-9 h-9 rounded-xl bg-blue-50 text-blue-600 font-bold
+                                  text-sm flex items-center justify-center shrink-0">
+                    {doc.name.split(' ')[1]?.[0]}
+                  </div>
+                  <span className="font-semibold text-sm text-slate-800">{doc.name}</span>
+                </div>
+              </td>
+
+              {/* Spec */}
+              <td className="px-6 py-4">
+                <span className="text-xs font-semibold bg-teal-50 text-teal-700
+                                 rounded-full px-2.5 py-1">
+                  {doc.spec}
+                </span>
+              </td>
+
+              {/* Schedule */}
+              <td className="px-6 py-4 text-sm text-slate-500">{doc.schedule}</td>
+
+              {/* Toggle */}
+              <td className="px-6 py-4">
+                <button
+                  className={`w-10 h-5 rounded-full relative transition-colors
+                              ${doc.available ? 'bg-teal-500' : 'bg-slate-200'}`}
+                >
+                  <div className={`absolute top-0.5 w-4 h-4 bg-white rounded-full shadow
+                                   transition-all
+                                   ${doc.available ? 'left-5' : 'left-0.5'}`} />
+                </button>
+              </td>
+
+              {/* Actions */}
+              <td className="px-6 py-4">
+                <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100
+                                transition-opacity">
+                  <button className="text-xs font-semibold text-slate-500 hover:text-blue-600
+                                     bg-slate-100 hover:bg-blue-50 px-3 py-1.5 rounded-lg
+                                     transition-colors">
+                    Edit
+                  </button>
+                  <button className="text-xs font-semibold text-slate-500 hover:text-red-600
+                                     bg-slate-100 hover:bg-red-50 px-3 py-1.5 rounded-lg
+                                     transition-colors">
+                    Remove
+                  </button>
+                </div>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </section>
+  </main>
+)}
+
+{mode === "Booking" && (
+  <main className="max-w-7xl mx-auto px-6 py-8 space-y-6">
+
+    <div className="flex items-center justify-between">
+      <div>
+        <h2 className="text-lg font-bold text-slate-800">Bookings</h2>
+        <p className="text-xs text-slate-400 mt-0.5">Review, accept, or decline booking requests</p>
+      </div>
+
+      {/* Filter tabs */}
+      <div className="flex bg-slate-100 rounded-xl p-1 gap-1">
+        {['All', 'Pending', 'Confirmed', 'Completed', 'Cancelled'].map(tab => (
+          <button
+            key={tab}
+            onClick={() => setActiveTab(tab)}
+            className={`text-xs font-semibold px-3 py-1.5 rounded-lg transition-all
+                        ${activeTab === tab
+                          ? 'bg-white text-slate-800 shadow-sm'
+                          : 'text-slate-400 hover:text-slate-600'}`}
+          >
+            {tab}
+          </button>
+        ))}
+      </div>
+    </div>
+
+    <section className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+      <table className="w-full text-left">
+        <thead>
+          <tr className="bg-slate-50 border-b border-slate-100">
+            {['Patient', 'Doctor', 'Service', 'Date & Time', 'Status', 'Actions'].map(h => (
+              <th key={h} className="px-6 py-3 text-[10px] font-bold text-slate-400
+                                     uppercase tracking-widest">
+                {h}
+              </th>
+            ))}
+          </tr>
+        </thead>
+        <tbody className="divide-y divide-slate-50">
+          {[
+            { id: 1, patient: 'John Wick',     doctor: 'Dr. Ben Villanueva',  service: 'Consultation', date: 'Mar 24, 9:00 AM',  status: 'Pending'   },
+            { id: 2, patient: 'Sarah Connor',  doctor: 'Dr. Claire Mendoza',  service: 'Check-up',     date: 'Mar 24, 10:30 AM', status: 'Confirmed' },
+            { id: 3, patient: 'Bruce Wayne',   doctor: 'Dr. Ben Villanueva',  service: 'Follow-up',    date: 'Mar 24, 1:00 PM',  status: 'Completed' },
+            { id: 4, patient: 'Diana Prince',  doctor: 'Dr. Paolo Gutierrez', service: 'Consultation', date: 'Mar 25, 8:00 AM',  status: 'Pending'   },
+            { id: 5, patient: 'Peter Parker',  doctor: 'Dr. Claire Mendoza',  service: 'Prenatal',     date: 'Mar 25, 2:00 PM',  status: 'Cancelled' },
+          ].filter(b => activeTab === 'All' || b.status === activeTab)
+           .map(booking => (
+            <tr key={booking.id} className="hover:bg-slate-50/70 transition-colors group">
+
+              {/* Patient */}
+              <td className="px-6 py-4">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-8 h-8 rounded-full bg-slate-100 text-slate-500 font-bold
+                                  text-xs flex items-center justify-center shrink-0">
+                    {booking.patient.split(' ').map(n => n[0]).join('')}
+                  </div>
+                  <span className="font-semibold text-sm text-slate-800">{booking.patient}</span>
+                </div>
+              </td>
+
+              {/* Doctor */}
+              <td className="px-6 py-4 text-sm text-slate-500">{booking.doctor}</td>
+
+              {/* Service */}
+              <td className="px-6 py-4 text-sm text-slate-500">{booking.service}</td>
+
+              {/* Date */}
+              <td className="px-6 py-4 font-semibold text-sm text-slate-700">{booking.date}</td>
+
+              {/* Status */}
+              <td className="px-6 py-4">
+                <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-[10px]
+                                  font-black uppercase ${statusStyle[booking.status] ??
+                                  'bg-red-100 text-red-600'}`}>
+                  {booking.status}
+                </span>
+              </td>
+
+              {/* Actions */}
+              <td className="px-6 py-4">
+                <div className="flex items-center gap-2">
+                  {booking.status === 'Pending' && (
+                    <>
+                      <button className="text-xs font-semibold text-white bg-teal-500
+                                         hover:bg-teal-400 px-3 py-1.5 rounded-lg
+                                         transition-colors">
+                        Accept
+                      </button>
+                      <button className="text-xs font-semibold text-slate-500
+                                         bg-slate-100 hover:bg-red-50 hover:text-red-600
+                                         px-3 py-1.5 rounded-lg transition-colors">
+                        Decline
+                      </button>
+                    </>
+                  )}
+                  {booking.status === 'Confirmed' && (
+                    <button className="text-xs font-semibold text-slate-500
+                                       bg-slate-100 hover:bg-slate-200
+                                       px-3 py-1.5 rounded-lg transition-colors">
+                      Mark Done
+                    </button>
+                  )}
+                  {(booking.status === 'Completed' || booking.status === 'Cancelled') && (
+                    <span className="text-xs text-slate-300">—</span>
+                  )}
+                </div>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </section>
+  </main>
+)}
+
+{mode === "Inquiries" && (
+  <main className="max-w-7xl mx-auto px-6 py-8 space-y-6">
+
+    <div>
+      <h2 className="text-lg font-bold text-slate-800">Inquiries</h2>
+      <p className="text-xs text-slate-400 mt-0.5">Messages from patients about your clinic</p>
+    </div>
+
+    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 h-150">
+
+      {/* LEFT — inquiry list */}
+      <div className="bg-white rounded-2xl border border-slate-200 shadow-sm
+                      overflow-hidden flex flex-col">
+        <div className="px-4 py-3 border-b border-slate-100">
+          <input
+            placeholder="Search inquiries..."
+            className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm
+                       outline-none focus:border-teal-400 transition-colors"
+          />
+        </div>
+
+        <div className="overflow-y-auto flex-1 divide-y divide-slate-50">
+          {[
+            { id: 1, user: 'Peter Parker',  initials: 'PP', msg: 'Are you open on Saturdays?',       time: '10 mins ago', unread: true,  active: true  },
+            { id: 2, user: 'Diana Prince',  initials: 'DP', msg: 'Can I reschedule my check-up?',    time: '1 hour ago',  unread: true,  active: false },
+            { id: 3, user: 'Clark Kent',    initials: 'CK', msg: 'What are your available slots?',   time: '3 hours ago', unread: false, active: false },
+            { id: 4, user: 'Natasha R.',    initials: 'NR', msg: 'Is Dr. Villanueva available Mon?', time: 'Yesterday',   unread: false, active: false },
+            { id: 5, user: 'Tony Stark',    initials: 'TS', msg: 'Do you accept PhilHealth?',        time: 'Yesterday',   unread: false, active: false },
+          ].map(inq => (
+            <div key={inq.id}
+              className={`p-4 cursor-pointer transition-colors
+                          ${inq.active
+                            ? 'bg-teal-50 border-l-2 border-teal-500'
+                            : 'hover:bg-slate-50 border-l-2 border-transparent'}`}
+            >
+              <div className="flex items-start gap-3">
+                <div className={`w-9 h-9 rounded-full flex items-center justify-center
+                                 text-[10px] font-black shrink-0
+                                 ${inq.unread
+                                   ? 'bg-healthcon-blue text-white'
+                                   : 'bg-slate-100 text-slate-500'}`}>
+                  {inq.initials}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center justify-between">
+                    <p className={`text-xs font-bold truncate
+                                   ${inq.unread ? 'text-slate-800' : 'text-slate-500'}`}>
+                      {inq.user}
+                    </p>
+                    <span className="text-[9px] text-slate-400 shrink-0 ml-1">{inq.time}</span>
+                  </div>
+                  <p className="text-[11px] text-slate-500 truncate mt-0.5">{inq.msg}</p>
+                </div>
+                {inq.unread && (
+                  <span className="w-2 h-2 rounded-full bg-teal-400 shrink-0 mt-1" />
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* RIGHT — active conversation */}
+      <div className="lg:col-span-2 bg-white rounded-2xl border border-slate-200 shadow-sm
+                      flex flex-col overflow-hidden">
+
+        {/* Conversation header */}
+        <div className="px-6 py-4 border-b border-slate-100 flex items-center gap-3">
+          <div className="w-9 h-9 rounded-full bg-healthcon-blue text-white font-bold
+                          text-xs flex items-center justify-center">
+            PP
+          </div>
+          <div>
+            <p className="font-bold text-sm text-slate-800">Peter Parker</p>
+            <p className="text-[10px] text-slate-400">10 minutes ago</p>
+          </div>
+        </div>
+
+        {/* Messages */}
+        <div className="flex-1 overflow-y-auto px-6 py-5 space-y-4 bg-slate-50/40">
+
+          {/* Patient message */}
+          <div className="flex justify-start">
+            <div className="bg-white border border-slate-200 rounded-2xl rounded-tl-none
+                            px-4 py-3 max-w-sm shadow-sm">
+              <p className="text-sm text-slate-700">Are you open on Saturdays?</p>
+              <p className="text-[10px] text-slate-400 mt-1">10:14 AM</p>
+            </div>
+          </div>
+
+          {/* Clinic reply */}
+          <div className="flex justify-end">
+            <div className="bg-healthcon-blue rounded-2xl rounded-tr-none
+                            px-4 py-3 max-w-sm">
+              <p className="text-sm text-white">
+                Yes, we are open on Saturdays from 8:00 AM to 12:00 PM.
+              </p>
+              <p className="text-[10px] text-blue-200 mt-1">10:17 AM · You</p>
+            </div>
+          </div>
+
+          {/* Patient follow-up */}
+          <div className="flex justify-start">
+            <div className="bg-white border border-slate-200 rounded-2xl rounded-tl-none
+                            px-4 py-3 max-w-sm shadow-sm">
+              <p className="text-sm text-slate-700">
+                Great! Can I book for this Saturday morning?
+              </p>
+              <p className="text-[10px] text-slate-400 mt-1">10:18 AM</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Reply input */}
+        <div className="px-6 py-4 border-t border-slate-100 flex items-center gap-3">
+          <input
+            placeholder="Type a reply..."
+            className="flex-1 border border-slate-200 rounded-xl px-4 py-2.5 text-sm
+                       outline-none focus:border-teal-400 transition-colors bg-slate-50"
+          />
+          <button className="bg-teal-500 hover:bg-teal-400 text-white font-semibold
+                             text-sm px-5 py-2.5 rounded-xl transition-colors shrink-0">
+            Send
+          </button>
+        </div>
+      </div>
+    </div>
+  </main>
+)}
+
+      </div>
     </div>
   );
 }
