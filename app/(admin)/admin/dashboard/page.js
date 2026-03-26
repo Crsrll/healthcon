@@ -2,7 +2,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import PulseCard from "@/components/ui/PulseCard";
-import { Pencil, Calendar, MessageCircle, User, Home } from "lucide-react";
+import { Home, Clock, Building2, Stethoscope, Users, Calendar, Settings, Flag, CalendarCheck, Banknote  } from "lucide-react";
 import SidebarWrapper from "@/components/dashboard/SidebarWrapper";
 
 export default function PlatformAdminDashboard() {
@@ -21,16 +21,16 @@ export default function PlatformAdminDashboard() {
     { name: "CDO Outpatient Clinic", bookings: 215, growth: "+5%", color: "bg-indigo-500" },
   ];
 
-  const buttons = [
-    { label: "Dashboard", icon: <Home size={20} /> },
-    { label: "Pending Clinics", icon: <User size={20} /> },
-    { label: "Clinics", icon: <Pencil size={20} /> },
-    { label: "Doctors", icon: <User size={20} /> },
-    { label: "Users", icon: <User size={20} /> },
-    { label: "Bookings", icon: <Calendar size={20} /> },
-    { label: "System Settings", icon: <MessageCircle size={20} /> },
-    { label: "Reports & Flagged", icon: <Calendar size={20} /> }
-  ];
+const buttons = [
+  { label: "Dashboard", icon: <Home size={20} /> },
+  { label: "Pending Clinics", icon: <Clock size={20} /> },
+  { label: "Clinics", icon: <Building2 size={20} /> },
+  { label: "Doctors", icon: <Stethoscope size={20} /> },
+  { label: "Users", icon: <Users size={20} /> },
+  { label: "Bookings", icon: <Calendar size={20} /> },
+  { label: "System Settings", icon: <Settings size={20} /> },
+  { label: "Reports & Flagged", icon: <Flag size={20} /> }
+];
 
   return (
     <div className="min-h-screen bg-slate-100 font-sans">
@@ -71,10 +71,10 @@ export default function PlatformAdminDashboard() {
               
               {/* KPI CARDS */}
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">  
-                <PulseCard title="Total Clinics" value="142" subtext="12 pending approval" icon="🏥" color="text-blue-600" iconBg="bg-blue-50" />
-                <PulseCard title="Total Users" value="10,390" subtext="Patients and Clinics" icon="👥" color="text-emerald-600" iconBg="bg-emerald-50" />
-                <PulseCard title="Active Bookings" value="1,205" subtext="Live across platform" icon="📅" color="text-indigo-600" iconBg="bg-indigo-50" />
-                <PulseCard title="Revenue" value="₱250.8k" subtext="Commission (March)" icon="💰" color="text-emerald-600" iconBg="bg-emerald-50" />
+                <PulseCard title="Total Clinics" value="142" subtext="12 pending approval" icon={<Building2 size={24} />} color="text-blue-600" iconBg="bg-blue-50"/>
+                <PulseCard title="Total Users"value="10,390" subtext="Patients and Clinics" icon={<Users size={24} />} color="text-emerald-600" iconBg="bg-emerald-50" />
+                <PulseCard title="Active Bookings" value="1,205" subtext="Live across platform" icon={<CalendarCheck size={24} />} color="text-indigo-600" iconBg="bg-indigo-50" />
+                <PulseCard title="Revenue" value="₱250.8k" subtext="Commission (March)" icon={<Banknote size={24} />} color="text-emerald-600" iconBg="bg-emerald-50" />
               </div>
 
               {/* MIDDLE GRID */}
