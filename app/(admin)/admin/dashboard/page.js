@@ -71,10 +71,10 @@ const buttons = [
               
               {/* KPI CARDS */}
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">  
-                <PulseCard title="Total Clinics" value="142" subtext="12 pending approval" icon={<Building2 size={24} />} color="text-blue-600" iconBg="bg-blue-50"/>
-                <PulseCard title="Total Users"value="10,390" subtext="Patients and Clinics" icon={<Users size={24} />} color="text-emerald-600" iconBg="bg-emerald-50" />
-                <PulseCard title="Active Bookings" value="1,205" subtext="Live across platform" icon={<CalendarCheck size={24} />} color="text-indigo-600" iconBg="bg-indigo-50" />
-                <PulseCard title="Revenue" value="₱250.8k" subtext="Commission (March)" icon={<Banknote size={24} />} color="text-emerald-600" iconBg="bg-emerald-50" />
+                <PulseCard title="Total Clinics" value="142" valueClass="text-2xl" subtext="12 pending approval" icon={<Building2 size={24} />} color="text-blue-600" iconBg="bg-blue-50" border="border-blue-200" />
+                <PulseCard title="Total Users"value="10,390" valueClass="text-2xl" subtext="Patients and Clinics" icon={<Users size={24} />} color="text-emerald-600" iconBg="bg-emerald-50" border="border-emerald-200" />
+                <PulseCard title="Active Bookings" value="1,205" valueClass="text-2xl" subtext="Live across platform" icon={<CalendarCheck size={24} />} color="text-indigo-600" iconBg="bg-indigo-50" border="border-indigo-200" />
+                <PulseCard title="Revenue" value="₱250.8k" valueClass="text-2xl" subtext="Commission (March)" icon={<Banknote size={24} />} color="text-emerald-600" iconBg="bg-emerald-50" border="border-emerald-200" />
               </div>
 
               {/* MIDDLE GRID */}

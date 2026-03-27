@@ -1,31 +1,10 @@
 "use client";
 import { useState } from "react";
 import Link from "next/link";
+import PulseCard from "@/components/ui/PulseCard";
+import { CalendarCheck, Clock, MessageCircle, CheckCircle2  } from "lucide-react";
 
 export default function DashboardPage() {
-
-  const stats = [
-    {
-      label: "Today's Appointments", value: "12", sub: "2 more than yesterday",
-      icon: (<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.8} stroke="currentColor" className="w-5 h-5"><path strokeLinecap="round" strokeLinejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5" /></svg>),
-      color: "text-blue-600", bg: "bg-blue-50", border: "border-blue-100",
-    },
-    {
-      label: "Pending Requests", value: "5", sub: "Needs your review",
-      icon: (<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.8} stroke="currentColor" className="w-5 h-5"><path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" /></svg>),
-      color: "text-amber-600", bg: "bg-amber-50", border: "border-amber-100",
-    },
-    {
-      label: "Inquiries", value: "3", sub: "2 unread messages",
-      icon: (<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.8} stroke="currentColor" className="w-5 h-5"><path strokeLinecap="round" strokeLinejoin="round" d="M2.25 12.76c0 1.6 1.123 2.994 2.707 3.227 1.087.16 2.185.283 3.293.369V21l4.076-4.076a1.526 1.526 0 0 1 1.037-.443 48.282 48.282 0 0 0 5.68-.494c1.584-.233 2.707-1.626 2.707-3.228V6.741c0-1.602-1.123-2.995-2.707-3.228A48.394 48.394 0 0 0 12 3c-2.392 0-4.744.175-7.043.513C3.373 3.746 2.25 5.14 2.25 6.741v6.018Z" /></svg>),
-      color: "text-teal-600", bg: "bg-teal-50", border: "border-teal-100",
-    },
-    {
-      label: "Completed Today", value: "7", sub: "of 12 appointments",
-      icon: (<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.8} stroke="currentColor" className="w-5 h-5"><path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" /></svg>),
-      color: "text-green-600", bg: "bg-green-50", border: "border-green-100",
-    },
-  ];
 
   const todayAppointments = [
     { id: 1, time: "09:00 AM", patient: "John Wick",     service: "Consultation", status: "Completed"  },
@@ -52,19 +31,11 @@ export default function DashboardPage() {
     <main className="max-w-7xl mx-auto px-6 py-8 space-y-6">
 
       {/* STATS ROW */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        {stats.map((stat) => (
-          <div key={stat.label} className={`bg-white rounded-2xl border ${stat.border} shadow-sm p-5 flex items-start justify-between hover:shadow-md transition-all group`}>
-            <div className="flex-1 min-w-0">
-              <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">{stat.label}</p>
-              <p className="text-3xl font-black text-slate-800 mt-1 leading-none">{stat.value}</p>
-              <p className="text-[11px] text-slate-400 mt-1.5">{stat.sub}</p>
-            </div>
-            <div className={`${stat.bg} ${stat.color} p-3 rounded-xl shrink-0 group-hover:scale-110 transition-transform`}>
-              {stat.icon}
-            </div>
-          </div>
-        ))}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">  
+        <PulseCard title="Today's Appointments" value="12" subtext="2 more than yesterday" icon={<CalendarCheck size={24} />} color="text-blue-600" iconBg="bg-blue-50" border="border-blue-100"/>
+        <PulseCard title="Pending Requests" value="5" subtext="Needs your review" icon={<Clock size={24} />} color="text-amber-600" iconBg="bg-amber-50" border="border-amber-100"/>
+        <PulseCard title="Inquiries" value ="3" subtext="2 unread messages" icon={<MessageCircle size={24} />} color="text-teal-600" iconBg="bg-teal-50" border="border-teal-100"/>
+        <PulseCard title="Completed Today" value="7" subtext="of 12 appointments" icon={<CheckCircle2 size={24} />} color="text-green-600" iconBg="bg-green-50" border="border-green-100"/>
       </div>
 
       {/* MAIN GRID */}
