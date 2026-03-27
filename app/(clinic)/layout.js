@@ -1,5 +1,5 @@
 "use client";
-import { Home, Pencil, User, Calendar, MessageCircle , Stethoscope} from "lucide-react";
+import { Home, Pencil, User, Calendar, MessageCircle , Stethoscope, Settings, Flag} from "lucide-react";
 import Sidebar from "@/components/dashboard/Sidebar";
 import Navbar from "@/components/layout/Navbar";
 import {useState} from "react";
@@ -9,8 +9,11 @@ const buttons = [
   { label: "Profile",   href:"/clinic/profile",   icon: <User size={20} /> },
   { label: "Edit",      href: "/clinic/edit",      icon: <Pencil size={20} /> },
   { label: "Doctors",   href: "/clinic/doctors",   icon: <Stethoscope size={20} /> },
-  { label: "Booking",   href: "/clinic/bookings",   icon: <Calendar size={20} /> },
+  { label: "Bookings",   href: "/clinic/bookings",   icon: <Calendar size={20} /> },
   { label: "Inquiries", href: "/clinic/inquiries",  icon: <MessageCircle size={20} /> },
+  { label: "Settings", href: "/clinic/settings", icon: <Settings size={20} /> },
+  { label: "Reports & Reviews", href: "/clinic/reports-reviews", icon: <Flag size={20} /> }
+  
 ];
 
 export default function ClinicLayout({ children }) {

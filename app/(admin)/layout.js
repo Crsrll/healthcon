@@ -9,7 +9,7 @@ const buttons = [
   { label: "Clinics", href:"/admin/clinics", icon: <Building2 size={20} /> },
   { label: "Doctors",   href: "/admin/doctors",   icon: <Stethoscope size={20} /> },
   { label: "Users",      href: "/admin/users",      icon: <Users size={20} /> },
-  { label: "Booking",   href: "/admin/bookings",   icon: <Calendar size={20} /> },
+  { label: "Bookings",   href: "/admin/bookings",   icon: <Calendar size={20} /> },
   { label: "System Settings", href: "/admin/system-settings", icon: <Settings size={20} /> },
   { label: "Reports & Flagged", href: "/admin/reports-flagged", icon: <Flag size={20} /> }
 ];
