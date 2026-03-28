@@ -34,7 +34,9 @@ export default function DashboardPage() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">  
         <PulseCard title="Today's Appointments" value="12" subtext="2 more than yesterday" icon={<CalendarCheck size={24} />} color="text-blue-600" iconBg="bg-blue-50" border="border-blue-100"/>
         <PulseCard title="Pending Requests" value="5" subtext="Needs your review" icon={<Clock size={24} />} color="text-amber-600" iconBg="bg-amber-50" border="border-amber-100"/>
+        <a href ="/clinic/inquiries">
         <PulseCard title="Inquiries" value ="3" subtext="2 unread messages" icon={<MessageCircle size={24} />} color="text-teal-600" iconBg="bg-teal-50" border="border-teal-100"/>
+        </a>
         <PulseCard title="Completed Today" value="7" subtext="of 12 appointments" icon={<CheckCircle2 size={24} />} color="text-green-600" iconBg="bg-green-50" border="border-green-100"/>
       </div>
 

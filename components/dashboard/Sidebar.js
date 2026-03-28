@@ -6,7 +6,7 @@ export default function Sidebar({ buttons, className = '', children }) {
   const pathname = usePathname();
 
   return (
-    <div className={`w-56 shrink-0 sticky top-0 h-screen overflow-y-auto bg-white border-r border-gray-200 p-4 ${className}`}>
+    <div className={`w-56 shrink-0 sticky top-0 h-screen overflow-y-auto bg-white border-r border-gray-200 pt-8 px-2 space-y-3 ${className}`}>
       {buttons.map((b) => (
         <Link
           key={b.label}
