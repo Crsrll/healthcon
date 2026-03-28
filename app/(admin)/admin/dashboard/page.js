@@ -92,37 +92,36 @@ export default function AdminDashboard() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
-                        {clinics.map((clinic) => (
-                          <tr key={clinic.id} className="hover:bg-slate-50 transition-colors">
-                            <td className="px-6 py-4 font-bold text-slate-700">{clinic.name}</td>
-                            <td className="px-6 py-4 text-slate-500 text-xs">{clinic.owner}</td>
-                            <td className="px-6 py-4 text-slate-500 text-xs">{clinic.city}</td>
-                            <td className="px-6 py-4 text-slate-400 text-xs">{clinic.date}</td>
-                            <td className="px-6 py-4 flex items-center gap-2">
-                              {/* 3. Trigger Modal on Click */}
-                              <button 
-                                onClick={() => handleOpenModal("approve", clinic)}
-                                className="bg-teal-600 text-white px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase hover:bg-teal-700 transition-all"
-                              >
-                                Approve
-                              </button>
-                              <button 
-                                onClick={() => handleOpenModal("review", clinic)}
-                                className="border border-slate-200 text-slate-400 px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase hover:bg-slate-50 transition-all"
-                              >
-                                Review
-                              </button>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </section>
+                {clinics.map((clinic) => (
+                  <tr key={clinic.id} className="hover:bg-slate-50 transition-colors">
+                    <td className="px-6 py-4 font-bold text-slate-700">{clinic.name}</td>
+                    <td className="px-6 py-4 text-slate-500 text-xs">{clinic.owner}</td>
+                    <td className="px-6 py-4 text-slate-500 text-xs">{clinic.city}</td>
+                    <td className="px-6 py-4 text-slate-400 text-xs">{clinic.date}</td>
+                    <td className="px-6 py-4 flex items-center gap-2">
+                      {/* 3. Trigger Modal on Click */}
+                      <button 
+                        onClick={() => handleOpenModal("approve", clinic)}
+                        className="bg-teal-600 text-white px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase hover:bg-teal-700 transition-all"
+                      >
+                        Approve
+                      </button>
+                      <button 
+                        onClick={() => handleOpenModal("review", clinic)}
+                        className="border border-slate-200 text-slate-400 px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase hover:bg-slate-50 transition-all"
+                      >
+                        Review
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </section>
 
 
           {/* ANALYTICS ROW */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-
             {/* Revenue Breakdown */}
             <section className="bg-white rounded-2xl border border-slate-200 shadow-sm p-5">
               <h3 className="font-bold text-slate-800 text-sm mb-4">Revenue Breakdown</h3>
@@ -191,9 +190,8 @@ export default function AdminDashboard() {
         </div>
 
         {/* RIGHT col */}
-        <aside className="space-y-6">
-
-          <section className="bg-white rounded-2xl border border-slate-200 shadow-sm flex flex-col h-[295px] overflow-hidden">
+        <aside className="space-y-6.5">
+          <section className="bg-white rounded-2xl border border-slate-200 shadow-sm flex flex-col h-[300px] overflow-hidden">
             {/* Header */}
             <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between bg-white shrink-0">
               <h3 className="font-bold text-slate-800 text-sm">System Audit Log</h3>
@@ -219,7 +217,7 @@ export default function AdminDashboard() {
 
             {/* Footer Action */}
             <div className="px-5 py-2 border-t border-slate-50 bg-slate-50/50 shrink-0">
-              <button className="text-[10px] font-bold text-slate-400 hover:text-teal-600 uppercase tracking-widest w-full text-center transition-colors">
+              <button className="text-[11px] font-bold text-slate-400 hover:text-teal-600 uppercase tracking-widest w-full text-center transition-colors">
                 View Full History →
               </button>
             </div>
