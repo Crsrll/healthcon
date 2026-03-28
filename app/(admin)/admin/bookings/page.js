@@ -40,11 +40,7 @@ export default function BookingsPage() {
       </div>
 
       {/* Summary cards */}
-<<<<<<< HEAD
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-=======
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
->>>>>>> main
         {[
           { label:"Pending",   count: counts.Pending,   color:"text-amber-600", bg:"bg-amber-50"  },
           { label:"Confirmed", count: counts.Confirmed, color:"text-blue-600",  bg:"bg-blue-50"   },

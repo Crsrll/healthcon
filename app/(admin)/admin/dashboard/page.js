@@ -27,11 +27,32 @@ const auditLogs = [
 ];
 
 export default function AdminDashboard() {
+    const [modalType, setModalType] = useState("");
+    const handleOpenModal = (type, clinic) => {
+      setModalType(type);
+      setSelectedClinic(clinic);
+      setIsModalOpen(true);
+    };
+
+
+    const [clinics, setClinics] = useState(pendingClinics);
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [selectedClinic, setSelectedClinic] = useState(null);
+      const handleApproveClick = (clinic) => {
+        setSelectedClinic(clinic);
+        setIsModalOpen(true);
+      };
+
+       const handleConfirmApproval = () => {
+        setClinics(prev => prev.filter(c => c.id !== selectedClinic.id));
+        setIsModalOpen(false);
+        alert(`${selectedClinic.name} has been approved!`);
+    };
+
   return (
     <main className="p-6 space-y-6 animate-in fade-in duration-500">
 
       {/* KPI CARDS */}
-
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">  
         <PulseCard title="Total Clinics" value="142" valueClass="text-2xl" subtext="12 pending approval" icon={<Building2 size={24} />} color="text-blue-600" iconBg="bg-blue-50" border="border-blue-200" />
         <PulseCard title="Total Users"value="10,390" valueClass="text-2xl" subtext="Patients and Clinics" icon={<Users size={24} />} color="text-emerald-600" iconBg="bg-emerald-50" border="border-emerald-200" />
@@ -70,29 +91,34 @@ export default function AdminDashboard() {
                   ))}
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-50">
-                {pendingClinics.map(clinic => (
-                  <tr key={clinic.id} className="hover:bg-slate-50 transition-colors">
-                    <td className="px-6 py-4 font-semibold text-slate-800">{clinic.name}</td>
-                    <td className="px-6 py-4 text-slate-500 text-xs">{clinic.owner}</td>
-                    <td className="px-6 py-4 text-slate-500 text-xs">{clinic.city}</td>
-                    <td className="px-6 py-4 text-slate-400 text-xs">{clinic.date}</td>
-                    <td className="px-6 py-4 flex items-center gap-2">
-                      <button className="bg-teal-500 hover:bg-teal-400 text-white px-3 py-1.5
-                                         rounded-lg text-[10px] font-bold uppercase transition-colors">
-                        Approve
-                      </button>
-                      <button className="border border-slate-200 hover:border-blue-300
-                                         text-slate-500 hover:text-blue-600 px-3 py-1.5
-                                         rounded-lg text-[10px] font-bold uppercase transition-colors">
-                        Review
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </section>
+              <tbody className="divide-y divide-slate-100">
+                        {clinics.map((clinic) => (
+                          <tr key={clinic.id} className="hover:bg-slate-50 transition-colors">
+                            <td className="px-6 py-4 font-bold text-slate-700">{clinic.name}</td>
+                            <td className="px-6 py-4 text-slate-500 text-xs">{clinic.owner}</td>
+                            <td className="px-6 py-4 text-slate-500 text-xs">{clinic.city}</td>
+                            <td className="px-6 py-4 text-slate-400 text-xs">{clinic.date}</td>
+                            <td className="px-6 py-4 flex items-center gap-2">
+                              {/* 3. Trigger Modal on Click */}
+                              <button 
+                                onClick={() => handleOpenModal("approve", clinic)}
+                                className="bg-teal-600 text-white px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase hover:bg-teal-700 transition-all"
+                              >
+                                Approve
+                              </button>
+                              <button 
+                                onClick={() => handleOpenModal("review", clinic)}
+                                className="border border-slate-200 text-slate-400 px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase hover:bg-slate-50 transition-all"
+                              >
+                                Review
+                              </button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </section>
+
 
           {/* ANALYTICS ROW */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -167,23 +193,35 @@ export default function AdminDashboard() {
         {/* RIGHT col */}
         <aside className="space-y-6">
 
-          {/* Audit log */}
-          <section className="bg-white rounded-2xl border border-slate-200 shadow-sm
-                              flex flex-col overflow-hidden">
-            <div className="px-5 py-4 border-b border-slate-100 flex items-center
-                            justify-between">
+          <section className="bg-white rounded-2xl border border-slate-200 shadow-sm flex flex-col h-[295px] overflow-hidden">
+            {/* Header */}
+            <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between bg-white shrink-0">
               <h3 className="font-bold text-slate-800 text-sm">System Audit Log</h3>
-              <span className="text-[10px] text-slate-400 uppercase font-bold">Live</span>
+              <div className="flex items-center gap-1.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-teal-500 animate-pulse" />
+                <span className="text-[10px] text-slate-400 uppercase font-black tracking-widest">Live</span>
+              </div>
             </div>
-            <div className="p-4 space-y-3 overflow-y-auto max-h-64">
+
+            {/* Scrollable Content */}
+            <div className="flex-1 p-5 space-y-5 overflow-y-auto custom-scrollbar">
               {auditLogs.map((log, i) => (
-                <div key={i} className={`border-l-2 ${log.color} pl-3 py-0.5`}>
-                  <p className="font-semibold text-slate-700 text-xs">{log.action}</p>
-                  <p className="text-[10px] text-slate-400 uppercase font-bold mt-0.5">
-                    {log.time}
+                <div key={i} className={`border-l-2 ${log.color || 'border-slate-200'} pl-4 py-1 group cursor-default`}>
+                  <p className="font-bold text-slate-700 text-[13px] group-hover:text-teal-600 transition-colors">
+                    {log.action}
+                  </p>
+                  <p className="text-[10px] text-slate-400 uppercase font-bold mt-1 tracking-tighter">
+                    {log.time} • System Node 01
                   </p>
                 </div>
               ))}
+            </div>
+
+            {/* Footer Action */}
+            <div className="px-5 py-2 border-t border-slate-50 bg-slate-50/50 shrink-0">
+              <button className="text-[10px] font-bold text-slate-400 hover:text-teal-600 uppercase tracking-widest w-full text-center transition-colors">
+                View Full History →
+              </button>
             </div>
           </section>
 
