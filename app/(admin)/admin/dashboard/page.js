@@ -1,6 +1,8 @@
 "use client";
+import { useState } from "react";
 import PulseCard from "@/components/ui/PulseCard";
-import { Building2, Users, CalendarCheck, Banknote } from "lucide-react";
+import Modal from "@/components/ui/Modal";
+import { Building2, Users, CalendarCheck, Banknote, AlertCircle, FileText } from "lucide-react";
 
 const pendingClinics = [
   { id: 1, name: "City Care Plus",  owner: "Dr. Alon",    city: "Davao City", date: "2 hrs ago" },
@@ -21,19 +23,41 @@ const auditLogs = [
   { action: "High Traffic Alert",               time: "3h ago",  color: "border-red-400",   dot: "bg-red-400"   },
   { action: "DB Backup Completed",              time: "5h ago",  color: "border-teal-400",  dot: "bg-teal-400"  },
   { action: "Doctor Flagged for Review",        time: "6h ago",  color: "border-amber-400", dot: "bg-amber-400" },
-  // { action: "System Settings Updated",          time: "8h ago",  color: "border-slate-300", dot: "bg-slate-400" },
+  { action: "System Settings Updated",          time: "8h ago",  color: "border-slate-300", dot: "bg-slate-400" },
 ];
 
 export default function AdminDashboard() {
+    const [modalType, setModalType] = useState("");
+    const handleOpenModal = (type, clinic) => {
+      setModalType(type);
+      setSelectedClinic(clinic);
+      setIsModalOpen(true);
+    };
+
+
+    const [clinics, setClinics] = useState(pendingClinics);
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [selectedClinic, setSelectedClinic] = useState(null);
+      const handleApproveClick = (clinic) => {
+        setSelectedClinic(clinic);
+        setIsModalOpen(true);
+      };
+
+       const handleConfirmApproval = () => {
+        setClinics(prev => prev.filter(c => c.id !== selectedClinic.id));
+        setIsModalOpen(false);
+        alert(`${selectedClinic.name} has been approved!`);
+    };
+
   return (
     <main className="p-6 space-y-6 animate-in fade-in duration-500">
 
       {/* KPI CARDS */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <PulseCard title="Total Clinics"   value="142"     subtext="12 pending approval"    icon={<Building2 size={20}/>}     color="text-blue-600"    iconBg="bg-blue-50"    border="border-blue-200"   />
-        <PulseCard title="Total Users"     value="10,390"  subtext="Patients and clinics"   icon={<Users size={20}/>}         color="text-emerald-600" iconBg="bg-emerald-50" border="border-emerald-200"/>
-        <PulseCard title="Active Bookings" value="1,205"   subtext="Live across platform"   icon={<CalendarCheck size={20}/>} color="text-indigo-600"  iconBg="bg-indigo-50"  border="border-indigo-200" />
-        <PulseCard title="Revenue"         value="₱250.8k" subtext="Commission (March)"     icon={<Banknote size={20}/>}      color="text-emerald-600" iconBg="bg-emerald-50" border="border-emerald-200"/>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">  
+        <PulseCard title="Total Clinics" value="142" valueClass="text-2xl" subtext="12 pending approval" icon={<Building2 size={24} />} color="text-blue-600" iconBg="bg-blue-50" border="border-blue-200" />
+        <PulseCard title="Total Users"value="10,390" valueClass="text-2xl" subtext="Patients and Clinics" icon={<Users size={24} />} color="text-emerald-600" iconBg="bg-emerald-50" border="border-emerald-200" />
+        <PulseCard title="Active Bookings" value="1,205" valueClass="text-2xl" subtext="Live across platform" icon={<CalendarCheck size={24} />} color="text-indigo-600" iconBg="bg-indigo-50" border="border-indigo-200" />
+        <PulseCard title="Revenue" value="₱250.8k" valueClass="text-2xl" subtext="Commission (March)" icon={<Banknote size={24} />} color="text-emerald-600" iconBg="bg-emerald-50" border="border-emerald-200" />
       </div>
 
       {/* MAIN GRID */}
@@ -67,29 +91,34 @@ export default function AdminDashboard() {
                   ))}
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-50">
-                {pendingClinics.map(clinic => (
-                  <tr key={clinic.id} className="hover:bg-slate-50 transition-colors">
-                    <td className="px-6 py-4 font-semibold text-slate-800">{clinic.name}</td>
-                    <td className="px-6 py-4 text-slate-500 text-xs">{clinic.owner}</td>
-                    <td className="px-6 py-4 text-slate-500 text-xs">{clinic.city}</td>
-                    <td className="px-6 py-4 text-slate-400 text-xs">{clinic.date}</td>
-                    <td className="px-6 py-4 flex items-center gap-2">
-                      <button className="bg-teal-500 hover:bg-teal-400 text-white px-3 py-1.5
-                                         rounded-lg text-[10px] font-bold uppercase transition-colors">
-                        Approve
-                      </button>
-                      <button className="border border-slate-200 hover:border-blue-300
-                                         text-slate-500 hover:text-blue-600 px-3 py-1.5
-                                         rounded-lg text-[10px] font-bold uppercase transition-colors">
-                        Review
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </section>
+              <tbody className="divide-y divide-slate-100">
+                        {clinics.map((clinic) => (
+                          <tr key={clinic.id} className="hover:bg-slate-50 transition-colors">
+                            <td className="px-6 py-4 font-bold text-slate-700">{clinic.name}</td>
+                            <td className="px-6 py-4 text-slate-500 text-xs">{clinic.owner}</td>
+                            <td className="px-6 py-4 text-slate-500 text-xs">{clinic.city}</td>
+                            <td className="px-6 py-4 text-slate-400 text-xs">{clinic.date}</td>
+                            <td className="px-6 py-4 flex items-center gap-2">
+                              {/* 3. Trigger Modal on Click */}
+                              <button 
+                                onClick={() => handleOpenModal("approve", clinic)}
+                                className="bg-teal-600 text-white px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase hover:bg-teal-700 transition-all"
+                              >
+                                Approve
+                              </button>
+                              <button 
+                                onClick={() => handleOpenModal("review", clinic)}
+                                className="border border-slate-200 text-slate-400 px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase hover:bg-slate-50 transition-all"
+                              >
+                                Review
+                              </button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </section>
+
 
           {/* ANALYTICS ROW */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -164,23 +193,35 @@ export default function AdminDashboard() {
         {/* RIGHT col */}
         <aside className="space-y-6">
 
-          {/* Audit log */}
-          <section className="bg-white rounded-2xl border border-slate-200 shadow-sm
-                              flex flex-col overflow-hidden">
-            <div className="px-5 py-4 border-b border-slate-100 flex items-center
-                            justify-between">
+          <section className="bg-white rounded-2xl border border-slate-200 shadow-sm flex flex-col h-[295px] overflow-hidden">
+            {/* Header */}
+            <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between bg-white shrink-0">
               <h3 className="font-bold text-slate-800 text-sm">System Audit Log</h3>
-              <span className="text-[10px] text-slate-400 uppercase font-bold">Live</span>
+              <div className="flex items-center gap-1.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-teal-500 animate-pulse" />
+                <span className="text-[10px] text-slate-400 uppercase font-black tracking-widest">Live</span>
+              </div>
             </div>
-            <div className="p-4 space-y-3 overflow-y-auto max-h-64">
+
+            {/* Scrollable Content */}
+            <div className="flex-1 p-5 space-y-5 overflow-y-auto custom-scrollbar">
               {auditLogs.map((log, i) => (
-                <div key={i} className={`border-l-2 ${log.color} pl-3 py-0.5`}>
-                  <p className="font-semibold text-slate-700 text-xs">{log.action}</p>
-                  <p className="text-[10px] text-slate-400 uppercase font-bold mt-0.5">
-                    {log.time}
+                <div key={i} className={`border-l-2 ${log.color || 'border-slate-200'} pl-4 py-1 group cursor-default`}>
+                  <p className="font-bold text-slate-700 text-[13px] group-hover:text-teal-600 transition-colors">
+                    {log.action}
+                  </p>
+                  <p className="text-[10px] text-slate-400 uppercase font-bold mt-1 tracking-tighter">
+                    {log.time} • System Node 01
                   </p>
                 </div>
               ))}
+            </div>
+
+            {/* Footer Action */}
+            <div className="px-5 py-2 border-t border-slate-50 bg-slate-50/50 shrink-0">
+              <button className="text-[10px] font-bold text-slate-400 hover:text-teal-600 uppercase tracking-widest w-full text-center transition-colors">
+                View Full History →
+              </button>
             </div>
           </section>
 
@@ -250,6 +291,47 @@ export default function AdminDashboard() {
           </section>
         </aside>
       </div>
+      {/* 4. THE MODAL COMPONENT */}
+      <Modal 
+        isOpen={isModalOpen} 
+        onClose={() => setIsModalOpen(false)} 
+        title={modalType === "approve" ? "Confirm Approval" : "Clinic Review Details"}
+      >
+        {modalType === "approve" ? (
+          <div className="space-y-6">
+            <div className="flex items-center gap-4 bg-blue-50 p-4 rounded-2xl">
+               <AlertCircle className="text-blue-600" size={24} />
+               <div>
+                 <p className="text-xs font-bold text-blue-400 uppercase tracking-widest">Verify Clinic</p>
+                 <h4 className="text-base font-black text-slate-800">{selectedClinic?.name}</h4>
+               </div>
+            </div>
+            <p className="text-sm text-slate-500">Approve this clinic to make it live on the platform directory?</p>
+            <div className="flex gap-3">
+              <button onClick={handleConfirmApproval} className="flex-1 bg-teal-600 text-white py-3 rounded-2xl font-bold uppercase text-xs">Confirm Approval</button>
+              <button onClick={() => setIsModalOpen(false)} className="flex-1 bg-slate-100 text-slate-400 py-3 rounded-2xl font-bold uppercase text-xs">Cancel</button>
+            </div>
+          </div>
+        ) : (
+          <div className="space-y-6">
+            <div className="p-5 bg-slate-50 rounded-3xl border border-slate-100">
+               <h3 className="font-black text-xl text-slate-800">{selectedClinic?.name}</h3>
+               <p className="text-xs text-slate-400 font-bold uppercase mt-1">{selectedClinic?.city} · {selectedClinic?.owner}</p>
+            </div>
+            <div className="space-y-3">
+               <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Verification Documents</p>
+               <div className="flex items-center justify-between p-3 bg-white border border-slate-100 rounded-xl">
+                  <div className="flex items-center gap-3">
+                    <FileText className="text-teal-500" size={18} />
+                    <span className="text-xs font-semibold text-slate-600">Business_Permit.pdf</span>
+                  </div>
+                  <button className="text-[10px] font-bold text-teal-600 underline">View</button>
+               </div>
+            </div>
+            <button onClick={() => setIsModalOpen(false)} className="w-full bg-slate-800 text-white py-3 rounded-2xl font-bold uppercase text-xs">Close Review</button>
+          </div>
+        )}
+      </Modal>
     </main>
   );
 }
