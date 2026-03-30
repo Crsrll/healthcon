@@ -1,3 +1,5 @@
+"use client";
+
 import { createContext, useContext, useState } from "react";
 
 const AuthContext = createContext();
@@ -16,7 +18,7 @@ export function AuthProvider({ children }) {
 
   const acceptedAccounts = [
     { username: "melissa", password: "patient123", role: "patient", isApproved: true },
-    { username: "drsmith", password: "doctor123", role: "doctor", isApproved: true },
+    { username: "drsmith", password: "clinic123", role: "clinic", isApproved: true },
     { username: "adminuser", password: "admin123", role: "admin", isApproved: true },
   ];
 
@@ -34,14 +36,14 @@ export function AuthProvider({ children }) {
 
   const logout = () => setUser(null);
 
-  const value = {
-    user,
-    login,
-    logout
-  };
+  // const value = {
+  //   user,
+  //   login,
+  //   logout
+  // };
 
   return (
-    <AuthContext.Provider value={value}>
+    <AuthContext.Provider value={{ user, login, logout }}>
       {children}
     </AuthContext.Provider>
   );

@@ -2,8 +2,16 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState, useRef, useEffect } from "react";
+import { useAuth } from "@/context/authContext";
 
 export default function Navbar() {
+  const { user, logout } = useAuth();
+
+  const handleLogout = () => {
+    logout();            // clear user from context
+    router.push("/");    // redirect to homepage or login
+  };
+
   const pathname = usePathname();
 
   const isPatient = pathname?.startsWith("/patient");
@@ -149,7 +157,7 @@ export default function Navbar() {
                     
                     <hr className="border-slate-100 my-1" />
                     
-                    <Link href="/" className="flex items-center gap-2 px-4 py-2 text-xs text-red-600 font-semibold hover:bg-red-50 transition-colors"
+                    <Link href="/" onClick={handleLogout} className="flex items-center gap-2 px-4 py-2 text-xs text-red-600 font-semibold hover:bg-red-50 transition-colors"
                     >
                       Log Out
                     </Link>
