@@ -31,7 +31,8 @@ export default function Footer() {
           onClick={() => router.push("/")}
           style={{ color: "#fff", fontWeight: 700, fontSize: 17, cursor: "pointer" }}
         >
-          <span style={{ color: "#60a5fa" }}>✚</span> HealthCon
+          <img src="/logo.png" alt="HealthCon" style={{ height: 36, objectFit: "contain" }} /> 
+             <span>Health<span className="text-healthcon-teal">con</span></span>
         </div>
 
         {/* Links */}

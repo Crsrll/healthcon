@@ -115,11 +115,6 @@ export default function ClinicLoginPage() {
               ← Back to Patient Sign In
             </button>
 
-            <div className="flex items-center gap-3 mb-4">
-              <div className="w-12 h-12 rounded-xl flex items-center justify-center text-2xl bg-white/10">
-                🏥
-              </div>
-            </div>
 
             <p className="text-blue-400 font-bold text-xs uppercase tracking-[6px] mb-3">HealthCon Platform</p>
             <h2 className="text-white font-black text-5xl uppercase leading-none tracking-tighter mb-4">
@@ -133,10 +128,8 @@ export default function ClinicLoginPage() {
 
           {/* Logo */}
           <div className="absolute bottom-12 z-10 flex items-center gap-3" style={{ left: 80 }}>
-            <div className="w-10 h-10 rounded-xl bg-blue-600 flex items-center justify-center shadow-lg shadow-blue-600/30">
-              <span className="text-white font-black text-xl">H</span>
-            </div>
-            <span className="text-white/30 font-bold tracking-widest text-xs uppercase">HealthCon</span>
+            <img src="/logo.png" alt="HealthCon" style={{ height: 36, objectFit: "contain" }} /> 
+             <span>Health<span className="text-healthcon-teal">con</span></span>
           </div>
         </div>
 
@@ -186,7 +179,7 @@ export default function ClinicLoginPage() {
 
               {/* Patient Login */}
               <button className="patient-btn" onClick={() => router.push('/auth/login')}>
-                👤 Are you a Patient? Sign in here
+                Are you a Patient? Sign in here
               </button>
 
             </div>

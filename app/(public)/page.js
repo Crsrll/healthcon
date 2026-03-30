@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 
+
 const styles = `
   @keyframes fadeSlideUp {
     from { opacity: 0; transform: translateY(24px); }
@@ -93,7 +94,8 @@ export default function LandingPage() {
       }}>
         <div style={container} className="flex items-center justify-between text-white">
           <div className="flex items-center gap-2 font-bold cursor-pointer" style={{ fontSize: 20 }} onClick={() => router.push("/")}>
-            <span style={{ color: "#60a5fa" }}>✚</span> HealthCon
+             <img src="/logo.png" alt="HealthCon" style={{ height: 36, objectFit: "contain" }} /> 
+             <span>Health<span className="text-healthcon-teal">con</span></span>
           </div>
           <div className="flex items-center gap-8">
             <span className="nav-link" onClick={handleAboutClick}>About</span>
@@ -121,12 +123,16 @@ export default function LandingPage() {
               HealthCon is your smart clinic queue platform — skip the waiting room and get real medical care from licensed doctors, wherever you are.
             </p>
             <div className="hero-text hero-text-4 flex gap-3 flex-wrap pt-1">
-              <button className="btn-primary" onClick={() => router.push("/signup")}>Book Appointments Now ↗</button>
+              <button className="btn-primary" onClick={() => router.push("/auth/register")}>Book Appointments Now ↗</button>
               <button className="btn-secondary" onClick={handleLearnMoreClick}>Learn more</button>
             </div>
           </div>
-          <div className="hidden lg:flex items-center justify-center bg-white/5 border border-white/10 rounded-2xl italic text-white/20" style={{ height: 300, fontSize: 15 }}>
-            Doctor consultation image placeholder
+          <div className="hidden lg:flex items-center justify-center" style={{ height: 340 }}>
+            <img
+              src="/img1.png"
+              alt="Doctor consultation"
+              style={{ height: "154%", width: "135%", objectFit: "contain", objectPosition: "center" }}
+            />
           </div>
         </div>
       </section>
@@ -208,7 +214,7 @@ export default function LandingPage() {
             Join thousands of patients who've already made the switch to smarter, faster healthcare with HealthCon.
           </p>
           <div className="pt-2">
-            <button className="btn-cta" onClick={() => router.push("/signup")}>Book Appointments Now ↗</button>
+            <button className="btn-cta" onClick={() => router.push("/auth/register")}>Book Appointments Now ↗</button>
           </div>
         </div>
       </section>

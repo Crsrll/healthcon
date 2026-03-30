@@ -45,10 +45,8 @@ export default function RegisterPage() {
 
         {/* Logo bottom left */}
         <div className="absolute bottom-12 z-10 flex items-center gap-3" style={{ left: 80 }}>
-          <div className="w-10 h-10 rounded-xl bg-blue-600 flex items-center justify-center shadow-lg shadow-blue-600/30">
-            <span className="text-white font-black text-xl">H</span>
-          </div>
-          <span className="text-white/30 font-bold tracking-widest text-xs uppercase">HealthCon</span>
+          <img src="/logo.png" alt="HealthCon" style={{ height: 36, objectFit: "contain" }} /> 
+             <span>Health<span className="text-healthcon-teal">con</span></span>
         </div>
       </div>
 
@@ -123,7 +121,7 @@ export default function RegisterPage() {
               className="w-full rounded-2xl border-2 border-blue-600 text-blue-600 font-black text-base hover:bg-blue-600 hover:text-white active:scale-[0.98] transition-all duration-300"
               style={{ paddingTop: 16, paddingBottom: 16 }}
             >
-              🏥 Are you a Clinic? Register here
+              Are you a Clinic? Register here
             </button>
           </form>
 

@@ -100,13 +100,6 @@ export default function RegisterClinicPage() {
               ← Back to Patient Sign Up
             </button>
 
-            <div className="flex items-center gap-3 mb-4">
-              <div className="w-12 h-12 rounded-xl flex items-center justify-center text-2xl"
-                style={{ background: "rgba(255,255,255,0.15)" }}>
-                🏥
-              </div>
-            </div>
-
             <h2 className="text-white font-black uppercase leading-none tracking-tighter m-0" style={{ fontSize: 48 }}>
               CLINIC<br />SIGN UP
             </h2>
@@ -120,10 +113,8 @@ export default function RegisterClinicPage() {
 
           {/* Bottom Logo */}
           <div className="absolute bottom-12 z-10 flex items-center gap-3" style={{ left: 64 }}>
-            <div className="w-10 h-10 rounded-xl bg-blue-600 flex items-center justify-center shadow-lg">
-              <span className="text-white font-black text-lg">H</span>
-            </div>
-            <span className="font-bold uppercase tracking-widest text-xs" style={{ color: "rgba(255,255,255,0.3)" }}>HealthCon</span>
+            <img src="/logo.png" alt="HealthCon" style={{ height: 36, objectFit: "contain" }} /> 
+             <span>Health<span className="text-healthcon-teal">con</span></span>
           </div>
         </div>
 
