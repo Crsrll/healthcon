@@ -17,7 +17,7 @@ export default function MockLoginPage() {
         
         {/* Logo Section */}
         <div className="flex flex-col items-center mb-8">
-          <div className="w-16 h-16 bg-[#1a365d] rounded-2xl flex items-center justify-center mb-4 shadow-lg">
+          <div className="w-16 h-16 bg-healthcon-blue rounded-2xl flex items-center justify-center mb-4 shadow-lg">
             <img src="/logo.png" alt="Healthcon" className="w-10 h-10" />
           </div>
           <h1 className="text-2xl font-bold text-slate-800">
@@ -37,7 +37,7 @@ export default function MockLoginPage() {
           {/* THE ONE CLICK BUTTON */}
           <button
             onClick={handleQuickLogin}
-            className="w-full bg-[#1a365d] hover:bg-[#254a7c] text-white py-4 rounded-2xl font-bold shadow-lg shadow-blue-900/20 transition-all active:scale-95 flex items-center justify-center gap-3"
+            className="w-full bg-healthcon-blue hover:bg-[#254a7c] text-white py-4 rounded-2xl font-bold shadow-lg shadow-blue-900/20 transition-all active:scale-95 flex items-center justify-center gap-3"
           >
             <span>Enter Dashboard</span>
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="w-5 h-5">
