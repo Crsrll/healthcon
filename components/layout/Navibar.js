@@ -31,10 +31,10 @@ export default function Navbar() {
         className={`fixed top-0 left-0 right-0 z-50 bg-[#122844] transition-all duration-300 ${
           scrolled
             ? "py-3 shadow-[0_4px_20px_rgba(0,0,0,0.3)]"
-            : "py-[18px]"
+            : "py-4.5"
         }`}
       >
-        <div className="max-w-[1280px] mx-auto px-12 flex items-center justify-between text-white">
+        <div className="max-w-7xl mx-auto px-12 flex items-center justify-between text-white">
           
           {/* Logo */}
           <div
@@ -61,7 +61,7 @@ export default function Navbar() {
               className="text-[12px] font-bold uppercase tracking-widest cursor-pointer relative group"
             >
               About
-              <span className="absolute left-0 bottom-0 w-0 h-[2px] bg-cyan-300 transition-all duration-200 group-hover:w-full"></span>
+              <span className="absolute left-0 bottom-0 w-0 h-0.5 bg-cyan-300 transition-all duration-200 group-hover:w-full"></span>
             </span>
   
             <span
@@ -69,16 +69,16 @@ export default function Navbar() {
               className="text-[12px] font-bold uppercase tracking-widest cursor-pointer relative group"
             >
               Sign Up
-              <span className="absolute left-0 bottom-0 w-0 h-[2px] bg-cyan-300 transition-all duration-200 group-hover:w-full"></span>
+              <span className="absolute left-0 bottom-0 w-0 h-0.5 bg-cyan-300 transition-all duration-200 group-hover:w-full"></span>
             </span>
   
             {/* Button */}
             <button
               onClick={() => router.push("/auth/login")}
-              className="bg-[#2f80d0] px-[22px] py-[9px] text-[14px] font-bold rounded-[10px]
+              className="bg-[#2f80d0] px-5.5 py-2.25 text-[14px] font-bold rounded-[10px]
                          shadow-[0_4px_14px_rgba(47,128,208,0.35)]
                          transition-all duration-200
-                         hover:-translate-y-[3px] hover:scale-[1.03]
+                         hover:-translate-y-0.75 hover:scale-[1.03]
                          hover:shadow-[0_10px_28px_rgba(47,128,208,0.5)]
                          hover:bg-[#1a6dbf]"
             >
