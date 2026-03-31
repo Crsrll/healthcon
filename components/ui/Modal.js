@@ -8,7 +8,6 @@ export default function Modal({ isOpen, onClose, title, children }) {
         onClick={onClose} 
       />
 
-      {/* 2. Modal Content Box */}
       <div className="relative bg-white rounded-3xl shadow-2xl max-w-lg w-full overflow-hidden animate-in zoom-in-95 duration-200">
         <div className="px-6 py-4 border-b border-slate-100 flex justify-between items-center">
           <h3 className="font-bold text-slate-800">{title}</h3>
@@ -16,7 +15,7 @@ export default function Modal({ isOpen, onClose, title, children }) {
         </div>
         
         <div className="p-6">
-          {children} {/* This is where your specific content goes */}
+          {children}
         </div>
       </div>
     </div>

@@ -1,56 +1,67 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react"; 
+import { useSearchParams } from "next/navigation";
 import Modal from "@/components/ui/Modal";
+import { Search, UserPlus, Edit, Trash2 } from "lucide-react";
 
 export default function DoctorsPage() {
+  const searchParams = useSearchParams();
+  const urlQuery = searchParams.get("q") || "";
+
   const [doctors, setDoctors] = useState([
-    { id: '1', name: 'Dr. Ben Villanueva', spec: 'Internal Medicine', schedule: 'Mon–Fri, 8AM–12PM', available: true },
-    { id: '2', name: 'Dr. Claire Mendoza', spec: 'Ob-Gyne', schedule: 'Tue, Thu, 1PM–5PM', available: true },
-    { id: '3', name: 'Dr. Paolo Gutierrez', spec: 'General Practice', schedule: 'Mon, Wed, Fri', available: false },
+    { id: '1', name: 'Dr. Ben Villanueva', spec: 'Internal Medicine', schedule: 'Mon–Fri, 8AM–12PM', available: true, status: 'active' },
+    { id: '2', name: 'Dr. Claire Mendoza', spec: 'Ob-Gyne', schedule: 'Tue, Thu, 1PM–5PM', available: true, status: 'active' },
+    { id: '3', name: 'Dr. Paolo Gutierrez', spec: 'General Practice', schedule: 'Mon, Wed, Fri', available: false, status: 'inactive' },
   ]);
 
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [searchQuery, setSearchQuery] = useState("");
-  
+  const [search, setSearch] = useState(urlQuery);
+  const [filter, setFilter] = useState("All");
   const [editingId, setEditingId] = useState(null); 
+  const [formData, setFormData] = useState({ name: "", spec: "", schedule: "", available: "Available" });
 
-  const [formData, setFormData] = useState({
-    name: "",
-    spec: "",
-    schedule: "",
-    available: "Available",
+  // Sync local search state with URL query from Layout
+  useEffect(() => {
+    setSearch(urlQuery);
+  }, [urlQuery]);
+
+  // --- CONSOLIDATED FILTER LOGIC ---
+  const filteredDoctors = doctors.filter(doc => {
+    const q = search.toLowerCase();
+    const matchSearch = doc.name.toLowerCase().includes(q) || doc.spec.toLowerCase().includes(q);
+    const matchTab = filter === "All" || doc.status === filter.toLowerCase();
+    return matchSearch && matchTab;
   });
 
-  // --- LOGIC: Handle Add vs Edit ---
+  // --- HANDLERS ---
   const handleSaveDoctor = (e) => {
     e.preventDefault();
+    const isAvailable = formData.available === "Available";
+    const currentStatus = isAvailable ? 'active' : 'inactive';
 
     if (editingId) {
-      setDoctors(doctors.map(doc => 
-        doc.id === editingId 
-          ? { ...doc, ...formData, available: formData.available === "Available" } 
-          : doc
+      setDoctors(doctors.map(d => d.id === editingId 
+        ? { ...d, ...formData, available: isAvailable, status: currentStatus } 
+        : d
       ));
     } else {
-      const entry = {
-        id: Date.now().toString(),
-        ...formData,
-        available: formData.available === "Available"
-      };
-      setDoctors([...doctors, entry]);
+      setDoctors([...doctors, { 
+        id: Date.now().toString(), 
+        ...formData, 
+        available: isAvailable, 
+        status: currentStatus 
+      }]);
     }
-
     closeModal();
   };
 
-  // --- LOGIC: Open Modal for Edit ---
   const startEdit = (doc) => {
     setEditingId(doc.id);
-    setFormData({
-      name: doc.name,
-      spec: doc.spec,
-      schedule: doc.schedule,
-      available: doc.available ? "Available" : doc.busy ? "Busy" : "On Leave",
+    setFormData({ 
+      name: doc.name, 
+      spec: doc.spec, 
+      schedule: doc.schedule, 
+      available: doc.available ? "Available" : "On Leave" 
     });
     setIsModalOpen(true);
   };
@@ -62,37 +73,94 @@ export default function DoctorsPage() {
   };
 
   const removeDoctor = (id) => {
-    setDoctors(doctors.filter(doc => doc.id !== id));
+    if(confirm("Are you sure you want to remove this doctor?")) {
+        setDoctors(doctors.filter(d => d.id !== id));
+    }
   };
 
   const toggleAvailability = (id) => {
     setDoctors(doctors.map(doc => 
-      doc.id === id ? { ...doc, available: !doc.available } : doc
+      doc.id === id ? { ...doc, available: !doc.available, status: !doc.available ? 'active' : 'inactive' } : doc
     ));
   };
-
-  const filteredDoctors = doctors.filter(doc => 
-    doc.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    doc.spec.toLowerCase().includes(searchQuery.toLowerCase())
-  );
 
   return (
     <main className="max-w-7xl mx-auto px-6 py-8 space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-lg font-bold text-slate-800">Manage Doctors</h2>
-          <p className="text-xs text-slate-400 mt-0.5">Add, edit, or toggle doctor availability</p>
+          <h2 className="text-2xl font-black text-slate-800 tracking-tight">Doctor Registry</h2>
+          <p className="text-xs text-slate-400 font-bold uppercase tracking-widest mt-1">
+            {doctors.filter(d => d.status === 'active').length} Active · {doctors.length} Total
+          </p>
         </div>
-        <button 
-          onClick={() => setIsModalOpen(true)}
-          className="bg-teal-500 hover:bg-teal-400 text-white text-sm font-semibold px-5 py-2.5 rounded-xl transition-colors flex items-center gap-2"
-        >
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
-          Add Doctor
+        <button onClick={() => setIsModalOpen(true)} className="bg-teal-500 hover:bg-teal-400 text-white text-sm font-bold px-5 py-2.5 rounded-xl transition-all flex items-center gap-2 shadow-lg shadow-teal-500/20">
+          <UserPlus size={18} /> Add Doctor
         </button>
       </div>
 
-      {/* --- ADD/EDIT MODAL --- */}
+      {search && (
+        <div className="bg-blue-50 border border-blue-100 px-4 py-2 rounded-xl w-fit">
+          <p className="text-[10px] font-bold text-blue-600 uppercase tracking-widest">
+            Results for: <span className="text-slate-800">"{search}"</span>
+          </p>
+        </div>
+      )}
+
+      <section className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+        <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/30">
+          <div className="relative w-64">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+            <input 
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Filter list..." 
+              className="w-full border border-slate-200 rounded-xl pl-9 pr-4 py-2 text-sm outline-none focus:border-teal-400 transition-all bg-white" 
+            />
+          </div>
+          <div className="flex bg-slate-100 rounded-xl p-1 gap-1">
+            {["All","Active","Inactive"].map(tab => (
+              <button key={tab} onClick={() => setFilter(tab)}
+                className={`text-[10px] font-bold px-3 py-1.5 rounded-lg transition-all uppercase ${filter === tab ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-400'}`}>
+                {tab}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <table className="w-full text-left">
+          <thead>
+            <tr className="bg-slate-50/50 border-b border-slate-100">
+              {['Doctor', 'Specialization', 'Schedule', 'Status', 'Actions'].map(h => (
+                <th key={h} className="px-6 py-3 text-[10px] font-bold text-slate-400 uppercase tracking-widest">{h}</th>
+              ))}
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-slate-50">
+            {filteredDoctors.map(doc => (
+              <tr key={doc.id} className="hover:bg-slate-50/50 transition-colors group">
+                <td className="px-6 py-4 font-bold text-sm text-slate-800">{doc.name}</td>
+                <td className="px-6 py-4"><span className="text-[10px] font-bold bg-teal-50 text-teal-700 rounded-full px-2.5 py-1 uppercase">{doc.spec}</span></td>
+                <td className="px-6 py-4 text-xs text-slate-500">{doc.schedule}</td>
+                <td className="px-6 py-4">
+                  <button 
+                    onClick={() => toggleAvailability(doc.id)}
+                    className={`w-10 h-5 rounded-full relative transition-colors ${doc.available ? 'bg-teal-500' : 'bg-slate-200'}`}
+                  >
+                    <div className={`absolute top-0.5 w-4 h-4 bg-white rounded-full shadow transition-all ${doc.available ? 'left-5' : 'left-0.5'}`} />
+                  </button>
+                </td>
+                <td className="px-6 py-4">
+                  <div className="flex items-center gap-2 group-hover:opacity-100 transition-opacity">
+                    <button onClick={() => startEdit(doc)} className="p-1.5 text-slate-400 hover:text-blue-600 transition-colors"><Edit size={16}/></button>
+                    <button onClick={() => removeDoctor(doc.id)} className="p-1.5 text-slate-400 hover:text-red-600 transition-colors"><Trash2 size={16}/></button>
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </section>
+
       <Modal
         isOpen={isModalOpen}
         onClose={closeModal}
@@ -119,7 +187,7 @@ export default function DoctorsPage() {
             <select className="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm bg-white outline-none focus:border-teal-400"
               value={formData.available} onChange={e => setFormData({...formData, available: e.target.value})}>
               <option value="Available">Available</option>
-              <option value="On Leave">Busy</option>
+              <option value="Busy">Busy</option>
               <option value="On Leave">On Leave</option>
             </select>
           </div>
@@ -128,70 +196,6 @@ export default function DoctorsPage() {
           </button>
         </form>
       </Modal>
-
-      {/* --- DOCTORS TABLE --- */}
-      <section className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-        <div className="px-6 py-4 border-b border-slate-100 flex items-center gap-3">
-          <div className="relative flex-1 max-w-xs">
-            <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 fill-none stroke-current stroke-2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-            <input 
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search doctors..." 
-              className="w-full border border-slate-200 rounded-xl pl-9 pr-4 py-2 text-sm outline-none focus:border-teal-400 transition-colors" 
-            />
-          </div>
-        </div>
-        <table className="w-full text-left">
-          <thead>
-            <tr className="bg-slate-50 border-b border-slate-100">
-              {['Doctor', 'Specialization', 'Schedule', 'Availability', 'Actions'].map(h => (
-                <th key={h} className="px-6 py-3 text-[10px] font-bold text-slate-400 uppercase tracking-widest">{h}</th>
-              ))}
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-slate-50">
-            {filteredDoctors.map(doc => (
-              <tr key={doc.id} className="hover:bg-slate-50/70 transition-colors group">
-                <td className="px-6 py-4">
-                  <div className="flex items-center gap-3">
-                    <div className="w-9 h-9 rounded-xl bg-blue-50 text-blue-600 font-bold text-sm flex items-center justify-center shrink-0">
-                      {doc.name.split(' ').filter(n => !n.includes('.')).join(' ')[0] || 'D'}
-                    </div>
-                    <span className="font-semibold text-sm text-slate-800">{doc.name}</span>
-                  </div>
-                </td>
-                <td className="px-6 py-4"><span className="text-xs font-semibold bg-teal-50 text-teal-700 rounded-full px-2.5 py-1">{doc.spec}</span></td>
-                <td className="px-6 py-4 text-sm text-slate-500">{doc.schedule}</td>
-                <td className="px-6 py-4">
-                  <button 
-                    onClick={() => toggleAvailability(doc.id)}
-                    className={`w-10 h-5 rounded-full relative transition-colors ${doc.available ? 'bg-teal-500' : 'bg-slate-200'}`}
-                  >
-                    <div className={`absolute top-0.5 w-4 h-4 bg-white rounded-full shadow transition-all ${doc.available ? 'left-5' : 'left-0.5'}`} />
-                  </button>
-                </td>
-                <td className="px-6 py-4">
-                  <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <button 
-                      onClick={() => startEdit(doc)}
-                      className="text-xs font-semibold text-slate-500 hover:text-blue-600 bg-slate-100 hover:bg-blue-50 px-3 py-1.5 rounded-lg transition-colors"
-                    >
-                      Edit
-                    </button>
-                    <button 
-                      onClick={() => removeDoctor(doc.id)}
-                      className="text-xs font-semibold text-slate-500 hover:text-red-600 bg-slate-100 hover:bg-red-50 px-3 py-1.5 rounded-lg transition-colors"
-                    >
-                      Remove
-                    </button>
-                  </div>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </section>
     </main>
   );
 }
