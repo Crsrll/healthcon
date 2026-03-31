@@ -38,11 +38,6 @@ export default function AdminDashboard() {
     const [clinics, setClinics] = useState(pendingClinics);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [selectedClinic, setSelectedClinic] = useState(null);
-      const handleApproveClick = (clinic) => {
-        setSelectedClinic(clinic);
-        setIsModalOpen(true);
-      };
-
        const handleConfirmApproval = () => {
         setClinics(prev => prev.filter(c => c.id !== selectedClinic.id));
         setIsModalOpen(false);
@@ -53,11 +48,19 @@ export default function AdminDashboard() {
     <main className="p-6 space-y-6 animate-in fade-in duration-500">
 
       {/* KPI CARDS */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">  
-        <PulseCard title="Total Clinics" value="142" valueClass="text-2xl" subtext="12 pending approval" icon={<Building2 size={24} />} color="text-blue-600" iconBg="bg-blue-50" border="border-blue-200" />
-        <PulseCard title="Total Users"value="10,390" valueClass="text-2xl" subtext="Patients and Clinics" icon={<Users size={24} />} color="text-emerald-600" iconBg="bg-emerald-50" border="border-emerald-200" />
-        <PulseCard title="Active Bookings" value="1,205" valueClass="text-2xl" subtext="Live across platform" icon={<CalendarCheck size={24} />} color="text-indigo-600" iconBg="bg-indigo-50" border="border-indigo-200" />
-        <PulseCard title="Revenue" value="₱250.8k" valueClass="text-2xl" subtext="Commission (March)" icon={<Banknote size={24} />} color="text-emerald-600" iconBg="bg-emerald-50" border="border-emerald-200" />
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6"> 
+        <a href = "/admin/clinics"> 
+          <PulseCard title="Total Clinics" value="142" valueClass="text-2xl" subtext="12 pending approval" icon={<Building2 size={24} />} color="text-blue-600" iconBg="bg-blue-50" border="border-blue-200" />
+        </a>
+        <a href = "/admin/users">
+          <PulseCard title="Total Users"value="10,390" valueClass="text-2xl" subtext="Patients and Clinics" icon={<Users size={24} />} color="text-emerald-600" iconBg="bg-emerald-50" border="border-emerald-200" />
+        </a>
+        <a href = "/admin/bookings">
+          <PulseCard title="Active Bookings" value="1,205" valueClass="text-2xl" subtext="Live across platform" icon={<CalendarCheck size={24} />} color="text-indigo-600" iconBg="bg-indigo-50" border="border-indigo-200" />
+        </a>
+        <a href = "/admin/revenue">
+          <PulseCard title="Revenue" value="₱250.8k" valueClass="text-2xl" subtext="Commission (March)" icon={<Banknote size={24} />} color="text-emerald-600" iconBg="bg-emerald-50" border="border-emerald-200" />
+        </a>
       </div>
 
       {/* MAIN GRID */}
@@ -217,9 +220,11 @@ export default function AdminDashboard() {
 
             {/* Footer Action */}
             <div className="px-5 py-2 border-t border-slate-50 bg-slate-50/50 shrink-0">
-              <button className="text-[11px] font-bold text-slate-400 hover:text-teal-600 uppercase tracking-widest w-full text-center transition-colors">
-                View Full History →
-              </button>
+              <a href = "/admin/audit-log">
+                <button className="text-[11px] font-bold text-slate-400 hover:text-teal-600 uppercase tracking-widest w-full text-center transition-colors">
+                  View Full History →
+                </button>
+              </a>
             </div>
           </section>
 
