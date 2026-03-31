@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import { useState, useRef, useEffect } from "react";
 import { useAuth } from "@/context/authContext";
 
-export default function Navbar() {
+export default function Navbar({style}) {
   const router = useRouter();
 
   const { user, logout } = useAuth();
@@ -28,10 +28,10 @@ export default function Navbar() {
 
     return (
       <nav
-        className={`fixed top-0 left-0 right-0 z-50 bg-[#122844] transition-all duration-300 ${
+        className={`${style} bg-navy-dark transition-all duration-300 ${
           scrolled
             ? "py-3 shadow-[0_4px_20px_rgba(0,0,0,0.3)]"
-            : "py-4.5"
+            : "py-3 shadow-none"
         }`}
       >
         <div className="max-w-7xl mx-auto px-12 flex items-center justify-between text-white">

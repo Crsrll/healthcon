@@ -22,7 +22,7 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="fixed inset-0 z-[100] flex flex-row w-full h-full bg-white font-sans overflow-hidden">
+    <div className="flex flex-row w-full h-full bg-white font-sans overflow-hidden">
       
       {/* ── LEFT PANEL ── */}
       <div className="relative hidden lg:flex lg:w-[45%] bg-[#0f2035] flex-col justify-center overflow-hidden"
