@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import Navibar from "@/components/layout/Navibar";
 
 
 const styles = `
@@ -85,7 +86,8 @@ export default function LandingPage() {
       <style>{styles}</style>
 
       {/* ── NAV ── */}
-      <nav style={{
+      <Navibar />
+      {/* <nav style={{
         position: "fixed", top: 0, left: 0, right: 0, zIndex: 50,
         backgroundColor: "#122844",
         padding: scrolled ? "12px 0" : "18px 0",
@@ -105,7 +107,7 @@ export default function LandingPage() {
             </button>
           </div>
         </div>
-      </nav>
+      </nav> */}
 
       {/* ── HERO ── */}
       <section className="bg-[#122844] text-white" style={{ paddingTop: 130, paddingBottom: 90 }}>
