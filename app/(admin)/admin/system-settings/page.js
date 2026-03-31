@@ -20,7 +20,7 @@ export default function SystemSettingsPage() {
   }
 
   return (
-    <main className="p-6 space-y-6 max-w-3xl">
+    <main className="p-6 space-y-6 max-w-full">
       <div>
         <h2 className="text-lg font-bold text-slate-800">System Settings</h2>
         <p className="text-xs text-slate-400 mt-0.5">Platform-wide configuration</p>
