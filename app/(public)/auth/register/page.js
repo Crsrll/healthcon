@@ -111,7 +111,7 @@ export default function RegisterPage() {
             </div>
 
             {/* Submit */}
-            <button className="w-full mt-4 rounded-2xl bg-[#0f2035] text-white font-black text-lg shadow-xl shadow-blue-900/20 hover:bg-blue-600 active:scale-[0.98] transition-all duration-300" style={{ paddingTop: 20, paddingBottom: 20 }}>
+            <button className="w-full mt-4 rounded-2xl bg-[#0f2035] text-white font-black text-lg shadow-xl shadow-blue-900/20 hover:bg-blue-600 active:scale-[0.98] transition-all duration-300" style={{ paddingTop: 20, paddingBottom: 20 }} onClick={() => router.push("/patient/dashboard")}>
               Create Account
             </button>
 

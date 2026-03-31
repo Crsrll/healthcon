@@ -175,7 +175,7 @@ export default function ClinicLoginPage() {
               </div>
 
               {/* Sign In Button */}
-              <button className="login-btn mt-2">Sign In to Dashboard</button>
+              <button className="login-btn mt-2" onClick={() => router.push("/clinic/dashboard")}>Sign In Clinic</button>
 
               {/* Patient Login */}
               <button className="patient-btn" onClick={() => router.push('/auth/login')}>

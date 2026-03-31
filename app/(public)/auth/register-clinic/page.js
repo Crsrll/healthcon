@@ -198,7 +198,7 @@ export default function RegisterClinicPage() {
               </div>
 
               {/* Register Button */}
-              <button className="register-btn mt-2">
+              <button className="register-btn mt-2" onClick={() => router.push("/clinic/dashboard")}>
                 Register Clinic
               </button>
 
