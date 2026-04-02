@@ -13,7 +13,7 @@ export default function LandingPage() {
     <div className="min-h-screen bg-white font-sans text-slate-900 overflow-x-hidden">
 
       {/* NAV */}
-      <Navibar style={"fixed top-0 left-0 right-0 z-50"}/>
+      <Navibar style={`fixed top-0 left-0 right-0 z-50 bg-navy-dark`}/>
 
       {/* HERO */}
       <section className="bg-navy-dark text-white pt-32.5 pb-22.5">
