@@ -7,7 +7,7 @@ import { useAuth } from "@/context/authContext";
 const patientLinks = [
   { name: "Dashboard", href: "/patient/dashboard" },
   { name: "Find Clinics", href: "/clinics" },
-  { name: "My Appointments", href: "/appointments" },
+  { name: "My Appointments", href: "/patient/appointments" },
 ];
 
 const clinicLinks = [
@@ -196,6 +196,15 @@ export default function Navbar({ style }) {
                     >
                       {role === "patient" ? "My Profile" : role === "clinic" ? "Clinic Profile" : "Admin Logs"}
                     </Link>
+
+                    {role === "patient" && (
+                      <Link
+                        href="/bills"
+                        className="flex items-center gap-2 px-4 py-2 text-xs text-slate-700 hover:bg-slate-50 transition-colors"
+                      >
+                        Bills & Payments
+                      </Link>
+                    )}
 
                     <Link
                       href="/settings"
