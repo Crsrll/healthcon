@@ -49,7 +49,9 @@ export default function FavoriteClinics() {
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
           <div>
             <nav className="flex items-center gap-2 text-teal-400 text-[10px] font-bold uppercase tracking-[0.2em] mb-4">
+              <Link href = "/patient/dashboard" className="hover:text-white transition-colors">
               <span>Patient</span>
+              </Link>
               <ChevronRight size={10} />
               <span className="text-white/60">Favorites</span>
             </nav>

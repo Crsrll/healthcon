@@ -2,6 +2,7 @@
 import { useState, useMemo, useEffect } from "react";
 import Modal from "@/components/ui/Modal";
 import { useSearchParams } from "next/navigation";
+import Link from "next/link";
 import { Calendar, Clock,  ChevronRight, Search,Plus,Clipboard } from "lucide-react";
 
 export default function MyAppointmentsPage() {
@@ -73,7 +74,9 @@ export default function MyAppointmentsPage() {
 
       <div className="bg-[#1a365d] text-white pt-10 pb-16 px-6">
         <nav className="flex items-center gap-2 text-teal-400 text-[10px] font-bold uppercase tracking-[0.2em] mb-4">
-          <span>Patient</span>
+          <Link href = "/patient/dashboard" className="hover:text-white transition-colors">
+            <span>Patient</span>
+          </Link>
           <ChevronRight size={10} />
           <span className="text-white/60">Appointments</span>
         </nav>

@@ -1,16 +1,32 @@
 "use client";
 import { useState } from "react";
 import Link from "next/link";
-import { Calendar, FileText, Star, Search, ChevronRight, Pill, Beaker, ShieldCheck, PhoneCall, ArrowRight } from "lucide-react";
+import { useRouter } from "next/navigation";
+import Modal from "@/components/ui/Modal";
+import { Calendar, FileText, Star, Search, ChevronRight, Pill, Beaker, ShieldCheck, ArrowRight } from "lucide-react";
 
 export default function PatientDashboard() {
   const [search, setSearch] = useState("");
+  const router = useRouter();
+  const [isDetailsOpen, setIsDetailsOpen] = useState(false);
+  const [selectedApt, setSelectedApt] = useState(null);
 
-  // --- MOCK DATA ---
-  const appointments = [
-    { id: "1", date: "Mar 23", time: "10:00 AM", doctor: "Dr. Ben Villanueva", clinic: "Joseph Community Health", status: "Confirmed", type: "General" },
-    { id: "2", date: "Mar 25", time: "11:00 AM", doctor: "Dr. Claire Mendoza", clinic: "Joseph Community Health", status: "Pending", type: "Ob-Gyne" },
-  ];
+  const handleSearch = (e) => {
+    e.preventDefault();
+    if (!search.trim()) return;
+
+  router.push(`/clinics?q=${encodeURIComponent(search)}`);
+  };
+
+  const [appointments] = useState([
+    { id: 1, clinic: "Joseph Community Health", doctor: "Dr. Ben Villanueva", service: "General Check-up", date: "2026-04-10", time: "10:00 AM", status: "Confirmed", isPast: false },
+    { id: 2, clinic: "Iligan Medical Center", doctor: "Dr. Claire Mendoza", service: "Cardiology", date: "2026-04-15", time: "02:30 PM", status: "Pending", isPast: false },
+  ]);
+
+  const handleViewDetails = (apt) => {
+    setSelectedApt(apt);
+    setIsDetailsOpen(true);
+  };
 
   const prescriptions = [
     { name: "Amoxicillin", dose: "500mg", freq: "3x a day", remaining: "4 days left" },
@@ -20,6 +36,12 @@ export default function PatientDashboard() {
   const nearbyClinics = [
     { id: "1", name: "CDO General Outpatient", city: "Cagayan de Oro", specialty: "Ob-Gyne", image: "https://images.unsplash.com/photo-1538108149393-fbbd81895907?w=400" },
     { id: "2", name: "Iligan Medical Center", city: "Iligan City", specialty: "Cardiology", image: "https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?w=400" },
+  ];
+
+  const recentlyViewed = [
+    { id: "1", name: "CDO General Outpatient", city: "Cagayan de Oro", specialty: "Ob-Gyne", image: "https://images.unsplash.com/photo-1538108149393-fbbd81895907?w=400" },
+    { id: "2", name: "Iligan Medical Center", city: "Iligan City", specialty: "Cardiology", image: "https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?w=400" },
+    { id: "3", name: "Bukidnon Community Center", city: "Malaybalay", specialty: "General", image: "https://images.unsplash.com/photo-1586773860418-d37222d8fce3?w=400" },
   ];
 
   return (
@@ -35,7 +57,7 @@ export default function PatientDashboard() {
             {/* Left: Greetings */}
             <div className="flex-1">
               <p className="text-teal-300 text-[10px] font-bold uppercase tracking-[0.2em] mb-1">Patient Portal</p>
-              <h1 className="text-white text-3xl font-bold">Good Day, Melissa! 👋</h1>
+              <h1 className="text-white text-3xl font-bold">Good Day, Melissa! </h1>
               <p className="text-slate-300 text-sm mt-1 flex items-center gap-2">
                 <span className="w-2 h-2 rounded-full bg-teal-400 animate-pulse" />
                 Next appointment: <span className="text-teal-300 font-semibold">Today at 10:00 AM</span>
@@ -44,7 +66,7 @@ export default function PatientDashboard() {
 
             {/* Right: Search Bar */}
             <div className="w-full md:w-auto md:min-w-[400px]">
-              <form onSubmit={(e) => e.preventDefault()} className="flex gap-2">
+              <form onSubmit={handleSearch} className="flex gap-2">
                 <div className="relative flex-1">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                   <input
@@ -111,7 +133,8 @@ export default function PatientDashboard() {
                       </div>
                       <p className="text-xs text-slate-500 truncate">{apt.clinic} · {apt.time}</p>
                     </div>
-                    <button className="text-xs font-bold text-slate-400 group-hover:text-teal-600 transition-colors">Details →</button>
+                    <button onClick={() => handleViewDetails(apt)}
+                    className="text-xs font-bold text-slate-400 group-hover:text-teal-600 transition-colors">Details →</button>
                   </div>
                 ))}
               </div>
@@ -121,7 +144,7 @@ export default function PatientDashboard() {
             <section className="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
               <div className="px-6 py-5 border-b border-slate-100 flex justify-between items-center">
                 <h2 className="font-bold text-slate-800">Active Prescriptions</h2>
-                <Link href="/patient/meds" className="text-xs font-bold text-teal-600 hover:underline">Pharmacy Info</Link>
+                <Link href="/patient/med-history" className="text-xs font-bold text-teal-600 hover:underline">History</Link>
               </div>
               <div className="p-6 grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {prescriptions.map((med) => (
@@ -132,7 +155,7 @@ export default function PatientDashboard() {
                     <div>
                       <p className="text-sm font-bold text-slate-800">{med.name}</p>
                       <p className="text-[10px] text-slate-500 font-medium">{med.dose} · {med.freq}</p>
-                      <span className="inline-block mt-1 text-[9px] font-bold text-purple-600 bg-purple-50 px-2 py-0.5 rounded-md">{med.remaining}</span>
+                      <span className="inline-block mt-1 text-[9px] font-bold text-teal-600 bg-purple-50 px-2 py-0.5 rounded-md">{med.remaining}</span>
                     </div>
                   </div>
                 ))}
@@ -141,7 +164,7 @@ export default function PatientDashboard() {
 
             {/* CLINICS NEAR YOU */}
             <section>
-              <div className="flex justify-between items-end mb-4">
+              <div className="flex justify-between items-end mb-5">
                 <h2 className="font-bold text-slate-800 text-lg">Clinics Near You</h2>
                 <Link href="/clinics" className="text-xs font-bold text-teal-600 hover:underline">Explore Map</Link>
               </div>
@@ -180,19 +203,20 @@ export default function PatientDashboard() {
               <p className="text-[11px] text-slate-500 leading-relaxed mb-5">
                 Complete your medical history to speed up your next clinic check-in.
               </p>
-              <button className="w-full py-3 bg-slate-50 hover:bg-teal-50 text-teal-600 text-[10px] font-black uppercase tracking-widest rounded-xl border border-teal-100 transition-all">
+              <Link href = "/patient/profile" className="block w-full py-2 text-center bg-slate-50 hover:bg-teal-50 text-teal-600 text-[10px] font-black uppercase tracking-widest rounded-xl border border-teal-100 transition-all">
                 Finish Setup
-              </button>
+              </Link>
             </section>
 
             {/* LATEST LAB RESULTS */}
             <section className="bg-white rounded-3xl border border-slate-200 shadow-sm p-6">
-              <h3 className="font-bold text-slate-800 text-sm mb-5">Latest Lab Results</h3>
+              <h3 className="font-bold text-slate-800 text-sm mb-4">Latest Lab Results</h3>
               <div className="space-y-5">
-                <div className="flex items-start gap-4">
+                {/* <div className="flex items-start gap-4">
                   <div className="w-10 h-10 bg-blue-50 text-blue-600 rounded-xl flex items-center justify-center shrink-0">
                     <Beaker size={18} />
                   </div>
+                  <Link href = "/patient/lab-result">
                   <div className="flex-1 min-w-0">
                     <p className="text-xs font-bold text-slate-800 truncate">Blood Panel Test</p>
                     <p className="text-[10px] text-slate-400">Joseph Health · 2 days ago</p>
@@ -200,39 +224,108 @@ export default function PatientDashboard() {
                       <ShieldCheck size={10} /> Ready to View
                     </span>
                   </div>
+                  </Link>
+                </div> */}
+                <div className="bg-slate-50/50 py-3 border-2 border-dashed border-slate-200 rounded-xl text-center">
+                  <p className="text-[11px] font-black text-slate-500 uppercase tracking-widest">
+                    No clinical records available
+                  </p>
+                  <p className="text-[10px] text-slate-400 italic mt-1">
+                    New reports will appear here automatically.
+                  </p>
                 </div>
               </div>
             </section>
 
-            {/* EMERGENCY SOS */}
-            <section className="bg-red-50 border border-red-100 rounded-3xl p-6">
-              <div className="flex items-center gap-3 mb-3">
-                <div className="w-10 h-10 bg-red-500 text-white rounded-xl flex items-center justify-center shadow-lg shadow-red-200">
-                  <PhoneCall size={20} />
-                </div>
-                <h3 className="font-bold text-red-700 text-sm uppercase tracking-tight">Emergency</h3>
+            {/* RECENTLY VIEWED */}
+            <section className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+              <div className="px-5 pt-3 pb-3 border-b border-slate-100">
+                <h3 className="font-bold text-slate-800">Recently Viewed</h3>
               </div>
-              <p className="text-[11px] text-red-600/70 mb-5 font-medium leading-relaxed">
-                Immediately contact the nearest medical facility or dial our 24/7 hotline.
-              </p>
-              <button className="w-full py-3 bg-red-500 hover:bg-red-600 text-white text-[10px] font-black uppercase tracking-[0.1em] rounded-xl transition-all shadow-md shadow-red-200">
-                Call Hotline Now
-              </button>
+              
+              <div className="divide-y divide-slate-100">
+                {recentlyViewed.map((item) => (
+                  <Link 
+                    href={`/clinics/${item.id}`} 
+                    key={item.id}
+                    className="flex items-center gap-3 px-5 py-3.5 hover:bg-slate-50 cursor-pointer transition-colors group"
+                  >
+                    <img
+                      src={item.image}
+                      className="w-10 h-10 rounded-xl object-cover shrink-0"
+                      alt={item.name}
+                    />
+                    <div className="flex-1 min-w-0">
+                      <h4 className="text-xs font-bold text-slate-800 truncate group-hover:text-teal-700 transition-colors">
+                        {item.name}
+                      </h4>
+                      <p className="text-[10px] text-slate-400 mt-0.5">Viewed 2 days ago</p>
+                    </div>
+                   <div className="text-slate-300 group-hover:text-teal-400 transition-colors">
+                      <ChevronRight size={14} />
+                    </div>
+                  </Link>
+                ))}
+
+                {/* FIXED VIEW ALL BUTTON */}
+                <Link 
+                  href="/patient/recently-viewed" 
+                  className="block w-full py-2 text-center text-[10px] font-bold text-slate-400 hover:text-teal-600 hover:bg-slate-50 uppercase tracking-widest transition-all border-t border-slate-50"
+                >
+                  View All History
+                </Link>
+              </div>
             </section>
 
             {/* HEALTH TIP */}
-            <div className="bg-gradient-to-br from-[#1a365d] to-[#2d4a77] rounded-3xl p-6 text-white shadow-xl relative overflow-hidden">
+            <div className="bg-gradient-to-br from-[#1a365d] to-[#2d4a77] rounded-2xl p-6 text-white shadow-xl relative overflow-hidden">
               <div className="absolute -bottom-4 -right-4 w-24 h-24 bg-teal-400/10 rounded-full blur-2xl" />
               <p className="text-teal-300 text-[10px] font-black uppercase tracking-widest mb-3">Daily Health Tip</p>
               <p className="text-sm font-bold leading-snug">Stay hydrated — drink at least 8 glasses of water daily for optimal kidney function.</p>
-              <button className="mt-5 flex items-center gap-2 text-[10px] font-bold text-teal-300 hover:text-teal-200 transition-colors uppercase">
-                Read More <ArrowRight size={12} />
-              </button>
+              <a
+                href="https://www.healthline.com/nutrition/how-much-water-should-you-drink-per-day" 
+                target="_blank" 
+                rel="noopener noreferrer" 
+                className="mt-5 flex items-center gap-2 text-[10px] font-bold text-teal-300 hover:text-teal-200 transition-colors uppercase group"
+                >
+                  Read More 
+                  <ArrowRight size={12} className="group-hover:translate-x-1 transition-transform" />
+                </a>
             </div>
 
           </aside>
         </div>
       </div>
+      {/* ── MODAL: VIEW DETAILS ── */}
+      <Modal 
+        isOpen={isDetailsOpen} 
+        onClose={() => setIsDetailsOpen(false)} 
+        title="Appointment Summary"
+      >
+        <div className="space-y-6">
+          <div className="p-8 bg-slate-50 rounded-2xl border border-slate-100">
+            <h3 className="text-xl font-black text-slate-900">{selectedApt?.clinic}</h3>
+            <p className="text-xs font-bold text-teal-600 uppercase mt-1">{selectedApt?.doctor}</p>
+          </div>
+          <div className="space-y-3">
+            <div className="flex justify-between text-sm">
+              <span className="text-slate-400">Service</span>
+              <span className="font-bold text-slate-700">{selectedApt?.service}</span>
+            </div>
+            <div className="flex justify-between text-sm">
+              <span className="text-slate-400">Date & Time</span>
+              <span className="font-bold text-slate-700">{selectedApt?.date} at {selectedApt?.time}</span>
+            </div>
+            <div className="flex justify-between text-sm">
+              <span className="text-slate-400">Status</span>
+              <span className="font-bold text-teal-600">{selectedApt?.status}</span>
+            </div>
+          </div>
+          <button onClick={() => setIsDetailsOpen(false)} className="w-full bg-[#1a365d] text-white py-4 rounded-2xl font-black uppercase text-xs tracking-widest">
+            Close Summary
+          </button>
+        </div>
+      </Modal>
     </main>
   );
 }

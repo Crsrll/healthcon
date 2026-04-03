@@ -1,6 +1,7 @@
 "use client";
 import { useState, useMemo } from "react";
 import Modal from "@/components/ui/Modal";
+import Link from "next/link";
 import { FileText, Download, Plus, Search, Clipboard, ShieldCheck, Clock, ChevronRight } from "lucide-react";
 
 export default function MedicalRecordsPage() {
@@ -55,7 +56,9 @@ export default function MedicalRecordsPage() {
       {/* ── HEADER ── */}
       <div className="bg-[#1a365d] text-white pt-10 pb-16 px-6">
             <nav className="flex items-center gap-2 text-teal-400 text-[10px] font-bold uppercase tracking-[0.2em] mb-4">
+              <Link href = "/patient/dashboard" className="hover:text-white transition-colors">
               <span>Patient</span>
+              </Link>
               <ChevronRight size={10} />
               <span className="text-white/60">Records</span>
             </nav>
