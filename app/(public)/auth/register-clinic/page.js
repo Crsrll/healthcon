@@ -169,7 +169,7 @@ export default function RegisterClinicPage() {
                 <svg width="16" height="16" fill="#9ca3af" viewBox="0 0 24 24" style={{ flexShrink: 0 }}>
                   <path d="M18 8h-1V6c0-2.8-2.2-5-5-5S7 3.2 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zM12 17c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.7 1.4-3.1 3.1-3.1 1.7 0 3.1 1.4 3.1 3.1v2z" />
                 </svg>
-                <input type={showPass ? "text" : "password"} placeholder="Password" className="clinic-input" autoComplete="off"/>
+                <input type={showPass ? "text" : "password"} placeholder="Password" className="clinic-input" autoComplete="new-password"/>
                 <button className="show-btn" onClick={() => setShowPass(!showPass)}>
                   {showPass ? "Hide" : "Show"}
                 </button>
@@ -180,7 +180,7 @@ export default function RegisterClinicPage() {
                 <svg width="16" height="16" fill="#9ca3af" viewBox="0 0 24 24" style={{ flexShrink: 0 }}>
                   <path d="M18 8h-1V6c0-2.8-2.2-5-5-5S7 3.2 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zM12 17c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.7 1.4-3.1 3.1-3.1 1.7 0 3.1 1.4 3.1 3.1v2z" />
                 </svg>
-                <input type={showConfirm ? "text" : "password"} placeholder="Confirm Password" className="clinic-input" />
+                <input type={showConfirm ? "text" : "password"} placeholder="Confirm Password" className="clinic-input" autoComplete="new-password"/>
                 <button className="show-btn" onClick={() => setShowConfirm(!showConfirm)}>
                   {showConfirm ? "Hide" : "Show"}
                 </button>

@@ -130,6 +130,7 @@
 
 html {
   scroll-behavior: smooth;
+  
 }
 
 body {
@@ -169,3 +170,19 @@ body {
 .feature-shimmer:hover::before {
   left: 100%;
 }
+
+/* Fix Chrome autofill background */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+input:-webkit-autofill:active {
+  -webkit-box-shadow: 0 0 0 1000px #f3f4f600 inset !important;
+  box-shadow: 0 0 0 1000px #f3f4f600 inset !important;
+  -webkit-text-fill-color: #374151 !important;
+  transition: background-color 9999s ease-in-out 0s;
+}
+
+/* Optional: when focused (matches your white focus style) */
+/* .input-row:focus-within input:-webkit-autofill {
+  -webkit-box-shadow: 0 0 0 1000px #ffffff inset !important;
+} */
