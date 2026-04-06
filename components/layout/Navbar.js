@@ -19,6 +19,9 @@ export default function Navbar() {
   const isAdmin = pathname?.startsWith("/admin");
   const isLoggedIn = isPatient || isClinic || isAdmin;
 
+  const hideOn = ["/auth/login", "/auth/register", "/auth/register-clinic"]; 
+  if (hideOn.includes(pathname)) return null;
+
   // State to handle dropdown visibility
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const dropdownRef = useRef(null);
