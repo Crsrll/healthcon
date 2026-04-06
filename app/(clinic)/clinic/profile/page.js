@@ -57,7 +57,7 @@ export default function ClinicProfile() {
 
           {/* ABOUT */}
           <section className="bg-white rounded-2xl border p-6 shadow-sm">
-            <h2 className="text-sm font-bold text-slate-400 uppercase mb-3">
+            <h2 className="text-sm font-bold text-slate-800 uppercase mb-3">
               About
             </h2>
             <p className="text-sm text-slate-600">{clinic.about}</p>
@@ -76,7 +76,7 @@ export default function ClinicProfile() {
 
           {/* DOCTORS */}
           <section className="bg-white rounded-2xl border p-6 shadow-sm">
-            <h2 className="text-sm font-bold text-slate-400 uppercase mb-4">
+            <h2 className="text-sm font-bold text-slate-800 uppercase mb-4">
               Doctors
             </h2>
 
@@ -125,7 +125,7 @@ export default function ClinicProfile() {
 
           {/* INFO */}
           <section className="bg-white rounded-2xl border p-5 shadow-sm">
-            <h2 className="text-xs font-bold text-slate-400 uppercase mb-4">
+            <h2 className="text-xs font-bold text-slate-800 uppercase mb-4">
               Clinic Info
             </h2>
 
@@ -139,7 +139,7 @@ export default function ClinicProfile() {
 
           {/* SERVICES */}
           <section className="bg-white rounded-2xl border p-5 shadow-sm">
-            <h2 className="text-xs font-bold text-slate-400 uppercase mb-4">
+            <h2 className="text-xs font-bold text-slate-800 uppercase mb-4">
               Services
             </h2>
 

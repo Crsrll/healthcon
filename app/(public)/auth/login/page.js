@@ -1,11 +1,27 @@
 "use client";
 
+import { useAuth } from "@/context/authContext"; 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 export default function PatientLoginPage() {
+  const { login } = useAuth();
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
   const router = useRouter();
   const [showPass, setShowPass] = useState(false);
+  const [error, setError] = useState("");
+
+  const handleLogin = () => {
+    const result = login({username, password});
+    if(result){
+      router.push(`../../${result.role}/dashboard`);
+    }
+    else{
+      setError("Invalid username or password");
+    }
+  };
+
 
   return (
     <>
@@ -82,7 +98,7 @@ export default function PatientLoginPage() {
         .clinic-btn:active { transform: scale(0.98); }
       `}</style>
 
-      <div className="fixed inset-0 z-[100] flex w-full h-full bg-white font-sans overflow-hidden">
+      <div className=" flex w-full h-full bg-white font-sans overflow-hidden">
 
         {/* ── LEFT PANEL ── */}
         <div className="relative hidden lg:flex lg:w-[45%] bg-[#0f2035] flex-col justify-center overflow-hidden"
@@ -126,7 +142,7 @@ export default function PatientLoginPage() {
                 <svg width="16" height="16" fill="#9ca3af" viewBox="0 0 24 24" style={{ flexShrink: 0 }}>
                   <path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z" />
                 </svg>
-                <input type="email" placeholder="Email Address" className="login-input" />
+                <input value={username} onChange={(e) => setUsername(e.target.value)} type="email" placeholder="Email Address" className="login-input" />
               </div>
 
               {/* Password */}
@@ -134,7 +150,7 @@ export default function PatientLoginPage() {
                 <svg width="16" height="16" fill="#9ca3af" viewBox="0 0 24 24" style={{ flexShrink: 0 }}>
                   <path d="M18 8h-1V6c0-2.8-2.2-5-5-5S7 3.2 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zM12 17c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.7 1.4-3.1 3.1-3.1 1.7 0 3.1 1.4 3.1 3.1v2z" />
                 </svg>
-                <input type={showPass ? "text" : "password"} placeholder="Password" className="login-input" />
+                <input value={password} onChange={(e) => setPassword(e.target.value)} type={showPass ? "text" : "password"} placeholder="Password" className="login-input" />
                 <button className="show-btn" onClick={() => setShowPass(!showPass)}>
                   {showPass ? "Hide" : "Show"}
                 </button>
@@ -152,7 +168,8 @@ export default function PatientLoginPage() {
               </div>
 
               {/* Sign In Button */}
-              <button className="login-btn mt-2" onClick={() => router.push("/patient/dashboard")}>Sign In</button>
+              {error && <p className="text-red-500 text-sm">{error}</p>}
+              <button className="login-btn mt-2" onClick={handleLogin}>Sign In</button>
 
               {/* Clinic Login */}
               <button className="clinic-btn" onClick={() => router.push('/auth/login-clinic')}>

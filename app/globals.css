@@ -1,4 +1,7 @@
 @import "tailwindcss";
+/* @import "tailwindcss/preflight"; */
+/* @import "tailwindcss/components"; */
+/* @import "tailwindcss/utilities"; */
 
 :root {
   --background: #f0f4f8;
@@ -17,6 +20,87 @@
 }
 
 @theme {
+  --spacing-13: 3.25rem;
+
+  --spacing-15: 3.75rem;
+
+  --spacing-22: 5.5rem;
+
+  --spacing-22_5: 5.625rem;
+
+  --spacing-25: 6.25rem;
+
+  --spacing-32_5: 8.125rem;
+
+  --spacing-85: 21.25rem;
+
+  --spacing-110: 27.5rem;
+
+  --spacing-165: 41.25rem;
+
+  /* Missing animation delays */
+
+  --transition-delay-250: 250ms;
+
+  --transition-delay-400: 400ms;
+
+  --transition-delay-550: 550ms;
+
+  /* Animations */
+
+  --animate-fadeSlideUp: fadeSlideUp 0.7s ease both;
+
+  @keyframes fadeSlideUp {
+
+    0% { opacity: 0; transform: translateY(24px); }
+
+    100% { opacity: 1; transform: translateY(0); }
+
+  }
+  --color-navy-dark: #122844;
+  --color-navy: #1a3a5c;
+  --color-navy-mid: #1e4370;
+  --color-healthcon-blue: #2f80d0;
+  --color-blue-light: #4da3f5;
+  --color-accent: #5bbfff;
+  --color-off-white: #f0f4f8;
+  --color-slate-custom: #6b8caa;
+  --color-slate-dark: #4a5d7a;
+
+  --font-sora: 'Sora', sans-serif;
+
+  --animate-fade-slide-up: fadeSlideUp 0.7s ease both;
+  --animate-pulse-custom: pulse-custom 1.8s infinite;
+  --animate-fade-up: fadeUp 0.9s ease both;
+  --animate-slide-in-left: slideInLeft 0.8s ease-out both;
+  --animate-float: float 5s ease-in-out infinite;
+  --animate-float-delayed: float 5s 1.5s ease-in-out infinite;
+  --animate-float-dot: floatDot linear infinite;
+
+  @keyframes pulse-custom {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+  }
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(28px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes slideInLeft {
+    from { opacity: 0; transform: translateX(-30px); }
+    to { opacity: 1; transform: translateX(0); }
+  }
+  @keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-20px); }
+  }
+  @keyframes floatDot {
+    0% { transform: translateY(0) translateX(0); }
+    100% { transform: translateY(-300px) translateX(100px); }
+  }
+  @keyframes fadeSlideUp {
+    0% { opacity: 0; transform: translateY(24px); }
+    100% { opacity: 1; transform: translateY(0); }
+  }
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
@@ -36,13 +120,13 @@
 .bg-accent { background-color: var(--accent); }
 .text-text-muted { color: var(--text-muted); }
 
-*,
+/* *,
 *::before,
 *::after {
   box-sizing: border-box;
   margin: 0;
   padding: 0;
-}
+} */
 
 html {
   scroll-behavior: smooth;

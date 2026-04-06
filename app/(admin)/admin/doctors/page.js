@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from "react"; // Added useEffect
+import { useState, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 import { Search, UserCheck, AlertOctagon, UserMinus } from "lucide-react";
 

@@ -8,8 +8,8 @@ export default function Navbar() {
   const { user, logout } = useAuth();
 
   const handleLogout = () => {
-    logout();            // clear user from context
-    router.push("/");    // redirect to homepage or login
+    logout();       
+    router.push("/");   
   };
 
   const pathname = usePathname();

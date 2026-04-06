@@ -20,7 +20,6 @@ const buttons = [
 export default function ClinicLayout({ children }) {
   const [search, setSearch] = useState("");
   const router = useRouter();
-  const pathname = usePathname();
 
   const handleSearch = (e) => {
     e.preventDefault();

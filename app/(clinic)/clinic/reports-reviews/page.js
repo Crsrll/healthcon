@@ -1,5 +1,4 @@
 "use client";
-
 import { useState } from "react";
 import Modal from "@/components/ui/Modal"; // Ensure path is correct (@/ refers to root)
 import { Star, Calendar, User, Search, AlertTriangle, CheckCircle2, Clock, X} from "lucide-react";
@@ -183,10 +182,10 @@ export default function ClinicReportsPage() {
         title="Report Details"
       >
         {selectedReport && (
-          <div className="space-y-8">
+          <div className="space-y-8 h-[420px]">
             {/* Patient Identity */}
             <div className="flex flex-col items-center text-center">
-              <div className="w-20 h-20 bg-teal-50 rounded-full flex items-center justify-center text-2xl font-bold text-teal-600 mb-3 shadow-inner">
+              <div className="w-16 h-16 bg-teal-50 rounded-full flex items-center justify-center text-2xl font-bold text-teal-600 mb-3 shadow-inner">
                 {selectedReport.patient[0]}
               </div>
               <h4 className="text-xl font-bold text-slate-800">{selectedReport.patient}</h4>
@@ -203,11 +202,11 @@ export default function ClinicReportsPage() {
             </div>
 
             {/* The Complaint */}
-            <div className="space-y-3">
+            <div className="space-y-2">
               <div className="flex items-center justify-center gap-2 text-xs font-bold text-slate-400 uppercase tracking-widest">
                 <AlertTriangle size={14} className="text-amber-500" /> Reported Issue
               </div>
-              <div className="p-6 bg-red-50/50 border border-red-100 rounded-2xl text-sm text-slate-700 leading-relaxed italic text-center">
+              <div className="p-4 bg-red-50/50 border border-red-100 rounded-2xl text-sm text-slate-700 leading-relaxed italic text-center">
                 "{selectedReport.issue}"
               </div>
             </div>
@@ -225,10 +224,10 @@ export default function ClinicReportsPage() {
             </div>
 
             {/* Footer Action */}
-            <div className="pt-2">
+            <div>
               <button 
                 onClick={() => setSelectedReport(null)}
-                className="w-full bg-teal-600 hover:bg-teal-700 text-white py-3.5 rounded-2xl font-bold text-sm transition-all shadow-lg shadow-teal-500/20"
+                className="w-full bg-teal-600 hover:bg-teal-700 text-white py-3 rounded-2xl font-bold text-sm transition-all shadow-lg shadow-teal-500/20"
               >
                 {selectedReport.status === "Resolved" ? "Close Details" : "Mark as Resolved"}
               </button>

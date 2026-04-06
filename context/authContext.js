@@ -9,17 +9,19 @@ export function useAuth() {
 }
 
 export function AuthProvider({ children }) {
-  const [user, setUser] = useState(null);
-
-  // const value = {
-  //   user,
-  //   setUser
-  // };
+  const [user, setUser] = useState(() => {
+    // Load user from localStorage on first render
+    if (typeof window !== "undefined") {
+      const saved = localStorage.getItem("hc_user");
+      return saved ? JSON.parse(saved) : null;
+    }
+    return null;
+  });
 
   const acceptedAccounts = [
-    { username: "melissa", password: "patient123", role: "patient", isApproved: true },
-    { username: "drsmith", password: "clinic123", role: "clinic", isApproved: true },
-    { username: "adminuser", password: "admin123", role: "admin", isApproved: true },
+    { username: "melissa@gmail.com", password: "patient123", role: "patient", isApproved: true },
+    { username: "drsmith@gmail.com", password: "clinic123", role: "clinic", isApproved: true },
+    { username: "adminuser@gmail.com", password: "admin123", role: "admin", isApproved: true },
   ];
 
   const login = ({username, password}) => {
@@ -29,12 +31,19 @@ export function AuthProvider({ children }) {
 
     if (account) {
       setUser(account);
-      return true;
+      localStorage.setItem("hc_user", JSON.stringify(account)); // ← save
+      document.cookie = `hc_user=${JSON.stringify(account)}; path=/`;
+      return account;
     }
-    return false;
+    return null;
   };
 
-  const logout = () => setUser(null);
+  // const logout = () => setUser(null);
+  const logout = () => {
+    setUser(null);
+    localStorage.removeItem("hc_user"); // ← clear
+    document.cookie = "hc_user=; path=/; max-age=0";
+  };
 
   // const value = {
   //   user,
