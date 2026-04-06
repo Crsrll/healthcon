@@ -1,27 +1,76 @@
 "use client";
 
-import { useAuth } from "@/context/authContext"; 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { getAuth, signInWithEmailAndPassword, GoogleAuthProvider, signInWithPopup } from "firebase/auth";
+import { collection, query, where, getDocs } from "firebase/firestore";
+import { db } from "@/lib/firebase";
 
 export default function PatientLoginPage() {
-  const { login } = useAuth();
-  const [username, setUsername] = useState("");
-  const [password, setPassword] = useState("");
   const router = useRouter();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [showPass, setShowPass] = useState(false);
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  const handleLogin = () => {
-    const result = login({username, password});
-    if(result){
-      router.push(`../../${result.role}/dashboard`);
+  const handleLogin = async () => {
+    setError("");
+    if (!email || !password) {
+      setError("Please enter your email and password.");
+      return;
     }
-    else{
-      setError("Invalid username or password");
+
+    setLoading(true);
+    try {
+      const auth = getAuth();
+
+      // 1. Sign in with Firebase Auth
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      const uid = userCredential.user.uid;
+
+      // 2. Check role in Firestore
+      const q = query(collection(db, "patients"), where("uid", "==", uid));
+      const snapshot = await getDocs(q);
+
+      if (snapshot.empty) {
+        setError("No patient account found. Are you a clinic?");
+        await auth.signOut();
+        return;
+      }
+
+      router.push("/patient/dashboard");
+    } catch (err) {
+      console.error(err);
+      if (err.code === "auth/invalid-credential" || err.code === "auth/wrong-password") {
+        setError("Invalid email or password.");
+      } else if (err.code === "auth/user-not-found") {
+        setError("No account found with this email.");
+      } else if (err.code === "auth/too-many-requests") {
+        setError("Too many attempts. Please try again later.");
+      } else {
+        setError("Something went wrong. Please try again.");
+      }
+    } finally {
+      setLoading(false);
     }
   };
 
+  const handleGoogle = async () => {
+    setError("");
+    setLoading(true);
+    try {
+      const auth = getAuth();
+      const provider = new GoogleAuthProvider();
+      await signInWithPopup(auth, provider);
+      router.push("/patient/dashboard");
+    } catch (err) {
+      console.error(err);
+      setError("Google sign-in failed. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <>
@@ -81,6 +130,7 @@ export default function PatientLoginPage() {
         }
         .login-btn:hover { background: #2f80d0; transform: translateY(-1px); }
         .login-btn:active { transform: scale(0.98); }
+        .login-btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
         .clinic-btn {
           width: 100%;
@@ -98,13 +148,12 @@ export default function PatientLoginPage() {
         .clinic-btn:active { transform: scale(0.98); }
       `}</style>
 
-      <div className=" flex w-full min-h-screen bg-white font-sans overflow-hidden">
+      <div className="flex w-full min-h-screen bg-white font-sans overflow-hidden">
 
         {/* ── LEFT PANEL ── */}
         <div className="relative hidden lg:flex lg:w-[45%] bg-[#0f2035] flex-col justify-center overflow-hidden"
           style={{ paddingLeft: 80, paddingRight: 80 }}>
 
-          {/* Background Glows */}
           <div className="absolute w-200 h-200 rounded-full bg-blue-600/10 -top-50 -left-50 blur-[120px]" />
           <div className="absolute w-125 h-125 rounded-full bg-blue-400/10 -bottom-25 -right-25 blur-[100px]" />
 
@@ -119,10 +168,9 @@ export default function PatientLoginPage() {
             </p>
           </div>
 
-          {/* Logo */}
           <div className="absolute bottom-12 z-10 flex items-center gap-3" style={{ left: 80 }}>
-            <img src="/logo.png" alt="HealthCon" style={{ height: 36, objectFit: "contain" }} /> 
-             <span>Health<span className="text-healthcon-teal">con</span></span>
+            <img src="/logo.png" alt="HealthCon" style={{ height: 36, objectFit: "contain" }} />
+            <span className="text-white font-bold">Health<span className="text-cyan-300">con</span></span>
           </div>
         </div>
 
@@ -137,12 +185,26 @@ export default function PatientLoginPage() {
 
             <div className="flex flex-col gap-4">
 
+              {/* Error */}
+              {error && (
+                <div className="px-4 py-3 bg-red-50 border border-red-200 rounded-xl text-red-600 text-sm font-medium">
+                  {error}
+                </div>
+              )}
+
               {/* Email */}
               <div className="input-row">
                 <svg width="16" height="16" fill="#9ca3af" viewBox="0 0 24 24" style={{ flexShrink: 0 }}>
                   <path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z" />
                 </svg>
-                <input value={username} onChange={(e) => setUsername(e.target.value)} type="email" placeholder="Email Address" className="login-input" />
+                <input
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  type="email"
+                  placeholder="Email Address"
+                  className="login-input"
+                  autoComplete="off"
+                />
               </div>
 
               {/* Password */}
@@ -150,7 +212,14 @@ export default function PatientLoginPage() {
                 <svg width="16" height="16" fill="#9ca3af" viewBox="0 0 24 24" style={{ flexShrink: 0 }}>
                   <path d="M18 8h-1V6c0-2.8-2.2-5-5-5S7 3.2 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zM12 17c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.7 1.4-3.1 3.1-3.1 1.7 0 3.1 1.4 3.1 3.1v2z" />
                 </svg>
-                <input value={password} onChange={(e) => setPassword(e.target.value)} type={showPass ? "text" : "password"} placeholder="Password" className="login-input" />
+                <input
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  type={showPass ? "text" : "password"}
+                  placeholder="Password"
+                  className="login-input"
+                  autoComplete="new-password"
+                />
                 <button className="show-btn" onClick={() => setShowPass(!showPass)}>
                   {showPass ? "Hide" : "Show"}
                 </button>
@@ -168,8 +237,9 @@ export default function PatientLoginPage() {
               </div>
 
               {/* Sign In Button */}
-              {error && <p className="text-red-500 text-sm">{error}</p>}
-              <button className="login-btn mt-2" onClick={handleLogin}>Sign In</button>
+              <button className="login-btn mt-2" onClick={handleLogin} disabled={loading}>
+                {loading ? "Signing in..." : "Sign In"}
+              </button>
 
               {/* Clinic Login */}
               <button className="clinic-btn" onClick={() => router.push('/auth/login-clinic')}>
@@ -183,8 +253,13 @@ export default function PatientLoginPage() {
                 <div className="flex-1 h-px bg-gray-100" />
               </div>
 
-              {/* Social */}
-              <button className="w-full flex items-center justify-center gap-3 bg-gray-50 border border-gray-200 rounded-2xl font-semibold text-slate-600 hover:bg-gray-100 transition-colors" style={{ padding: "13px 18px", fontSize: 14 }}>
+              {/* Google */}
+              <button
+                onClick={handleGoogle}
+                disabled={loading}
+                className="w-full flex items-center justify-center gap-3 bg-gray-50 border border-gray-200 rounded-2xl font-semibold text-slate-600 hover:bg-gray-100 transition-colors disabled:opacity-50"
+                style={{ padding: "13px 18px", fontSize: 14 }}
+              >
                 <svg width="18" height="18" viewBox="0 0 48 48">
                   <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
                   <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>

@@ -2,11 +2,42 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { useRegisterPatient } from "@/hooks/useRegisterPatient";
 
 export default function RegisterPage() {
   const router = useRouter();
+  const { registerPatient, loading, error } = useRegisterPatient();
+
   const [showPass, setShowPass] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
+
+  const [form, setForm] = useState({
+    firstName: "",
+    middleInitial: "",
+    lastName: "",
+    phone: "",
+    email: "",
+    password: "",
+    confirmPassword: "",
+    terms: false,
+  });
+
+  const handleChange = (e) => {
+    const { name, value, type, checked } = e.target;
+    setForm((prev) => ({
+      ...prev,
+      [name]: type === "checkbox" ? checked : value,
+    }));
+  };
+
+  const handleSubmit = async () => {
+    if (!form.firstName || !form.lastName || !form.email || !form.password) return;
+    if (form.password !== form.confirmPassword) return;
+    if (!form.terms) return;
+
+    const result = await registerPatient(form);
+    if (result.success) router.push("/patient/dashboard");
+  };
 
   const inputStyle = {
     paddingLeft: '40px',
@@ -28,7 +59,6 @@ export default function RegisterPage() {
       <div className="relative hidden lg:flex lg:w-[45%] bg-[#0f2035] flex-col justify-center overflow-hidden"
         style={{ paddingLeft: 80, paddingRight: 80 }}>
         
-        {/* Background Glows */}
         <div className="absolute w-200 h-200 rounded-full bg-blue-600/10 -top-50 -left-50 blur-[120px]" />
         <div className="absolute w-125 h-125 rounded-full bg-blue-400/10 -bottom-25 -right-25 blur-[100px]" />
         
@@ -43,52 +73,103 @@ export default function RegisterPage() {
           </p>
         </div>
 
-        {/* Logo bottom left */}
         <div className="absolute bottom-12 z-10 flex items-center gap-3" style={{ left: 80 }}>
-          <img src="/logo.png" alt="HealthCon" style={{ height: 36, objectFit: "contain" }} /> 
-             <span>Health<span className="text-healthcon-teal">con</span></span>
+          <img src="/logo.png" alt="HealthCon" style={{ height: 36, objectFit: "contain" }} />
+          <span className="text-white font-bold">Health<span className="text-cyan-300">con</span></span>
         </div>
       </div>
 
       {/* ── RIGHT PANEL ── */}
       <div className="flex-1 flex items-center justify-center p-12 bg-white overflow-y-auto">
-        <div className="w-full max-w-130 max-h-185">
+        <div className="w-full max-w-130">
           
           <header className="mb-10 text-left">
             <h1 className="text-3xl font-black text-slate-900 tracking-tight mb-2">Sign up</h1>
             <p className="text-gray-400 text-base font-medium">Create your patient account to get started</p>
           </header>
 
-          <form className="flex flex-col gap-3" onSubmit={(e) => e.preventDefault()}>
-            
+          {/* Error Message */}
+          {error && (
+            <div className="mb-4 px-4 py-3 bg-red-50 border border-red-200 rounded-xl text-red-600 text-sm font-medium">
+              {error}
+            </div>
+          )}
+
+          <div className="flex flex-col gap-3">
+
             {/* First Name */}
             <div className="bg-gray-50 rounded-2xl border-2 border-transparent focus-within:border-blue-500 focus-within:bg-white transition-all shadow-sm">
-              <input type="text" placeholder="First Name" style={inputStyle} />
+              <input
+                name="firstName"
+                type="text"
+                placeholder="First Name"
+                value={form.firstName}
+                onChange={handleChange}
+                style={inputStyle}
+              />
             </div>
 
             {/* M.I. & Last Name */}
             <div className="flex flex-row gap-5">
               <div className="w-28 bg-gray-50 rounded-2xl border-2 border-transparent focus-within:border-blue-500 focus-within:bg-white transition-all shadow-sm">
-                <input type="text" placeholder="M.I." maxLength={2} style={{...inputStyle, paddingLeft: '0', textAlign: 'center'}} />
+                <input
+                  name="middleInitial"
+                  type="text"
+                  placeholder="M.I."
+                  maxLength={2}
+                  value={form.middleInitial}
+                  onChange={handleChange}
+                  style={{...inputStyle, paddingLeft: '0', textAlign: 'center'}}
+                />
               </div>
               <div className="flex-1 bg-gray-50 rounded-2xl border-2 border-transparent focus-within:border-blue-500 focus-within:bg-white transition-all shadow-sm">
-                <input type="text" placeholder="Last Name" style={inputStyle} />
+                <input
+                  name="lastName"
+                  type="text"
+                  placeholder="Last Name"
+                  value={form.lastName}
+                  onChange={handleChange}
+                  style={inputStyle}
+                />
               </div>
             </div>
 
-            {/* Phone Number */}
+            {/* Phone */}
             <div className="bg-gray-50 rounded-2xl border-2 border-transparent focus-within:border-blue-500 focus-within:bg-white transition-all shadow-sm">
-              <input type="tel" placeholder="Phone Number" style={inputStyle} />
+              <input
+                name="phone"
+                type="tel"
+                placeholder="Phone Number"
+                value={form.phone}
+                onChange={handleChange}
+                style={inputStyle}
+              />
             </div>
 
             {/* Email */}
             <div className="bg-gray-50 rounded-2xl border-2 border-transparent focus-within:border-blue-500 focus-within:bg-white transition-all shadow-sm">
-              <input type="email" placeholder="Email Address" style={inputStyle} />
+              <input
+                name="email"
+                type="email"
+                placeholder="Email Address"
+                value={form.email}
+                onChange={handleChange}
+                style={inputStyle}
+                autoComplete="off"
+              />
             </div>
 
             {/* Password */}
             <div className="relative bg-gray-50 rounded-2xl border-2 border-transparent focus-within:border-blue-500 focus-within:bg-white transition-all shadow-sm">
-              <input type={showPass ? 'text' : 'password'} placeholder="Password" style={{...inputStyle, paddingRight: '80px'}} />
+              <input
+                name="password"
+                type={showPass ? 'text' : 'password'}
+                placeholder="Password"
+                value={form.password}
+                onChange={handleChange}
+                style={{...inputStyle, paddingRight: '80px'}}
+                autoComplete="new-password"
+              />
               <button type="button" onClick={() => setShowPass(!showPass)} className="absolute right-6 top-1/2 -translate-y-1/2 text-blue-600 text-[10px] font-black uppercase tracking-widest">
                 {showPass ? 'Hide' : 'Show'}
               </button>
@@ -96,7 +177,15 @@ export default function RegisterPage() {
 
             {/* Confirm Password */}
             <div className="relative bg-gray-50 rounded-2xl border-2 border-transparent focus-within:border-blue-500 focus-within:bg-white transition-all shadow-sm">
-              <input type={showConfirm ? 'text' : 'password'} placeholder="Confirm Password" style={{...inputStyle, paddingRight: '80px'}} />
+              <input
+                name="confirmPassword"
+                type={showConfirm ? 'text' : 'password'}
+                placeholder="Confirm Password"
+                value={form.confirmPassword}
+                onChange={handleChange}
+                style={{...inputStyle, paddingRight: '80px'}}
+                autoComplete="new-password"
+              />
               <button type="button" onClick={() => setShowConfirm(!showConfirm)} className="absolute right-6 top-1/2 -translate-y-1/2 text-blue-600 text-[10px] font-black uppercase tracking-widest">
                 {showConfirm ? 'Hide' : 'Show'}
               </button>
@@ -104,15 +193,27 @@ export default function RegisterPage() {
 
             {/* Terms */}
             <div className="flex items-center gap-4 py-2 px-2">
-              <input type="checkbox" id="terms" className="w-6 h-6 rounded-md accent-blue-600 cursor-pointer" />
+              <input
+                name="terms"
+                type="checkbox"
+                id="terms"
+                checked={form.terms}
+                onChange={handleChange}
+                className="w-6 h-6 rounded-md accent-blue-600 cursor-pointer"
+              />
               <label htmlFor="terms" className="text-sm text-gray-500 font-medium cursor-pointer select-none">
                 I agree to the <span className="text-blue-600 font-bold hover:underline">Terms of Service</span>
               </label>
             </div>
 
             {/* Submit */}
-            <button className="w-full mt-4 rounded-2xl bg-[#0f2035] text-white font-black text-lg shadow-xl shadow-blue-900/20 hover:bg-blue-600 active:scale-[0.98] transition-all duration-300" style={{ paddingTop: 20, paddingBottom: 20 }} onClick={() => router.push("/patient/dashboard")}>
-              Create Account
+            <button
+              onClick={handleSubmit}
+              disabled={loading}
+              className="w-full mt-4 rounded-2xl bg-[#0f2035] text-white font-black text-lg shadow-xl shadow-blue-900/20 hover:bg-blue-600 active:scale-[0.98] transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+              style={{ paddingTop: 20, paddingBottom: 20 }}
+            >
+              {loading ? "Creating Account..." : "Create Account"}
             </button>
 
             {/* Clinic Button */}
@@ -123,7 +224,8 @@ export default function RegisterPage() {
             >
               Are you a Clinic? Register here
             </button>
-          </form>
+
+          </div>
 
           {/* Bottom Links */}
           <div className="mt-10 pt-3 border-t border-gray-100 text-center">
