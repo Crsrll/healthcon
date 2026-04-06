@@ -105,8 +105,8 @@ export default function PatientLoginPage() {
           style={{ paddingLeft: 80, paddingRight: 80 }}>
 
           {/* Background Glows */}
-          <div className="absolute w-[800px] h-[800px] rounded-full bg-blue-600/10 -top-[200px] -left-[200px] blur-[120px]" />
-          <div className="absolute w-[500px] h-[500px] rounded-full bg-blue-400/10 -bottom-[100px] -right-[100px] blur-[100px]" />
+          <div className="absolute w-200 h-200 rounded-full bg-blue-600/10 -top-50 -left-50 blur-[120px]" />
+          <div className="absolute w-125 h-125 rounded-full bg-blue-400/10 -bottom-25 -right-25 blur-[100px]" />
 
           <div className="relative z-10">
             <p className="text-blue-400 font-bold text-xs uppercase tracking-[6px] mb-3">HealthCon Platform</p>

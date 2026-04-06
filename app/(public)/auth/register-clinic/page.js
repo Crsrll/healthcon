@@ -119,8 +119,8 @@ export default function RegisterClinicPage() {
         </div>
 
         {/* ── RIGHT PANEL ── */}
-        <div className="flex-1 bg-white flex items-center justify-center overflow-y-auto" style={{ padding: 48 }}>
-          <div className="w-full" style={{ maxWidth: 420 }}>
+        <div className="flex-1 bg-white flex items-start justify-center overflow-y-auto" style={{ padding: 48 }}>
+  <div className="w-full px-18 py-8">
 
             <h1 className="font-bold text-slate-900 m-0 mb-1" style={{ fontSize: 28 }}>Register your Clinic</h1>
             <p className="text-gray-400 mt-0 mb-7" style={{ fontSize: 13 }}>Fill in your clinic details to get started</p>
@@ -148,7 +148,7 @@ export default function RegisterClinicPage() {
                 <svg width="16" height="16" fill="#9ca3af" viewBox="0 0 24 24" style={{ flexShrink: 0 }}>
                   <path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z" />
                 </svg>
-                <input type="email" placeholder="Email Address" className="clinic-input" />
+                <input type="email" placeholder="Email Address" className="clinic-input" autoComplete="off"/>
               </div>
 
               {/* DOH LTO */}
@@ -157,7 +157,7 @@ export default function RegisterClinicPage() {
                   <svg width="16" height="16" fill="#9ca3af" viewBox="0 0 24 24" style={{ flexShrink: 0 }}>
                     <path d="M20 6h-2.18c.07-.31.18-.62.18-.95C18 3.37 16.63 2 14.95 2c-.96 0-1.86.48-2.48 1.24L12 3.89l-.47-.65C10.9 2.48 10 2 9.05 2 7.37 2 6 3.37 6 5.05c0 .33.11.64.18.95H4c-1.1 0-2 .9-2 2v11c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zm-5.05-2c.55 0 1.05.45 1.05 1.05 0 .64-.5 1.07-1.05 1.07S13.9 5.69 13.9 5.05C13.9 4.45 14.4 4 14.95 4zM9.05 4c.55 0 1.05.45 1.05 1.05 0 .64-.5 1.07-1.05 1.07S8 5.69 8 5.05C8 4.45 8.5 4 9.05 4zM20 19H4V8h16v11z" />
                   </svg>
-                  <input type="text" placeholder="DOH License to Operate (LTO) Number" className="clinic-input" />
+                  <input type="text" placeholder="DOH License to Operate (LTO) Number" className="clinic-input" autoComplete="off"/>
                 </div>
                 <p className="text-gray-400 ml-1 mt-1 mb-0" style={{ fontSize: 11, lineHeight: 1.5 }}>
                   Your LTO number is issued by the Philippine DOH. It verifies your clinic is legally authorized to operate.
@@ -169,7 +169,7 @@ export default function RegisterClinicPage() {
                 <svg width="16" height="16" fill="#9ca3af" viewBox="0 0 24 24" style={{ flexShrink: 0 }}>
                   <path d="M18 8h-1V6c0-2.8-2.2-5-5-5S7 3.2 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zM12 17c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.7 1.4-3.1 3.1-3.1 1.7 0 3.1 1.4 3.1 3.1v2z" />
                 </svg>
-                <input type={showPass ? "text" : "password"} placeholder="Password" className="clinic-input" />
+                <input type={showPass ? "text" : "password"} placeholder="Password" className="clinic-input" autoComplete="off"/>
                 <button className="show-btn" onClick={() => setShowPass(!showPass)}>
                   {showPass ? "Hide" : "Show"}
                 </button>
