@@ -7,7 +7,7 @@ export default function ClinicLoginPage() {
   const [showPass, setShowPass] = useState(false);
 
   return (
-    <div className="flex w-full h-full bg-white font-sans overflow-hidden">
+    <div className="flex w-full min-h-screen bg-white font-sans overflow-hidden">
 
       {/* ── LEFT PANEL ── */}
       <div className="relative hidden lg:flex lg:w-[45%] bg-[#0f2035] flex-col justify-center overflow-hidden px-20">

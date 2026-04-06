@@ -1,11 +1,15 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 
 export default function Footer() {
   const router = useRouter();
   const links = ["privacy", "terms", "contact", "faq"];
 
+  const pathname = usePathname();                                              // ← inside function
+  const hideOn = ["/auth/login", "/auth/register", "/auth/register-clinic" , "/auth/login-clinic"];  // ← inside function
+  if (hideOn.includes(pathname)) return null; 
   return (
     <footer style={{
       backgroundColor: "#122844",

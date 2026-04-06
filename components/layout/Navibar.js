@@ -3,6 +3,9 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, useRef, useEffect } from "react";
 import { useAuth } from "@/context/authContext";
+import { usePathname } from "next/navigation";
+
+
 
 const patientLinks = [
   { name: "Dashboard", href: "/patient/dashboard" },
@@ -30,6 +33,8 @@ export default function Navbar({ style }) {
   const [mounted, setMounted] = useState(false);
   const dropdownRef = useRef(null);
 
+ 
+
   useEffect(() => { setMounted(true); }, []);
 
   useEffect(() => {
@@ -47,6 +52,10 @@ export default function Navbar({ style }) {
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
+
+  const pathname = usePathname();                                              // ← inside function
+  const hideOn = ["/auth/login", "/auth/register", "/auth/register-clinic" , "/auth/login-clinic"];  // ← inside function
+  if (hideOn.includes(pathname)) return null;
 
   const handleLogout = () => {
     logout();
