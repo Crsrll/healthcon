@@ -52,14 +52,14 @@ export default function RegisterPage() {
 
       {/* ── RIGHT PANEL ── */}
       <div className="flex-1 flex items-center justify-center p-12 bg-white overflow-y-auto">
-        <div className="w-full max-w-[520px]">
+        <div className="w-full max-w-[520px] max-h-[740px]">
           
           <header className="mb-10 text-left">
             <h1 className="text-3xl font-black text-slate-900 tracking-tight mb-2">Sign up</h1>
             <p className="text-gray-400 text-base font-medium">Create your patient account to get started</p>
           </header>
 
-          <form className="flex flex-col gap-5" onSubmit={(e) => e.preventDefault()}>
+          <form className="flex flex-col gap-3" onSubmit={(e) => e.preventDefault()}>
             
             {/* First Name */}
             <div className="bg-gray-50 rounded-2xl border-2 border-transparent focus-within:border-blue-500 focus-within:bg-white transition-all shadow-sm">
@@ -126,7 +126,7 @@ export default function RegisterPage() {
           </form>
 
           {/* Bottom Links */}
-          <div className="mt-10 pt-8 border-t border-gray-100 text-center">
+          <div className="mt-10 pt-3 border-t border-gray-100 text-center">
             <p className="text-base text-gray-400 font-medium">
               Already have an account? <button onClick={() => router.push('/auth/login')} className="text-blue-600 font-black ml-1">Sign in</button>
             </p>
