@@ -7,6 +7,13 @@ export default function proxy(request) {
   const user = userCookie ? JSON.parse(userCookie) : null;
   const role = user?.role;
 
+  if (user && !role) {
+    const response = NextResponse.redirect(new URL("/auth/login", request.url));
+    response.cookies.delete("hc_user");
+    return response;
+  }
+
+
   // ← If already logged in, block access to auth pages
   const isAuthRoute = pathname.startsWith("/auth");
   if (isAuthRoute && user) {

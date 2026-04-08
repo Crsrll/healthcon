@@ -1,7 +1,12 @@
 import { useState } from "react";
 import { db } from "@/lib/firebase";
-import { collection, addDoc, serverTimestamp } from "firebase/firestore";
-import { getAuth, createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
+import { doc, setDoc, serverTimestamp } from "firebase/firestore";
+import {
+  getAuth,
+  createUserWithEmailAndPassword,
+  updateProfile,
+  sendEmailVerification,
+} from "firebase/auth";
 
 export function useRegisterPatient() {
   const [loading, setLoading] = useState(false);
@@ -14,7 +19,11 @@ export function useRegisterPatient() {
       const auth = getAuth();
 
       // 1. Create user in Firebase Auth
-      const userCredential = await createUserWithEmailAndPassword(auth, form.email, form.password);
+      const userCredential = await createUserWithEmailAndPassword(
+        auth,
+        form.email,
+        form.password
+      );
       const uid = userCredential.user.uid;
 
       // 2. Update display name in Auth
@@ -22,9 +31,11 @@ export function useRegisterPatient() {
         displayName: `${form.firstName} ${form.middleInitial} ${form.lastName}`,
       });
 
-      // 3. Save full details to Firestore
-      await addDoc(collection(db, "patients"), {
-        uid,
+      // 3. Send verification email
+      await sendEmailVerification(userCredential.user);
+
+      // 4. Save profile to Firestore (uid as document ID)
+      await setDoc(doc(db, "users", uid), {
         firstName: form.firstName,
         middleInitial: form.middleInitial,
         lastName: form.lastName,
