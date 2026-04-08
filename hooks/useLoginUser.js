@@ -61,6 +61,12 @@ export function useLoginUser() {
         return { success: false };
       }
 
+      if (role === "clinic" && !userData.approved) {
+        await auth.signOut();
+        setError("Your clinic account is pending admin approval.");
+        return { success: false };
+      }
+
       // ✅ Return role for routing
       return {
         success: true,

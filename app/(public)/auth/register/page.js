@@ -36,7 +36,7 @@ export default function RegisterPage() {
     if (!form.terms) return;
 
     const result = await registerPatient(form);
-    if (result.success) router.push("/patient/dashboard");
+    if (result.success) router.push("/auth/login");
   };
 
   const inputStyle = {
@@ -185,6 +185,7 @@ export default function RegisterPage() {
                 onChange={handleChange}
                 style={{...inputStyle, paddingRight: '80px'}}
                 autoComplete="new-password"
+                onKeyDown={(e) => e.key === "Enter" && handleSubmit()}
               />
               <button type="button" onClick={() => setShowConfirm(!showConfirm)} className="absolute right-6 top-1/2 -translate-y-1/2 text-blue-600 text-[10px] font-black uppercase tracking-widest">
                 {showConfirm ? 'Hide' : 'Show'}
@@ -210,7 +211,7 @@ export default function RegisterPage() {
             <button
               onClick={handleSubmit}
               disabled={loading}
-              className="w-full mt-4 rounded-2xl bg-[#0f2035] text-white font-black text-lg shadow-xl shadow-blue-900/20 hover:bg-blue-600 active:scale-[0.98] transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="cursor-pointer w-full mt-4 rounded-2xl bg-[#0f2035] text-white font-black text-lg shadow-xl shadow-blue-900/20 hover:bg-blue-600 active:scale-[0.98] transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
               style={{ paddingTop: 20, paddingBottom: 20 }}
             >
               {loading ? "Creating Account..." : "Create Account"}
@@ -219,7 +220,7 @@ export default function RegisterPage() {
             {/* Clinic Button */}
             <button
               onClick={() => router.push('/auth/register-clinic')}
-              className="w-full rounded-2xl border-2 border-blue-600 text-blue-600 font-black text-base hover:bg-blue-600 hover:text-white active:scale-[0.98] transition-all duration-300"
+              className="cursor-pointer w-full rounded-2xl border-2 border-blue-600 text-blue-600 font-black text-base hover:bg-blue-600 hover:text-white active:scale-[0.98] transition-all duration-300"
               style={{ paddingTop: 16, paddingBottom: 16 }}
             >
               Are you a Clinic? Register here
@@ -230,7 +231,7 @@ export default function RegisterPage() {
           {/* Bottom Links */}
           <div className="mt-10 pt-3 border-t border-gray-100 text-center">
             <p className="text-base text-gray-400 font-medium">
-              Already have an account? <button onClick={() => router.push('/auth/login')} className="text-blue-600 font-black ml-1">Sign in</button>
+              Already have an account? <button onClick={() => router.push('/auth/login')} className="cursor-pointer text-blue-600 font-black ml-1">Sign in</button>
             </p>
           </div>
 

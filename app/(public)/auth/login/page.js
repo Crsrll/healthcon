@@ -163,6 +163,7 @@ export default function LoginPage() {
                 <input
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
+                  onKeyDown={(e) => e.key === "Enter" && handleLogin()}
                   type={showPass ? "text" : "password"}
                   placeholder="Password"
                   className="login-input"
@@ -176,8 +177,9 @@ export default function LoginPage() {
               </div>
 
               {/* Remember Me */}
-              <label className="flex items-center gap-2 text-sm text-gray-500">
+              <label className="cursor-pointer flex items-center gap-2 text-sm text-gray-500">
                 <input
+                  className="cursor-pointer"
                   type="checkbox"
                   checked={rememberMe}
                   onChange={(e) => setRememberMe(e.target.checked)}
@@ -201,7 +203,7 @@ export default function LoginPage() {
                 Don't have an account?{" "}
                 <button
                   onClick={() => router.push("/auth/register")}
-                  className="text-blue-600 font-bold"
+                  className="cursor-pointer text-blue-600 font-bold"
                 >
                   Sign up
                 </button>
