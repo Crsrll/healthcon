@@ -1,23 +1,24 @@
 "use client";
 
-import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { useLoginUser } from "@/hooks/useLoginUser";
+import { useRouter } from "next/navigation";
+import { useAuth } from "@/context/authContext"; // your AuthProvider
+// no need to import useLoginUser here anymore
 
 export default function LoginPage() {
   const router = useRouter();
+  const { login, loading, error } = useAuth();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPass, setShowPass] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
 
-  const { loginUser, loading, error } = useLoginUser();
-
   const handleLogin = async () => {
     if (!email || !password) return;
 
-    const result = await loginUser(email, password, rememberMe);
+    // Use context login which calls your useLoginUser hook internally
+    const result = await login(email, password, rememberMe);
     if (!result.success) return;
 
     const roleRoutes = {
@@ -26,14 +27,18 @@ export default function LoginPage() {
       patient: "/patient/dashboard",
     };
 
-    const route = roleRoutes[result.role];
+    const userRole = result.user?.role;
 
-    if (!route) {
-      console.error("Unknown role:", result.role);
+    const route = roleRoutes[userRole];
+
+    if (route) {
+      router.push(route);
+      router.refresh();
+    }
+    else{
+      console.error("Unknown role:", userRole);
       return;
     }
-
-    router.push(route);
   };
 
   return (

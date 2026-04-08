@@ -35,7 +35,7 @@ export function useRegisterPatient() {
       await sendEmailVerification(userCredential.user);
 
       // 4. Save profile to Firestore (uid as document ID)
-      await setDoc(doc(db, "patients", uid), {
+      await setDoc(doc(db, "users", uid), {
         firstName: form.firstName,
         middleInitial: form.middleInitial,
         lastName: form.lastName,
