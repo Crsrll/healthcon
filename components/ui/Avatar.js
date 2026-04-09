@@ -1,12 +1,13 @@
 export default function Avatar({ user, size = 40 }) {
-  const initials = user?.displayName
-    ? user.displayName
-        .split(" ")
-        .map((n) => n[0])
-        .join("")
-        .toUpperCase()
-        .slice(0, 2) // max 2 letters
-    : "?";
+  const displayName = `${user?.firstName[0]}${user?.lastName[0]}`; 
+  const initials = user?.firstName || user?.lastName 
+    ? displayName
+        // .split(" ")
+        // .map((n) => n[0])
+        // .join("")
+        // .toUpperCase()
+        // .slice(0, 2) // max 2 letters
+    : user?.firstName[0];
 
   if (user?.photoURL) {
     return (
@@ -22,19 +23,19 @@ export default function Avatar({ user, size = 40 }) {
 
   return (
     <div
-      style={{
-        width: size,
-        height: size,
-        borderRadius: "50%",
-        backgroundColor: "#1a355d", // HealthCon navy
-        color: "#b2f5ea",           // HealthCon mint
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        fontWeight: "900",
-        fontSize: size * 0.35,
-        userSelect: "none",
-      }}
+      // style={{
+      //   width: size,
+      //   height: size,
+      //   borderRadius: "50%",
+      //   backgroundColor: "#1a355d", // HealthCon navy
+      //   color: "#b2f5ea",           // HealthCon mint
+      //   display: "flex",
+      //   alignItems: "center",
+      //   justifyContent: "center",
+      //   fontWeight: "900",
+      //   fontSize: size * 0.35,
+      //   userSelect: "none",
+      // }}
     >
       {initials}
     </div>

@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useState, useRef, useEffect } from "react";
 import { useAuth } from "@/context/authContext";
 import { usePathname } from "next/navigation";
+import Avatar from "@/components/ui/Avatar";
 
 
 
@@ -190,7 +191,8 @@ export default function Navbar({ style }) {
                     onClick={() => setIsProfileOpen(!isProfileOpen)}
                     className="w-9 h-9 bg-teal-500 rounded-full border border-slate-300 cursor-pointer hover:ring-2 ring-teal-300 transition-all flex items-center justify-center text-white font-bold text-xs"
                   >
-                    {profileInitial}
+                    {/* {profileInitial} */}
+                    <Avatar user={user} />
                   </button>
                 </div>
 
