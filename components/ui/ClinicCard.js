@@ -4,6 +4,11 @@ import { Star, MapPin } from 'lucide-react';
 // import GeneralCard from './GeneralCard';
 
 export function ClinicCard({ clinic }) {
+
+  const specializations = Array.isArray(clinic.specialization)
+    ? clinic.specialization
+    : [clinic.specialization].filter(Boolean);
+
   return (
     <div className="group bg-white rounded-[2.5rem] border border-slate-200 shadow-sm hover:shadow-xl hover:shadow-slate-200/50 transition-all duration-500 overflow-hidden flex flex-col mb-8 mr-4">
 
@@ -32,7 +37,7 @@ export function ClinicCard({ clinic }) {
         <div className="absolute bottom-4 left-5 right-5 flex justify-between items-end">
           <div>
             <p className="text-teal-400 text-[10px] font-black uppercase tracking-widest mb-1">
-              {clinic.specialization[0]}
+              {specializations[0]}
             </p>
             <h3 className="text-white font-bold text-lg leading-tight">{clinic.name}</h3>
           </div>
@@ -51,7 +56,7 @@ export function ClinicCard({ clinic }) {
         </div>
 
         <div className="flex flex-wrap gap-2">
-          {clinic.specialization.map(s => (
+          {specializations.map(s => (
             <span key={s} className="bg-blue-50 text-blue-600 text-[10px] font-black uppercase tracking-wider px-3 py-1 rounded-full">
               {s}
             </span>
