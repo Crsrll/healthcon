@@ -1,11 +1,15 @@
 "use client";
 import { useState } from "react";
+import { useAuth } from "@/context/authContext";
+import { useClinics } from "@/hooks/useClinics";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import Modal from "@/components/ui/Modal";
 import { Calendar, FileText, Star, Search, ChevronRight, Pill, Beaker, ShieldCheck, ArrowRight } from "lucide-react";
 
 export default function PatientDashboard() {
+  const { user } = useAuth();
+  const { clinics, loading: clinicsLoading } = useClinics();
   const [search, setSearch] = useState("");
   const router = useRouter();
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
@@ -33,10 +37,10 @@ export default function PatientDashboard() {
     { name: "Cetirizine", dose: "10mg", freq: "Once a day", remaining: "Ongoing" },
   ];
 
-  const nearbyClinics = [
-    { id: "1", name: "CDO General Outpatient", city: "Cagayan de Oro", specialty: "Ob-Gyne", image: "https://images.unsplash.com/photo-1538108149393-fbbd81895907?w=400" },
-    { id: "2", name: "Iligan Medical Center", city: "Iligan City", specialty: "Cardiology", image: "https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?w=400" },
-  ];
+  // const nearbyClinics = [
+  //   { id: "1", name: "CDO General Outpatient", city: "Cagayan de Oro", specialty: "Ob-Gyne", image: "https://images.unsplash.com/photo-1538108149393-fbbd81895907?w=400" },
+  //   { id: "2", name: "Iligan Medical Center", city: "Iligan City", specialty: "Cardiology", image: "https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?w=400" },
+  // ];
 
   const recentlyViewed = [
     { id: "1", name: "CDO General Outpatient", city: "Cagayan de Oro", specialty: "Ob-Gyne", image: "https://images.unsplash.com/photo-1538108149393-fbbd81895907?w=400" },
@@ -57,7 +61,7 @@ export default function PatientDashboard() {
             {/* Left: Greetings */}
             <div className="flex-1">
               <p className="text-teal-300 text-[10px] font-bold uppercase tracking-[0.2em] mb-1">Patient Portal</p>
-              <h1 className="text-white text-3xl font-bold">Good Day, Melissa! </h1>
+              <h1 className="text-white text-3xl font-bold">Good Day, {user?.firstName}! </h1>
               <p className="text-slate-300 text-sm mt-1 flex items-center gap-2">
                 <span className="w-2 h-2 rounded-full bg-teal-400 animate-pulse" />
                 Next appointment: <span className="text-teal-300 font-semibold">Today at 10:00 AM</span>
@@ -168,22 +172,37 @@ export default function PatientDashboard() {
                 <h2 className="font-bold text-slate-800 text-lg">Clinics Near You</h2>
                 <Link href="/clinics" className="text-xs font-bold text-teal-600 hover:underline">Explore Map</Link>
               </div>
+              {/* ← CHANGED: replaced dummy nearbyClinics with real Firestore data from useClinics */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                {nearbyClinics.map((clinic) => (
-                  <Link href={`/clinics/${clinic.id}`} key={clinic.id} className="bg-white rounded-3xl overflow-hidden border border-slate-200 hover:shadow-lg transition-all group">
-                    <div className="relative h-40 overflow-hidden">
-                      <img src={clinic.image} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" alt={clinic.name} />
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-                      <span className="absolute bottom-3 left-4 text-[10px] font-black text-white bg-teal-500 px-3 py-1 rounded-full uppercase tracking-widest">
-                        {clinic.specialty}
-                      </span>
-                    </div>
-                    <div className="p-5">
-                      <h3 className="font-bold text-slate-800">{clinic.name}</h3>
-                      <p className="text-xs text-slate-400 mt-1">{clinic.city}</p>
-                    </div>
-                  </Link>
-                ))}
+                {clinicsLoading ? (
+                  <p className="text-sm text-slate-400">Loading clinics...</p>
+                ) : clinics.length === 0 ? (
+                  <div className="col-span-2 text-center py-8 text-slate-400 text-sm">
+                    No clinics available yet.
+                  </div>
+                ) : (
+                  clinics.slice(0, 2).map((clinic) => (
+                    <Link href={`/clinics/${clinic.id}`} key={clinic.id} className="bg-white rounded-3xl overflow-hidden border border-slate-200 hover:shadow-lg transition-all group">
+                      <div className="relative h-40 overflow-hidden">
+                        {/* ← CHANGED: fallback image if clinic has no image yet */}
+                        <img
+                          src={clinic.image}
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                          alt={clinic.name}
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+                        {/* ← CHANGED: handles both array and string specialty */}
+                        <span className="absolute bottom-3 left-4 text-[10px] font-black text-white bg-teal-500 px-3 py-1 rounded-full uppercase tracking-widest">
+                          {Array.isArray(clinic.specialty) ? clinic.specialty[0] : clinic.specialty}
+                        </span>
+                      </div>
+                      <div className="p-5">
+                        <h3 className="font-bold text-slate-800">{clinic.name}</h3>
+                        <p className="text-xs text-slate-400 mt-1">{clinic.city}</p>
+                      </div>
+                    </Link>
+                  ))
+                )}
               </div>
             </section>
           </div>
