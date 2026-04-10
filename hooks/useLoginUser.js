@@ -6,8 +6,6 @@ import {
   browserLocalPersistence,
   browserSessionPersistence,
 } from "firebase/auth";
-import { doc, getDoc } from "firebase/firestore";
-import { db } from "@/lib/firebase";
 
 export function useLoginUser() {
   const [loading, setLoading] = useState(false);
@@ -20,59 +18,38 @@ export function useLoginUser() {
     try {
       const auth = getAuth();
 
-      // Set persistence
+      // Persistence
       await setPersistence(
         auth,
         rememberMe ? browserLocalPersistence : browserSessionPersistence
       );
 
-      // Authenticate
-      const userCredential = await signInWithEmailAndPassword(
-        auth,
-        email,
-        password
-      );
-
+      // Firebase Auth — must stay client-side
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
 
       // Email verification
       if (!user.emailVerified) {
         await auth.signOut();
         setError("Please verify your email before logging in.");
-        return { success: false };
+        return { success: false, error: "Please verify your email before logging in." };
       }
 
-      // Get user data
-      const userDocRef = doc(db, "users", user.uid);
-      const userDocSnap = await getDoc(userDocRef);
+      // Call API route for Firestore lookup
+      const res = await fetch(`/api/user/getUser?uid=${user.uid}`);
+      const json = await res.json();
 
-      if (!userDocSnap.exists()) {
+      if (!res.ok) {
         await auth.signOut();
-        setError("User record not found.");
-        return { success: false };
+        setError(json.error || "Something went wrong.");
+        return { success: false, error: json.error };
       }
 
-      const userData = userDocSnap.data();
-      const role = userData.role;
-
-      if (!role) {
-        await auth.signOut();
-        setError("User role is not defined.");
-        return { success: false };
-      }
-
-      if (role === "clinic" && !userData.approved) {
-        await auth.signOut();
-        setError("Your clinic account is pending admin approval.");
-        return { success: false };
-      }
-
-      // ✅ Return role for routing
       return {
         success: true,
         user,
-        role,
-        data: userData,
+        role: json.data.role,
+        data: json.data,
       };
 
     } catch (err) {
@@ -80,20 +57,15 @@ export function useLoginUser() {
 
       switch (err.code) {
         case "auth/user-not-found":
-          setError("No account found with that email.");
-          break;
+          setError("No account found with that email."); break;
         case "auth/wrong-password":
-          setError("Incorrect password.");
-          break;
+          setError("Incorrect password."); break;
         case "auth/invalid-email":
-          setError("Invalid email address.");
-          break;
+          setError("Invalid email address."); break;
         case "auth/invalid-credential":
-          setError("Invalid email or password.");
-          break;
+          setError("Invalid email or password."); break;
         case "auth/too-many-requests":
-          setError("Too many attempts. Please try again later.");
-          break;
+          setError("Too many attempts. Please try again later."); break;
         default:
           setError("Something went wrong. Please try again.");
       }
@@ -104,9 +76,5 @@ export function useLoginUser() {
     }
   };
 
-  return {
-    loginUser,
-    loading,
-    error,
-  };
+  return { loginUser, loading, error };
 }

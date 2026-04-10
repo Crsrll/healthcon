@@ -3,6 +3,8 @@ import { Home, Pencil, User, Calendar, MessageCircle , Stethoscope, Settings, Fl
 import Sidebar from "@/components/dashboard/Sidebar";
 import { useRouter  } from "next/navigation";
 import {useState} from "react";
+import { useAuth } from "@/context/authContext";
+
 
 const buttons = [
   { label: "Dashboard", href: "/clinic/dashboard", icon: <Home size={20} /> },
@@ -19,6 +21,8 @@ const buttons = [
 ];
 
 export default function ClinicLayout({ children }) {
+  
+  const { user } = useAuth();
   const [search, setSearch] = useState("");
   const router = useRouter();
   const progressPct = Math.round((7 / 12) * 100);
@@ -59,7 +63,7 @@ export default function ClinicLayout({ children }) {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-teal-300 text-[11px] font-bold uppercase tracking-widest mb-1">Clinic Portal</p>
-              <h1 className="text-white text-2xl font-bold">Joseph Community Health</h1>
+              <h1 className="text-white text-2xl font-bold">{user?.clinicName}</h1>
               <p className="text-slate-300 text-sm mt-1 flex items-center gap-2">
                 <span className="inline-block w-2 h-2 rounded-full bg-teal-400 animate-pulse" />
                 Monday, March 23 · Clinic is <span className="text-teal-300 font-semibold ml-1">Open</span>
@@ -92,7 +96,7 @@ export default function ClinicLayout({ children }) {
                       value={search}
                       onChange={(e) => setSearch(e.target.value)}
                       placeholder="Search Patients or Doctors..."
-                      className="w-full bg-white/10 border border-white/20 rounded-xl pl-9 pr-4 py-2.5 text-sm text-white placeholder-slate-400 outline-none focus:bg-white/20 transition-all w-64"
+                      className="w-full bg-white/10 border border-white/20 rounded-xl pl-9 pr-4 py-2.5 text-sm text-white placeholder-slate-400 outline-none focus:bg-white/20 transition-all"
                     />
                   </div>
                   <button type="submit" className="bg-teal-500 hover:bg-teal-400 px-5 py-2.5 rounded-xl text-sm font-semibold text-white transition-all shadow-md">

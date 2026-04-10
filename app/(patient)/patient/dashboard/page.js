@@ -9,7 +9,7 @@ import { Calendar, FileText, Star, Search, ChevronRight, Pill, Beaker, ShieldChe
 
 export default function PatientDashboard() {
   const { user } = useAuth();
-  const { clinics, loading: clinicsLoading } = useClinics();
+  const { clinics, loading } = useClinics();
   const [search, setSearch] = useState("");
   const router = useRouter();
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
@@ -188,7 +188,7 @@ export default function PatientDashboard() {
                         <img
                           src={clinic.image}
                           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                          alt={clinic.name}
+                          alt={clinic.clinicName}
                         />
                         <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
                         {/* ← CHANGED: handles both array and string specialty */}
@@ -197,7 +197,7 @@ export default function PatientDashboard() {
                         </span>
                       </div>
                       <div className="p-5">
-                        <h3 className="font-bold text-slate-800">{clinic.name}</h3>
+                        <h3 className="font-bold text-slate-800">{clinic.clinicName}</h3>
                         <p className="text-xs text-slate-400 mt-1">{clinic.city}</p>
                       </div>
                     </Link>

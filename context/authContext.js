@@ -1,8 +1,9 @@
 "use client";
 
-import { createContext, useContext, useState, useEffect } from "react";
+import { createContext, useContext, useEffect, useState } from "react";
 import Cookies from "js-cookie";
-import { getAuth, signOut } from "firebase/auth";
+import { signOut } from "firebase/auth";        // ← remove getAuth
+import { auth } from "@/lib/firebase";          // ← add this
 import { useLoginUser } from "@/hooks/useLoginUser";
 
 const AuthContext = createContext();
@@ -12,12 +13,9 @@ export function useAuth() {
 }
 
 export function AuthProvider({ children }) {
-  const { loginUser } = useLoginUser();
+  const { loginUser, loading, error } = useLoginUser(); // ✅ reuse hook state
   const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
 
-  // Load user from localStorage on initial render
   useEffect(() => {
     if (typeof window !== "undefined") {
       const saved = localStorage.getItem("hc_user");
@@ -26,43 +24,32 @@ export function AuthProvider({ children }) {
   }, []);
 
   const login = async (email, password, rememberMe = false) => {
-    setLoading(true);
-    setError("");
+    const result = await loginUser(email, password, rememberMe);
 
-    try {
-      const result = await loginUser(email, password, rememberMe);
+    if (!result.success) return { success: false };
 
-      if (!result.success) {
-        setError(result.error || "Login failed.");
-        return { success: false };
-      }
+    const userData = { uid: result.user.uid, role: result.role, ...result.data };
+    setUser(userData);
+    localStorage.setItem("hc_user", JSON.stringify(userData));
 
-      // Save user info in state and localStorage
-      const userData = { uid: result.user.uid, role: result.role, ...result.data };
-      setUser(userData);
-      localStorage.setItem("hc_user", JSON.stringify(userData));
-
-      Cookies.set("hc_user", JSON.stringify(userData), { expires: rememberMe ? 7 : null });
-
-      return { success: true, user: userData };
-    } catch (err) {
-      console.error("Login error:", err);
-      setError("Something went wrong. Please try again.");
-      return { success: false };
-    } finally {
-      setLoading(false);
+    if (rememberMe) {
+      Cookies.set("hc_user", JSON.stringify(userData), { expires: 7 });
+    } else {
+      Cookies.set("hc_user", JSON.stringify(userData)); // session cookie
     }
+
+    return { success: true, user: userData };
   };
 
   const logout = async () => {
-    const auth = getAuth();
     try {
-      await signOut(auth);
+      await signOut(auth);  // ← use imported auth, not getAuth()
     } catch (err) {
       console.error("Logout error:", err);
     }
     setUser(null);
     localStorage.removeItem("hc_user");
+    Cookies.remove("hc_user");
   };
 
   return (

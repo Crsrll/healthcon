@@ -58,8 +58,8 @@ export default function Navbar({ style }) {
   const hideOn = ["/auth/login", "/auth/register", "/auth/register-clinic" , "/auth/login-clinic"];  // ← inside function
   if (hideOn.includes(pathname)) return null;
 
-  const handleLogout = () => {
-    logout();
+  const handleLogout = async () => {
+    await logout();
     router.push("/");
   };
 
@@ -70,15 +70,10 @@ export default function Navbar({ style }) {
     role === "admin"   ? adminLinks   :
     null;
 
-  const profileInitial =
-    role === "patient" ? "M" :
-    role === "clinic"  ? "J" :
-    role === "admin"   ? "AD" : "";
-
   const profileName =
-    role === "patient" ? "Melissa 👋" :
-    role === "clinic"  ? "Joseph Health 🏥" :
-    "Admin User";
+    role === "patient" ? `${user?.firstName} ${user?.lastName}` :
+    role === "clinic"  ? user?.clinicName :
+    `${user?.firstName} ${user?.lastName}`;
 
   const profileLabel =
     role === "patient" ? "Patient" :
