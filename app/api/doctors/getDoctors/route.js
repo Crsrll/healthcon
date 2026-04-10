@@ -19,6 +19,8 @@ export async function GET(req) {
     ...doc.data(),
   }));
 
+  // console.log("clinicID received:", clinicID);
+
   return NextResponse.json({ success: true, data: doctors });
   
     } catch (err) {
