@@ -33,8 +33,10 @@ export default function ClinicProfilePage() {
   const searchParams = useSearchParams();
   const router = useRouter();
 
-  const { clinic, loading } = useClinic(params.clinicID);
-  const doctors = useDoctors(params.clinicID);
+  const { clinic, loading: clinicLoading } = useClinic(params.clinicID);
+  const { doctors, loading: doctorLoading} = useDoctors(params.clinicID);
+
+  const isLoading = clinicLoading || doctorLoading;
 
   const [highlightDoctor, setHighlightDoctor] = useState(null);
   const doctorRefs = useRef({});
@@ -69,7 +71,7 @@ export default function ClinicProfilePage() {
   }, [clinic, searchParams]);
 
   // ── Loading ──────────────────────────────────────────────────
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="min-h-screen bg-[#f7fafc] flex items-center justify-center">
         <div className="text-center">
@@ -200,7 +202,7 @@ export default function ClinicProfilePage() {
                   </div>
 
                   <div className="flex-1 min-w-0">
-                    <p className="font-bold text-gray-900">{doctor.name}</p>
+                    <p className="font-bold text-gray-900">Dr. {doctor.name}</p>
                     <p className="text-sm text-blue-600 font-medium mb-1">
                       {doctor.specialty}
                     </p>

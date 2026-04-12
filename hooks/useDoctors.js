@@ -1,22 +1,43 @@
 import { useState, useEffect } from "react";
 
-export function useDoctors(clinicID) {
+export function useDoctors(clinicID = null) {
   const [doctors, setDoctors] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!clinicID) return;
-
     const fetchDoctors = async () => {
-      const res = await fetch(`/api/doctors/getDoctors?clinicID=${clinicID}`);
-      const json = await res.json();
+      setLoading(true);
 
-      if (res.ok) {
-        setDoctors(json.data);
+      let url = "/api/doctors/getDoctors";
+
+      if (clinicID) {
+        url += `?clinicID=${clinicID}`;
+      }
+
+      try {
+        const res = await fetch(url);
+        const json = await res.json();
+
+        if (!res.ok) {
+          console.error("Request failed:", json);
+          setDoctors([]);
+          return;
+        }
+
+        console.log('doctors API raw response:', JSON.stringify(json));
+
+        setDoctors(json.data || json || []);
+      } catch (err) {
+        console.error("Fetch error:", err);
+        setDoctors([]);
+      } finally {
+        setLoading(false);
       }
     };
 
-    fetchDoctors();
+    fetchDoctors(); // ✅ correct place
+
   }, [clinicID]);
 
-  return doctors;
+  return { doctors, loading };
 }

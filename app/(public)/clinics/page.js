@@ -3,21 +3,9 @@ import FilterSidebar from '@/components/layout/FilterSidebar';
 import { ClinicCard } from '@/components/ui/ClinicCard';
 import { DoctorCard } from '@/components/clinic/DoctorCard';
 import { useSearchParams } from "next/navigation";
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useClinics } from '@/hooks/useClinics';
-
-// ── Dummy data ──
-// const DUMMY_CLINICS = [
-//   { id: '1',  name: 'Melissa General Outpatient Clinic', location: 'Cagayan de Oro', status: 'approved', specialty: ['General Practice', 'Pediatrics'], doctorCount: 3, image: 'https://images.unsplash.com/photo-1538108149393-fbbd81895907?w=600&q=80' },
-//   { id: '2',  name: 'Jade Kyll Medical Center', location: 'Iligan City', status: 'approved', specialty: ['Internal Medicine', 'Cardiology'], doctorCount: 5, image: 'https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?w=600&q=80' },
-//   { id: '3',  name: 'Judel Community Health', location: 'Malaybalay', status: 'approved', specialty: ['General Practice'], doctorCount: 1, image: 'https://images.unsplash.com/photo-1586773860418-d37222d8fce3?w=600&q=80' },
-//   { id: '4',  name: 'Nova Community Health', location: 'Dapitan', status: 'approved', specialty: ['General Practice', 'Pediatrics'], doctorCount: 4, image: 'https://images.unsplash.com/photo-1527613426441-4da17471b66d?w=600&q=80' },
-//   { id: '5',  name: 'Joseph Community Health', location: 'Dapitan', status: 'approved', specialty: ['Internal Medicine'], doctorCount: 6, image: 'https://images.unsplash.com/photo-1631815589968-fdb09a223b1e?w=600&q=80' },
-//   { id: '6',  name: 'Che Ann Community Health', location: 'Dapitan', status: 'approved', specialty: ['Ob-Gyne', 'General Practice'], doctorCount: 7, image: 'https://images.unsplash.com/photo-1666214280557-f1b5022eb634?w=600&q=80' },
-//   { id: '7',  name: 'Sheila Community Health', location: 'Dapitan', status: 'approved', specialty: ['General Practice'], doctorCount: 6, image: 'https://images.unsplash.com/photo-1586773860418-d37222d8fce3?w=600&q=80' },
-//   { id: '8',  name: 'Xhyndy Community Health', location: 'Dapitan', status: 'approved', specialty: ['Internal Medicine', 'Pediatrics'], doctorCount: 9, image: 'https://images.unsplash.com/photo-1579684385127-1ef15d508118?w=600&q=80' },
-//   { id: '9',  name: 'Jashtenne Community Health', location: 'Dapitan', status: 'approved', specialty: ['General Practice', 'Ob-Gyne'], doctorCount: 11, image: 'https://images.unsplash.com/photo-1551076805-e1869033e561?w=600&q=80' },
-// ];
+import { useDoctors } from '@/hooks/useDoctors';
 
 const DUMMY_DOCTORS = [
   { id: '1',  name: 'Dr. Rosa Macaraeg', specialty: 'General Practice', clinicID: '1', clinicName: 'CDO General Outpatient Clinic'},
@@ -37,8 +25,17 @@ const DUMMY_DOCTORS = [
 const SPECIALTIES = ['All', 'General Practice', 'Pediatrics', 'Internal Medicine', 'Ob-Gyne', 'Cardiology'];
 const CITIES      = ['All cities', 'Cagayan de Oro', 'Iligan City', 'Dapitan', 'Malaybalay'];
 
+
 export default function ClinicDirectory() {
-  const { clinics, loading} = useClinics();
+  const { clinics, loading: clinicLoading} = useClinics();
+  const { doctors, loading: doctorLoading } = useDoctors();
+
+  const isLoading = clinicLoading || doctorLoading;
+
+  const clinicMap = useMemo(() => 
+    Object.fromEntries(clinics.map(c => [c.id, c])),
+    [clinics]
+  );
   
   const searchParams = useSearchParams();
   const qFromUrl = searchParams.get("q") || "";
@@ -63,7 +60,7 @@ export default function ClinicDirectory() {
 
   // 2. Main Filtering Logic
   useEffect(() => {
-    if (loading) return; // wait for clinics to load first
+    if (isLoading) return; // wait for clinics to load first
   
     const q = search.toLowerCase();
   
@@ -80,15 +77,18 @@ export default function ClinicDirectory() {
       });
       setResults(filtered);
     } else {
-      const filtered = DUMMY_DOCTORS.filter(d => {
-        const matchSearch    = d.name.toLowerCase().includes(q) || d.specialty.toLowerCase().includes(q) || d.clinicName.toLowerCase().includes(q);
+      const filtered = doctors.filter(d => {
+        const doctorClinic = clinicMap[d.clinicID]; // get clinic from map
+        
+        const matchSearch    = d.name?.toLowerCase().includes(q) || d.specialty?.toLowerCase().includes(q) || doctorClinic?.city?.toLowerCase().includes(q);
         const matchSpecialty = specialty === 'All' || d.specialty === specialty;
-        const matchCity      = city === 'All cities';
+        const matchCity      = city === 'All cities' || doctorClinic?.city === city; // ← lookup city from clinic
+        
         return matchSearch && matchSpecialty && matchCity;
       });
       setResults(filtered);
     }
-  }, [mode, search, specialty, city, clinics, loading]); // ← add clinics + loading here
+  }, [mode, search, specialty, city, clinics, doctors, isLoading]); // ← add clinics + loading here
 
   function resetFilters() {
     setSearch('');
@@ -161,7 +161,7 @@ export default function ClinicDirectory() {
             )}
           </div>
 
-          {loading ? (
+          {isLoading ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {[...Array(6)].map((_, i) => (
                 <div key={i} className="bg-white h-64 rounded-2xl border border-gray-100 animate-pulse" />
@@ -177,12 +177,14 @@ export default function ClinicDirectory() {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {mode === 'clinics'
                 ? results.map(clinic => <ClinicCard key={clinic.id} clinic={clinic} />)
-                : results.map(doctor => <DoctorCard key={doctor.id} doctor={doctor} />)
+                : results.map(doctor => <DoctorCard key={doctor.id} doctor={doctor} clinic={clinicMap[doctor.clinicID]} />)
               }
             </div>
+            
           )}
         </main>
       </div>
     </div>
   );
+  
 }

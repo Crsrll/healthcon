@@ -174,7 +174,7 @@ export default function PatientDashboard() {
               </div>
               {/* ← CHANGED: replaced dummy nearbyClinics with real Firestore data from useClinics */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                {clinicsLoading ? (
+                {loading ? (
                   <p className="text-sm text-slate-400">Loading clinics...</p>
                 ) : clinics.length === 0 ? (
                   <div className="col-span-2 text-center py-8 text-slate-400 text-sm">

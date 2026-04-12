@@ -8,7 +8,7 @@ const AVATAR_COLORS = [
   'bg-[#fff5f5] text-[#9b2c2c]',
 ];
 
-export function DoctorCard({ doctor }) {
+export function DoctorCard({ doctor, clinic }) {
   const router = useRouter();
 
   // Pick a consistent color based on doctor id
@@ -33,21 +33,20 @@ export function DoctorCard({ doctor }) {
       <div className="px-5 pt-5 pb-3 flex items-center gap-4">
         <div className={`w-14 h-14 rounded-2xl flex items-center justify-center
                          text-xl font-bold shrink-0 ${colorClass}`}>
-          {doctor.name.split(' ').find(w => w.startsWith('Dr'))
-            ? doctor.name.split(' ')[1]?.[0] ?? doctor.name[0]
-            : doctor.name[0]}
+          {(doctor?.name ?? '?').split(' ').find(w => w.startsWith('Dr'))
+            ? (doctor?.name ?? '').split(' ')[1]?.[0] ?? '?'
+            : doctor?.name?.[0] ?? '?'}
         </div>
         <div className="min-w-0">
           <h3 className="text-sm font-bold text-[#1a355d] leading-snug truncate">
-            {doctor.name}
+            Dr. {doctor?.name ?? '?'}
           </h3>
           <p className="text-xs text-[#3182ce] font-medium mt-0.5">
-            {doctor.specialization}
+            {doctor?.specialty ?? '?'}
           </p>
         </div>
       </div>
 
-      {/* Clinic name */}
       <div className="px-5 pb-4 flex-1">
         <div className="flex items-center gap-1.5 text-xs text-gray-400">
           <svg className="w-3 h-3 shrink-0 fill-none stroke-current stroke-2"
@@ -55,9 +54,10 @@ export function DoctorCard({ doctor }) {
             <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
             <polyline points="9 22 9 12 15 12 15 22"/>
           </svg>
-          <span className="truncate">{doctor.clinicName}</span>
+          <span className="truncate">{clinic?.clinicName}</span>
         </div>
       </div>
+      
 
       {/* Footer */}
       <div className="px-5 py-3 border-t border-gray-50 flex items-center justify-between">
