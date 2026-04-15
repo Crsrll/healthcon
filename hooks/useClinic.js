@@ -50,7 +50,7 @@ export function useClinic(clinicID) {
           city: data.city || "To be added",
           address: data.address || "To be added",
           about: data.about || "To be added",
-          hours: data.hours || "To be added",
+          hours: data.hours || [],
           contact: data.contact || "To be added",
           email: data.email || "To be added",
         });

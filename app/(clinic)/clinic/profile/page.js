@@ -1,50 +1,13 @@
 "use client";
+import { useClinic } from '@/hooks/useClinic';
+import { useAuth } from '@/context/authContext';
+import { useDoctors } from '@/hooks/useDoctors';
 
 export default function ClinicProfile() {
-  // ── DUMMY DATA ──
-  const clinic = {
-    name: "Joseph Community Health",
-    specialization: ["Internal Medicine", "General Practice"],
-    address: "Sunrise St., Dapitan City, Zamboanga del Norte",
-    location: "Dapitan City",
-    contact: "(065) 123-4567",
-    email: "joseph@healthcon.ph",
-    hours: "Mon–Sat · 8:00 AM – 5:00 PM",
-    about:
-      "A community health clinic dedicated to providing affordable and accessible healthcare services to local residents.",
-    services: [
-      "General Consultation",
-      "Laboratory Services",
-      "Minor Surgery",
-    ],
-    amenities: ["Air-conditioned", "Walk-in Accepted", "PhilHealth"],
-  };
-
-  const doctors = [
-    {
-      id: 1,
-      name: "Dr. Ben Villanueva",
-      specialization: "Internal Medicine",
-      schedule: "Mon–Fri, 8AM–12PM",
-      available: true,
-      queue: 3,
-    },
-    {
-      id: 2,
-      name: "Dr. Claire Mendoza",
-      specialization: "Ob-Gyne",
-      schedule: "Tue, Thu, 1PM–5PM",
-      available: true,
-      queue: 1,
-    },
-    {
-      id: 3,
-      name: "Dr. Paolo Gutierrez",
-      specialization: "General Practice",
-      schedule: "Mon, Wed, Fri",
-      available: false,
-    },
-  ];
+	const { user } = useAuth();
+	const userId = user?.uid;
+	const { clinic, loading:clinicLoading } = useClinic(userId);
+	const { doctors } = useDoctors(userId);
 
   return (
     <div className="min-h-screen bg-slate-100">
@@ -91,7 +54,7 @@ export default function ClinicProfile() {
                       {doc.name}
                     </p>
                     <p className="text-xs text-teal-600">
-                      {doc.specialization}
+                      {doc.specialty}
                     </p>
                     <p className="text-xs text-slate-400">
                       {doc.schedule}
@@ -130,10 +93,10 @@ export default function ClinicProfile() {
             </h2>
 
             <div className="space-y-3 text-sm text-slate-600">
-              <p>🕒 {clinic.hours}</p>
-              <p>📞 {clinic.contact}</p>
+              <p>🕒 {clinic.hours?.Monday?.open} to {clinic.hours?.Monday?.close}</p>
+              <p>📞 {clinic.phone}</p>
               <p>✉️ {clinic.email}</p>
-              <p>📍 {clinic.location}</p>
+              <p>📍 {clinic.city}</p>
             </div>
           </section>
 
