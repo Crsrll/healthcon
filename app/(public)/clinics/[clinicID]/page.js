@@ -10,6 +10,17 @@ import { generateTimeSlots } from '@/lib/generateTimeSlots';
 
 // ── Helpers ─────────────────────────────────────────────────────
 const ALL_DAYS  = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+
+const DAY_NAME_MAP = {
+  Mon: "Monday",
+  Tue: "Tuesday",
+  Wed: "Wednesday",
+  Thu: "Thursday",
+  Fri: "Friday",
+  Sat: "Saturday",
+  Sun: "Sunday",
+};
+
 const ALL_SLOTS = [
   '8:00 AM','9:00 AM','10:00 AM','11:00 AM',
   '1:00 PM','2:00 PM','3:00 PM','4:00 PM',
@@ -61,15 +72,23 @@ function SectionHeader({ title, count }) {
 
 // ── Booking Modal ────────────────────────────────────────────────
 function BookingModal({ doctor, services, clinicID, patientID, onClose }) {
-  const availableDays = parseAvailableDays(doctor.schedule);
-  const validSlots = doctor
-  ? generateTimeSlots(
-      doctor.availability.startTime,
-      doctor.availability.endTime
-    )
-  : [];
+  // FIX: Use the new availability array from the database instead of the old schedule string
+  const databaseDays = doctor?.availability?.days || []; 
+  
+  // FIX: Convert short days to a list of available short days for the UI
+  const availableShortDays = ALL_DAYS.filter(shortDay => 
+    databaseDays.includes(DAY_NAME_MAP[shortDay])
+  );
 
-  const [selectedDay,     setSelectedDay]     = useState(availableDays[0] ?? null);
+    const validSlots = doctor?.availability
+    ? generateTimeSlots(
+        doctor.availability.startTime,
+        doctor.availability.endTime
+      )
+    : [];
+
+  // Use the first available day as default
+  const [selectedDay, setSelectedDay] = useState(availableShortDays[0] ?? null);
   const [selectedTime,    setSelectedTime]    = useState(null);
   const [selectedService, setSelectedService] = useState('');
   const [notes,           setNotes]           = useState('');
@@ -111,10 +130,11 @@ function BookingModal({ doctor, services, clinicID, patientID, onClose }) {
 		}),
       });
 
-      if (!res.ok) throw new Error('Failed to create booking');
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed to create booking');
       setConfirmed(true);
     } catch (err) {
-      setError('Something went wrong. Please try again.');
+      setError(err.message);
     } finally {
       setSubmitting(false);
     }
@@ -153,67 +173,55 @@ function BookingModal({ doctor, services, clinicID, patientID, onClose }) {
 
   // ── Main modal ──
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 px-0 sm:px-4"
-      onClick={e => e.target === e.currentTarget && onClose()}
-    >
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 px-0 sm:px-4">
       <div className="bg-white w-full sm:max-w-md rounded-t-2xl sm:rounded-2xl border border-gray-200 overflow-hidden shadow-xl">
-
-        {/* Header */}
+        
+        {/* Header - Fixed formatting */}
         <div className="bg-[#1a355d] px-6 py-5 flex items-start gap-4">
-          <div className="w-12 h-12 rounded-full bg-[#2a4f8a] border-2 border-white/20
-                          flex items-center justify-center text-white font-bold text-lg flex-shrink-0">
-            {doctor.name?.split(' ').pop()?.[0]}
+           <div className="w-12 h-12 rounded-full bg-[#2a4f8a] border-2 border-white/20 flex items-center justify-center text-white font-bold text-lg">
+            {doctor.name?.[0]}
           </div>
-          <div className="flex-1 min-w-0">
-            <p className="text-white font-bold text-base">Dr. {doctor.name}</p>
-            <p className="text-white/60 text-xs mt-0.5">
-              {doctor.specialty} · {doctor.schedule}
+          <div className="flex-1">
+            <p className="text-white font-bold">Dr. {doctor.name}</p>
+            <p className="text-white/60 text-xs">
+              {doctor.specialty}
             </p>
           </div>
-          <button
-            onClick={onClose}
-            className="text-white/60 hover:text-white text-xl leading-none mt-0.5"
-          >
-            ✕
-          </button>
+          <button onClick={onClose} className="text-white/60 hover:text-white">✕</button>
         </div>
 
         <div className="px-6 py-5 flex flex-col gap-5 max-h-[75vh] overflow-y-auto">
-
-          {/* Service */}
+          {/* Service Dropdown */}
           <div>
             <label className="block text-xs font-semibold text-gray-500 mb-2">Service</label>
             <select
               value={selectedService}
               onChange={e => setSelectedService(e.target.value)}
-              className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm
-                         text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-200"
+              className="w-full border rounded-xl px-3 py-2.5 text-sm"
             >
               <option value="">Select a service...</option>
-              {(services ?? []).map(s => (
-                <option key={s} value={s}>{s}</option>
-              ))}
+              {services.map(s => <option key={s} value={s}>{s}</option>)}
             </select>
           </div>
 
-          {/* Day */}
+          {/* Day Selection - FIXED LOGIC */}
           <div>
-            <label className="block text-xs font-semibold text-gray-500 mb-2">Day</label>
+            <label className="block text-xs font-semibold text-gray-500 mb-2">Select Day</label>
             <div className="grid grid-cols-7 gap-1.5">
               {ALL_DAYS.map(day => {
-                const isAvailable = availableDays.includes(day);
+                // Check if button "Mon" matches "Monday" in doctor.availability.days
+                const isAvailable = databaseDays.includes(DAY_NAME_MAP[day]);
                 return (
                   <button
                     key={day}
                     disabled={!isAvailable}
                     onClick={() => handleDayChange(day)}
-                    className={`py-2 rounded-xl text-xs font-medium transition-all
+                    className={`py-2 rounded-xl text-xs font-bold transition-all
                       ${selectedDay === day
-                        ? 'bg-[#1a355d] text-white'
+                        ? 'bg-[#1a355d] text-white shadow-lg shadow-blue-900/20'
                         : isAvailable
-                          ? 'border border-gray-200 text-gray-600 hover:border-blue-300'
-                          : 'border border-gray-100 text-gray-300 cursor-not-allowed'
+                          ? 'border border-gray-200 text-gray-600 hover:border-blue-400'
+                          : 'bg-gray-50 text-gray-200 cursor-not-allowed border-transparent'
                       }`}
                   >
                     {day}
@@ -221,23 +229,14 @@ function BookingModal({ doctor, services, clinicID, patientID, onClose }) {
                 );
               })}
             </div>
-            {selectedDate && (
-              <p className="text-xs text-gray-400 mt-2">{formatDate(selectedDate)}</p>
-            )}
           </div>
 
-          {/* Time */}
+          {/* Time Selection */}
           <div>
-            <label className="block text-xs font-semibold text-gray-500 mb-2">
-              Time
-              {slotsLoading && (
-                <span className="ml-2 text-gray-400 font-normal">Checking availability...</span>
-              )}
-            </label>
+            <label className="block text-xs font-semibold text-gray-500 mb-2">Available Times</label>
             <div className="grid grid-cols-4 gap-2">
-			  {validSlots.map(slot => {
-				const isBooked = bookedSlots.includes(slot);
-
+              {validSlots.map(slot => {
+                const isBooked = bookedSlots.includes(slot);
 				return (
 				  <button
 					key={slot}

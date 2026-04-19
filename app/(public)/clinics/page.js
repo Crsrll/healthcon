@@ -1,7 +1,7 @@
 'use client';
 import FilterSidebar from '@/components/layout/FilterSidebar';
 import { ClinicCard } from '@/components/ui/ClinicCard';
-import { DoctorCard } from '@/components/clinic/DoctorCard';
+import { DoctorCard } from '@/components/clinic/DoctorCard1';
 import { useSearchParams } from "next/navigation";
 import { useState, useEffect, useMemo } from 'react';
 import { useClinics } from '@/hooks/useClinics';

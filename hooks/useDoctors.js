@@ -5,6 +5,11 @@ export function useDoctors(clinicID = null) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+       if (!clinicID) {
+      setLoading(false);
+      return; 
+    }
+    
     const fetchDoctors = async () => {
       setLoading(true);
 
@@ -35,7 +40,7 @@ export function useDoctors(clinicID = null) {
       }
     };
 
-    fetchDoctors(); // ✅ correct place
+    fetchDoctors(); 
 
   }, [clinicID]);
 
