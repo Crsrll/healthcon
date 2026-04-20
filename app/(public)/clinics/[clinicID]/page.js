@@ -95,7 +95,7 @@ const databaseDays = doctor?.availability?.days || [];
   const [selectedDay, setSelectedDay] = useState(availableShortDays[0] ?? null);
   const [selectedTime, setSelectedTime] = useState(null);
   const [selectedService, setSelectedService] = useState('');
-  const [notes, setNotes] = useState('');
+  // const [notes, setNotes] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [confirmed, setConfirmed] = useState(false);
   const [error, setError] = useState('');
@@ -135,7 +135,7 @@ const databaseDays = doctor?.availability?.days || [];
           day: selectedDay,
           time: selectedTime,
           date: selectedDate,
-          notes,
+          // notes,
         }),
       });
 
@@ -267,7 +267,37 @@ return (
             </div>
           </div>
 
+          {/* Notes
+          <div>
+            <label className="block text-xs font-semibold text-gray-500 mb-2">
+              Notes <span className="font-normal text-gray-400">(optional)</span>
+            </label>
+            <input
+              type="text"
+              value={notes}
+              onChange={e => setNotes(e.target.value)}
+              placeholder="e.g. first visit, referred by Dr. Cruz..."
+              className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm
+                         text-gray-800 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-200"
+            />
+          </div> */}
+
+          {/* Error */}
+          {error && (
+            <p className="text-xs text-red-500 bg-red-50 border border-red-100 rounded-xl px-4 py-3">
+              {error}
+            </p>
+          )}
+
+          {/* Disclaimer */}
+          <div className="bg-blue-50 border-l-4 border-blue-400 rounded-r-xl px-4 py-3">
+            <p className="text-xs text-blue-700">
+              Booking is subject to clinic confirmation. You will receive a notification once approved.
+            </p>
+          </div>
         </div>
+
+        
 
         {/* Footer */}
         <div className="px-6 py-4 border-t border-gray-100 flex gap-3 bg-gray-50/30">

@@ -37,7 +37,7 @@ export async function GET(req) {
 export async function POST(req) {
   try {
     const body = await req.json();
-    const { clinicID, doctorID, patientID, service, day, time, date, notes } = body;
+    const { clinicID, doctorID, patientID, service, day, time, date } = body;
 
     // 1. Basic Validation
     if (!clinicID || !doctorID || !patientID || !service || !day || !time || !date) {
@@ -68,6 +68,7 @@ export async function POST(req) {
 
     const doctor = doctorSnap.data();
     const availability = doctor.availability;
+    const actualDoctorName = doctor.name;
 
     // Map UI short names to DB full names
     const dayMap = {
@@ -94,13 +95,13 @@ export async function POST(req) {
     const ref = await addDoc(collection(db, 'bookings'), {
       clinicID,
       doctorID,
+      doctorName: `Dr. ${actualDoctorName}`,
       patientID,
-      patientName: fullName, // Name retrieved from users collection
+      patientName: fullName,
       service,
       day,
       time,
       date,
-      notes: notes ?? '',
       status: 'pending',
       createdAt: new Date().toISOString(),
     });

@@ -69,6 +69,7 @@ export default function PendingRequestsPage() {
             <tr className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
               <th className="px-6 py-4">Patient</th>
               <th className="px-6 py-4">Service</th>
+              <th className="px-6 py-4">Doctor</th>
               <th className="px-6 py-4">Requested Schedule</th>
               <th className="px-6 py-4 text-center">Actions</th>
             </tr>
@@ -83,12 +84,17 @@ export default function PendingRequestsPage() {
                         {/* If you don't have patientName saved in booking, you can show ID or placeholder */}
                         {req.patientName ? req.patientName.substring(0, 2).toUpperCase() : "PT"}
                       </div>
-                      <span className="font-semibold text-sm text-slate-800">{req.patientName || "Anonymous Patient"}</span>
+                      <span className="font-semibold text-sm text-slate-800">{req.patientName}</span>
                     </div>
                   </td>
                   <td className="px-6 py-5">
                     <span className="text-xs font-semibold text-slate-500 bg-slate-100 px-3 py-1 rounded-lg">
                       {req.service}
+                    </span>
+                  </td>
+                   <td className="px-6 py-5">
+                    <span className="font-bold text-sm text-slate-800">
+                      {req.doctorName}
                     </span>
                   </td>
                   <td className="px-6 py-5 text-sm">

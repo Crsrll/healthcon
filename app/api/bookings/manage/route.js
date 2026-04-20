@@ -2,15 +2,7 @@
 
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/firebase';
-import { 
-  collection, 
-  getDocs, 
-  query, 
-  where, 
-  doc, 
-  updateDoc, 
-  orderBy 
-} from 'firebase/firestore';
+import { collection, getDocs, query, where, doc, updateDoc, orderBy } from 'firebase/firestore';
 
 // GET: Fetch all pending bookings for a specific clinic
 export async function GET(req) {
