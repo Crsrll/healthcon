@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useParams, useSearchParams, useRouter } from 'next/navigation';
 import { useClinic } from '@/hooks/useClinic';
 import { useDoctors } from '@/hooks/useDoctors';
-import { useAuth } from '@/context/authContext';
+import { useAuth } from '@/hooks/useAuth';
 import { useBookedSlots } from '@/hooks/useBookedSlots';
 import { generateTimeSlots } from '@/lib/generateTimeSlots';
 
@@ -72,29 +72,33 @@ function SectionHeader({ title, count }) {
 
 // ── Booking Modal ────────────────────────────────────────────────
 function BookingModal({ doctor, services, clinicID, patientID, onClose }) {
-  // FIX: Use the new availability array from the database instead of the old schedule string
-  const databaseDays = doctor?.availability?.days || []; 
+  const { userData,  loading: authLoading } = useAuth(); 
+
+  const firstName = userData?.firstName || "";
+const lastName = userData?.lastName || "";
+const mi = userData?.middleInitial ? `${userData.middleInitial} ` : "";
+const uiPatientName = `${firstName} ${mi}${lastName}`.replace(/\s+/g, ' ').trim();
   
-  // FIX: Convert short days to a list of available short days for the UI
+const databaseDays = doctor?.availability?.days || []; 
+  
   const availableShortDays = ALL_DAYS.filter(shortDay => 
     databaseDays.includes(DAY_NAME_MAP[shortDay])
   );
 
-    const validSlots = doctor?.availability
+  const validSlots = doctor?.availability
     ? generateTimeSlots(
         doctor.availability.startTime,
         doctor.availability.endTime
       )
     : [];
 
-  // Use the first available day as default
   const [selectedDay, setSelectedDay] = useState(availableShortDays[0] ?? null);
-  const [selectedTime,    setSelectedTime]    = useState(null);
+  const [selectedTime, setSelectedTime] = useState(null);
   const [selectedService, setSelectedService] = useState('');
-  const [notes,           setNotes]           = useState('');
-  const [submitting,      setSubmitting]      = useState(false);
-  const [confirmed,       setConfirmed]       = useState(false);
-  const [error,           setError]           = useState('');
+  const [notes, setNotes] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+  const [confirmed, setConfirmed] = useState(false);
+  const [error, setError] = useState('');
 
   const selectedDate = selectedDay ? getNextDateForDay(selectedDay) : null;
 
@@ -106,10 +110,15 @@ function BookingModal({ doctor, services, clinicID, patientID, onClose }) {
 
   function handleDayChange(day) {
     setSelectedDay(day);
-    setSelectedTime(null); // reset time on day change
+    setSelectedTime(null); 
   }
 
   async function handleConfirm() {
+    if (!uiPatientName) {
+      setError("Account details not loaded. Please wait a moment.");
+      return;
+    }
+
     if (!selectedDay || !selectedTime || !selectedService) return;
     setSubmitting(true);
     setError('');
@@ -119,15 +128,15 @@ function BookingModal({ doctor, services, clinicID, patientID, onClose }) {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-		  clinicID,
-		  doctorID: doctor?.id,
-		  patientID,
-		  service: selectedService,
-		  day: selectedDay,
-		  time: selectedTime,
-		  date: selectedDate,
-		  notes,
-		}),
+          clinicID,
+          doctorID: doctor.id,
+          patientID,
+          service: selectedService,
+          day: selectedDay,
+          time: selectedTime,
+          date: selectedDate,
+          notes,
+        }),
       });
 
       const data = await res.json();
@@ -142,13 +151,12 @@ function BookingModal({ doctor, services, clinicID, patientID, onClose }) {
 
   const canConfirm = selectedDay && selectedTime && selectedService && !submitting;
 
-  // ── Confirmed screen ──
+  // ── Confirmed Screen ──
   if (confirmed) {
     return (
       <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4">
         <div className="bg-white rounded-2xl border border-gray-200 w-full max-w-sm p-8 text-center shadow-xl">
-          <div className="w-16 h-16 rounded-full bg-green-100 text-green-600
-                          flex items-center justify-center text-3xl mx-auto mb-4">
+          <div className="w-16 h-16 rounded-full bg-green-100 text-green-600 flex items-center justify-center text-3xl mx-auto mb-4">
             ✓
           </div>
           <h3 className="text-lg font-bold text-[#1a355d] mb-2">Appointment Requested</h3>
@@ -157,13 +165,7 @@ function BookingModal({ doctor, services, clinicID, patientID, onClose }) {
           </p>
           <p className="text-sm text-gray-500 mb-1">{formatDate(selectedDate)}</p>
           <p className="text-sm font-medium text-[#1a355d] mb-6">{selectedTime}</p>
-          <p className="text-xs text-gray-400 mb-6">
-            The clinic will confirm your appointment shortly.
-          </p>
-          <button
-            onClick={onClose}
-            className="w-full py-2.5 bg-[#1a355d] text-white rounded-xl text-sm font-bold"
-          >
+          <button onClick={onClose} className="w-full py-2.5 bg-[#1a355d] text-white rounded-xl text-sm font-bold">
             Done
           </button>
         </div>
@@ -171,58 +173,69 @@ function BookingModal({ doctor, services, clinicID, patientID, onClose }) {
     );
   }
 
-  // ── Main modal ──
-  return (
+  // ── Main Modal Form ──
+return (
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 px-0 sm:px-4">
       <div className="bg-white w-full sm:max-w-md rounded-t-2xl sm:rounded-2xl border border-gray-200 overflow-hidden shadow-xl">
         
-        {/* Header - Fixed formatting */}
+        {/* Header */}
         <div className="bg-[#1a355d] px-6 py-5 flex items-start gap-4">
            <div className="w-12 h-12 rounded-full bg-[#2a4f8a] border-2 border-white/20 flex items-center justify-center text-white font-bold text-lg">
             {doctor.name?.[0]}
           </div>
           <div className="flex-1">
             <p className="text-white font-bold">Dr. {doctor.name}</p>
-            <p className="text-white/60 text-xs">
-              {doctor.specialty}
-            </p>
+            <p className="text-white/60 text-xs">{doctor.specialty}</p>
           </div>
           <button onClick={onClose} className="text-white/60 hover:text-white">✕</button>
         </div>
 
         <div className="px-6 py-5 flex flex-col gap-5 max-h-[75vh] overflow-y-auto">
-          {/* Service Dropdown */}
+          
+          {/* Booking For Box */}
+          <div className="bg-blue-50/50 p-4 rounded-xl border border-blue-100">
+            <p className="text-[10px] font-bold text-blue-400 uppercase mb-1 tracking-widest">Booking for</p>
+            {authLoading ? (
+              <div className="h-4 w-32 bg-blue-100 animate-pulse rounded mt-1"></div>
+            ) : (
+              <p className="text-sm font-bold text-[#1a355d]">
+                {uiPatientName || "Loading profile..."}
+              </p>
+            )}
+          </div>
+
+          {/* Service Dropdown - Fixed with ID and Label association */}
           <div>
-            <label className="block text-xs font-semibold text-gray-500 mb-2">Service</label>
+            <label htmlFor="service-select" className="block text-xs font-semibold text-gray-500 mb-2">
+              Service
+            </label>
             <select
+              id="service-select"
+              name="service"
               value={selectedService}
               onChange={e => setSelectedService(e.target.value)}
-              className="w-full border rounded-xl px-3 py-2.5 text-sm"
+              className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm text-gray-800 focus:ring-2 focus:ring-blue-100 outline-none"
             >
               <option value="">Select a service...</option>
               {services.map(s => <option key={s} value={s}>{s}</option>)}
             </select>
           </div>
 
-          {/* Day Selection - FIXED LOGIC */}
+          {/* Day Selection */}
           <div>
-            <label className="block text-xs font-semibold text-gray-500 mb-2">Select Day</label>
+            <p className="block text-xs font-semibold text-gray-500 mb-2">Select Day</p>
             <div className="grid grid-cols-7 gap-1.5">
               {ALL_DAYS.map(day => {
-                // Check if button "Mon" matches "Monday" in doctor.availability.days
                 const isAvailable = databaseDays.includes(DAY_NAME_MAP[day]);
                 return (
                   <button
                     key={day}
+                    type="button"
+                    name={`day-${day}`}
                     disabled={!isAvailable}
                     onClick={() => handleDayChange(day)}
                     className={`py-2 rounded-xl text-xs font-bold transition-all
-                      ${selectedDay === day
-                        ? 'bg-[#1a355d] text-white shadow-lg shadow-blue-900/20'
-                        : isAvailable
-                          ? 'border border-gray-200 text-gray-600 hover:border-blue-400'
-                          : 'bg-gray-50 text-gray-200 cursor-not-allowed border-transparent'
-                      }`}
+                      ${selectedDay === day ? 'bg-[#1a355d] text-white' : isAvailable ? 'border border-gray-200 text-gray-600' : 'bg-gray-50 text-gray-200'}`}
                   >
                     {day}
                   </button>
@@ -233,78 +246,38 @@ function BookingModal({ doctor, services, clinicID, patientID, onClose }) {
 
           {/* Time Selection */}
           <div>
-            <label className="block text-xs font-semibold text-gray-500 mb-2">Available Times</label>
+            <p className="block text-xs font-semibold text-gray-500 mb-2">Time Slot</p>
             <div className="grid grid-cols-4 gap-2">
               {validSlots.map(slot => {
                 const isBooked = bookedSlots.includes(slot);
-				return (
-				  <button
-					key={slot}
-					disabled={isBooked || slotsLoading}
-					onClick={() => setSelectedTime(slot)}
-					className={`py-2 rounded-xl text-xs font-medium transition-all
-					  ${selectedTime === slot
-						? 'bg-[#1a355d] text-white'
-						: isBooked
-						  ? 'bg-gray-50 text-gray-300 cursor-not-allowed line-through'
-						  : slotsLoading
-							? 'border border-gray-100 text-gray-300 cursor-wait'
-							: 'border border-gray-200 text-gray-600 hover:border-blue-300'
-					  }`}
-				  >
-					{slot}
-				  </button>
-				);
-			  })}
-			</div>
-            <p className="text-xs text-gray-400 mt-2">Strikethrough slots are already taken.</p>
+                return (
+                  <button
+                    key={slot}
+                    type="button"
+                    name={`slot-${slot}`}
+                    disabled={isBooked || slotsLoading}
+                    onClick={() => setSelectedTime(slot)}
+                    className={`py-2 rounded-xl text-xs font-medium border transition-all
+                      ${selectedTime === slot ? 'bg-[#1a355d] text-white' : 'border-gray-200 text-gray-600'}`}
+                  >
+                    {slot}
+                  </button>
+                );
+              })}
+            </div>
           </div>
 
-          {/* Notes */}
-          <div>
-            <label className="block text-xs font-semibold text-gray-500 mb-2">
-              Notes <span className="font-normal text-gray-400">(optional)</span>
-            </label>
-            <input
-              type="text"
-              value={notes}
-              onChange={e => setNotes(e.target.value)}
-              placeholder="e.g. first visit, referred by Dr. Cruz..."
-              className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm
-                         text-gray-800 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-200"
-            />
-          </div>
-
-          {/* Error */}
-          {error && (
-            <p className="text-xs text-red-500 bg-red-50 border border-red-100 rounded-xl px-4 py-3">
-              {error}
-            </p>
-          )}
-
-          {/* Disclaimer */}
-          <div className="bg-blue-50 border-l-4 border-blue-400 rounded-r-xl px-4 py-3">
-            <p className="text-xs text-blue-700">
-              Booking is subject to clinic confirmation. You will receive a notification once approved.
-            </p>
-          </div>
         </div>
 
         {/* Footer */}
-        <div className="px-6 py-4 border-t border-gray-100 flex gap-3">
-          <button
-            onClick={onClose}
-            className="flex-1 py-2.5 border border-gray-200 rounded-xl text-sm text-gray-600 hover:bg-gray-50"
-          >
-            Cancel
-          </button>
-          <button
-            onClick={handleConfirm}
+        <div className="px-6 py-4 border-t border-gray-100 flex gap-3 bg-gray-50/30">
+          <button onClick={onClose} className="flex-1 py-2.5 border border-gray-200 rounded-xl text-sm font-bold text-gray-500">Cancel</button>
+          <button 
+            onClick={handleConfirm} 
             disabled={!canConfirm}
-            className="flex-[2] py-2.5 bg-[#1a355d] text-white rounded-xl text-sm font-bold
-                       disabled:opacity-30 disabled:cursor-not-allowed hover:bg-blue-800 transition-all"
+            className="flex-[2] py-2.5 bg-[#1a355d] text-white rounded-xl text-sm font-bold disabled:opacity-30"
           >
-            {submitting ? 'Booking...' : 'Confirm Appointment'}
+            {submitting ? 'Processing...' : 'Confirm Appointment'}
           </button>
         </div>
       </div>

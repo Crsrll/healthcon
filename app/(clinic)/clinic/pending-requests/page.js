@@ -1,24 +1,60 @@
 "use client";
-import { useState } from "react";
-import { Clock} from "lucide-react";
-
-// 1. Mock Data for Pending Requests
-const INITIAL_REQUESTS = [
-  { id: 1, patient: "Peter Parker", service: "General Check-up", date: "Mar 28, 2026", time: "09:00 AM" },
-  { id: 2, patient: "Diana Prince", service: "Laboratory Test", date: "Mar 28, 2026", time: "10:30 AM" },
-  { id: 3, patient: "Wanda Maximoff", service: "Consultation", date: "Mar 29, 2026", time: "02:00 PM" },
-  { id: 4, patient: "Bruce Wayne", service: "Follow-up", date: "Mar 30, 2026", time: "11:00 AM" },
-  { id: 5, patient: "Clark Kent", service: "Prenatal Check-up", date: "Mar 30, 2026", time: "03:00 PM" },
-];
+import { useState, useEffect } from "react";
+import { Clock, Loader2, CheckCircle, XCircle } from "lucide-react";
+import { useAuth } from "@/hooks/useAuth";
 
 export default function PendingRequestsPage() {
-  const [requests, setRequests] = useState(INITIAL_REQUESTS);
+  const { user, loading: authLoading } = useAuth();
+  const [requests, setRequests] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  // 2. Action Handlers
-  const handleAction = (id, patientName, action) => {
-    setRequests(prev => prev.filter(req => req.id !== id));
-    alert(`${patientName} has been ${action === 'approve' ? 'Approved' : 'Declined'}`);
+  // 1. Fetch real pending requests from API
+  const fetchRequests = async () => {
+    if (!user?.uid) return;
+    try {
+      const res = await fetch(`/api/bookings/manage?clinicID=${user.uid}`);
+      const json = await res.json();
+      if (json.success) setRequests(json.data);
+    } catch (err) {
+      console.error("Failed to load requests");
+    } finally {
+      setLoading(false);
+    }
   };
+
+  useEffect(() => {
+    if (!authLoading) fetchRequests();
+  }, [user, authLoading]);
+
+  // 2. Real Action Handler (API Call)
+  const handleAction = async (id, patientName, action) => {
+    const newStatus = action === 'approve' ? 'confirmed' : 'rejected';
+    
+    try {
+      const res = await fetch('/api/bookings/manage', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ bookingId: id, status: newStatus })
+      });
+
+      if (res.ok) {
+        // Remove from local list after successful update
+        setRequests(prev => prev.filter(req => req.id !== id));
+        alert(`${patientName} has been ${action === 'approve' ? 'Confirmed' : 'Rejected'}`);
+      }
+    } catch (err) {
+      alert("Failed to update status");
+    }
+  };
+
+  if (authLoading || loading) {
+    return (
+      <div className="h-screen flex flex-col items-center justify-center gap-4 text-slate-400">
+        <Loader2 className="animate-spin" size={40} />
+        <p className="text-xs font-bold uppercase tracking-widest">Fetching Requests...</p>
+      </div>
+    );
+  }
 
   return (
     <main className="p-6 space-y-6 animate-in fade-in duration-500">
@@ -44,9 +80,10 @@ export default function PendingRequestsPage() {
                   <td className="px-6 py-5">
                     <div className="flex items-center gap-3">
                       <div className="w-10 h-10 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center font-black text-xs border border-blue-100">
-                        {req.patient.substring(0, 2).toUpperCase()}
+                        {/* If you don't have patientName saved in booking, you can show ID or placeholder */}
+                        {req.patientName ? req.patientName.substring(0, 2).toUpperCase() : "PT"}
                       </div>
-                      <span className="font-semibold text-sm text-slate-800">{req.patient}</span>
+                      <span className="font-semibold text-sm text-slate-800">{req.patientName || "Anonymous Patient"}</span>
                     </div>
                   </td>
                   <td className="px-6 py-5">
@@ -63,17 +100,17 @@ export default function PendingRequestsPage() {
                   <td className="px-6 py-5">
                     <div className="flex justify-center gap-2">
                         <button 
-                        onClick={() => handleAction(req.id, req.patient, 'approve')}
-                        className="text-xs font-semibold text-white bg-teal-500 hover:bg-teal-400 px-3 py-1.5 rounded-lg transition-colors"
+                        onClick={() => handleAction(req.id, req.patientName, 'approve')}
+                        className="flex items-center gap-1.5 text-xs font-bold text-white bg-teal-500 hover:bg-teal-600 px-4 py-2 rounded-xl transition-all shadow-md shadow-teal-500/20"
                         >
-                        Approve
+                        <CheckCircle size={14} /> Approve
                         </button>
 
                         <button 
-                        onClick={() => handleAction(req.id, req.patient, 'decline')}
-                        className="text-xs font-semibold text-red-500 bg-slate-100 hover:text-red-600 hover:border-red-200 hover:bg-red-50 px-3 py-1.5 rounded-lg transition-colors"
+                        onClick={() => handleAction(req.id, req.patientName, 'decline')}
+                        className="flex items-center gap-1.5 text-xs font-bold text-red-500 bg-red-50 hover:bg-red-100 px-4 py-2 rounded-xl transition-all"
                         >
-                        Reject
+                        <XCircle size={14} /> Reject
                         </button>
                     </div>
                     </td>
