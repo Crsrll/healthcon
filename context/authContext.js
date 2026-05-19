@@ -5,6 +5,7 @@ import Cookies from "js-cookie";
 import { signOut } from "firebase/auth";        // ← remove getAuth
 import { auth } from "@/lib/firebase";          // ← add this
 import { useLoginUser } from "@/hooks/useLoginUser";
+import { sendPasswordResetEmail } from "firebase/auth";
 
 const AuthContext = createContext();
 
@@ -41,6 +42,15 @@ export function AuthProvider({ children }) {
     return { success: true, user: userData };
   };
 
+  const resetPassword = async (email) => {
+    try {
+      await sendPasswordResetEmail(auth, email);
+      return { success: true };
+    } catch (err) {
+      return { success: false, error: err.message };
+    }
+  };
+
   const logout = async () => {
     try {
       await signOut(auth);  // ← use imported auth, not getAuth()
@@ -53,8 +63,8 @@ export function AuthProvider({ children }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, logout, loading, error }}>
-      {children}
-    </AuthContext.Provider>
-  );
-}
+      <AuthContext.Provider value={{ user, login, logout, resetPassword, loading, error }}> {/* ← add resetPassword */}
+        {children}
+      </AuthContext.Provider>
+    );
+  }

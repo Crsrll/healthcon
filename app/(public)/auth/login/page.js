@@ -2,22 +2,25 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { useAuth } from "@/context/authContext"; // your AuthProvider
-// no need to import useLoginUser here anymore
+import { useAuth } from "@/context/authContext";
 
 export default function LoginPage() {
   const router = useRouter();
-  const { login, loading, error } = useAuth();
+  const { login, logout, resetPassword, loading, error } = useAuth();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPass, setShowPass] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
 
+  // Forgot password state
+  const [view, setView] = useState("login"); // "login" | "forgot" | "forgot-sent"
+  const [resetEmail, setResetEmail] = useState("");
+  const [resetLoading, setResetLoading] = useState(false);
+  const [resetError, setResetError] = useState("");
+
   const handleLogin = async () => {
     if (!email || !password) return;
-
-    // Use context login which calls your useLoginUser hook internally
     const result = await login(email, password, rememberMe);
     if (!result.success) return;
 
@@ -27,18 +30,27 @@ export default function LoginPage() {
       patient: "/patient/dashboard",
     };
 
-    const userRole = result.user?.role;
-
-    const route = roleRoutes[userRole];
-
+    const route = roleRoutes[result.user?.role];
     if (route) {
       router.push(route);
       router.refresh();
+    } else {
+      console.error("Unknown role:", result.user?.role);
     }
-    else{
-      console.error("Unknown role:", userRole);
-      return;
+  };
+
+  const handleForgotPassword = async () => {
+    if (!resetEmail) return;
+    setResetLoading(true);
+    setResetError("");
+
+    const result = await resetPassword(resetEmail); // ← use this
+    if (result.success) {
+      setView("forgot-sent");
+    } else {
+      setResetError(result.error || "Something went wrong.");
     }
+    setResetLoading(false);
   };
 
   return (
@@ -100,6 +112,33 @@ export default function LoginPage() {
         .login-btn:hover { background: #2f80d0; transform: translateY(-1px); }
         .login-btn:active { transform: scale(0.98); }
         .login-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+        .back-btn {
+          background: none;
+          border: none;
+          color: #6b7280;
+          font-size: 13px;
+          font-weight: 600;
+          cursor: pointer;
+          padding: 0;
+          display: flex;
+          align-items: center;
+          gap: 6px;
+          margin-bottom: 24px;
+          transition: color 0.2s;
+        }
+        .back-btn:hover { color: #374151; }
+
+        .sent-icon {
+          width: 64px;
+          height: 64px;
+          border-radius: 50%;
+          background: #eff6ff;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          margin-bottom: 20px;
+        }
       `}</style>
 
       <div className="flex w-full min-h-screen bg-white font-sans overflow-hidden">
@@ -137,83 +176,162 @@ export default function LoginPage() {
         <div className="flex-1 flex items-center justify-center overflow-y-auto bg-white" style={{ padding: 48 }}>
           <div className="w-full" style={{ maxWidth: 460 }}>
 
-            <header className="mb-10 text-left">
-              <h1 className="text-3xl font-black text-slate-900 mb-2">Sign in</h1>
-              <p className="text-gray-400 text-base">
-                Welcome back! Please enter your details.
-              </p>
-            </header>
+            {/* ── LOGIN VIEW ── */}
+            {view === "login" && (
+              <>
+                <header className="mb-10 text-left">
+                  <h1 className="text-3xl font-black text-slate-900 mb-2">Sign in</h1>
+                  <p className="text-gray-400 text-base">Welcome back! Please enter your details.</p>
+                </header>
 
-            <div className="flex flex-col gap-4">
+                <div className="flex flex-col gap-4">
+                  {error && (
+                    <div className="px-4 py-3 bg-red-50 border border-red-200 rounded-xl text-red-600 text-sm">
+                      {error}
+                    </div>
+                  )}
 
-              {error && (
-                <div className="px-4 py-3 bg-red-50 border border-red-200 rounded-xl text-red-600 text-sm">
-                  {error}
+                  <div className="input-row">
+                    <input
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      type="email"
+                      placeholder="Email Address"
+                      className="login-input"
+                    />
+                  </div>
+
+                  <div className="input-row">
+                    <input
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      onKeyDown={(e) => e.key === "Enter" && handleLogin()}
+                      type={showPass ? "text" : "password"}
+                      placeholder="Password"
+                      className="login-input"
+                    />
+                    <button className="show-btn" onClick={() => setShowPass(!showPass)}>
+                      {showPass ? "Hide" : "Show"}
+                    </button>
+                  </div>
+
+                  {/* Remember Me + Forgot Password row */}
+                  <div className="flex items-center justify-between">
+                    <label className="cursor-pointer flex items-center gap-2 text-sm text-gray-500">
+                      <input
+                        className="cursor-pointer"
+                        type="checkbox"
+                        checked={rememberMe}
+                        onChange={(e) => setRememberMe(e.target.checked)}
+                      />
+                      Remember me
+                    </label>
+                    <button
+                      onClick={() => { setResetEmail(email); setView("forgot"); setResetError(""); }}
+                      className="text-sm font-semibold text-blue-600 hover:text-blue-800 cursor-pointer bg-transparent border-none"
+                    >
+                      Forgot password?
+                    </button>
+                  </div>
+
+                  <button className="login-btn" onClick={handleLogin} disabled={loading}>
+                    {loading ? "Signing in..." : "Sign In"}
+                  </button>
                 </div>
-              )}
 
-              {/* Email */}
-              <div className="input-row">
-                <input
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  type="email"
-                  placeholder="Email Address"
-                  className="login-input"
-                />
-              </div>
+                <div className="mt-8 text-center">
+                  <p className="text-gray-400 text-sm">
+                    Don't have an account?{" "}
+                    <button
+                      onClick={() => router.push("/auth/register")}
+                      className="cursor-pointer text-blue-600 font-bold bg-transparent border-none"
+                    >
+                      Sign up
+                    </button>
+                  </p>
+                </div>
+              </>
+            )}
 
-              {/* Password */}
-              <div className="input-row">
-                <input
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  onKeyDown={(e) => e.key === "Enter" && handleLogin()}
-                  type={showPass ? "text" : "password"}
-                  placeholder="Password"
-                  className="login-input"
-                />
-                <button
-                  className="show-btn"
-                  onClick={() => setShowPass(!showPass)}
-                >
-                  {showPass ? "Hide" : "Show"}
+            {/* ── FORGOT PASSWORD VIEW ── */}
+            {view === "forgot" && (
+              <>
+                <button className="back-btn" onClick={() => setView("login")}>
+                  ← Back to Sign In
                 </button>
-              </div>
 
-              {/* Remember Me */}
-              <label className="cursor-pointer flex items-center gap-2 text-sm text-gray-500">
-                <input
-                  className="cursor-pointer"
-                  type="checkbox"
-                  checked={rememberMe}
-                  onChange={(e) => setRememberMe(e.target.checked)}
-                />
-                Remember me
-              </label>
+                <header className="mb-10 text-left">
+                  <h1 className="text-3xl font-black text-slate-900 mb-2">Reset password</h1>
+                  <p className="text-gray-400 text-base">
+                    Enter your email and we'll send you a link to reset your password.
+                  </p>
+                </header>
 
-              <button
-                className="login-btn"
-                onClick={handleLogin}
-                disabled={loading}
-              >
-                {loading ? "Signing in..." : "Sign In"}
-              </button>
+                <div className="flex flex-col gap-4">
+                  {resetError && (
+                    <div className="px-4 py-3 bg-red-50 border border-red-200 rounded-xl text-red-600 text-sm">
+                      {resetError}
+                    </div>
+                  )}
 
-            </div>
+                  <div className="input-row">
+                    <input
+                      value={resetEmail}
+                      onChange={(e) => setResetEmail(e.target.value)}
+                      onKeyDown={(e) => e.key === "Enter" && handleForgotPassword()}
+                      type="email"
+                      placeholder="Email Address"
+                      className="login-input"
+                      autoFocus
+                    />
+                  </div>
 
-            {/* Sign Up */}
-            <div className="mt-8 text-center">
-              <p className="text-gray-400 text-sm">
-                Don't have an account?{" "}
-                <button
-                  onClick={() => router.push("/auth/register")}
-                  className="cursor-pointer text-blue-600 font-bold"
-                >
-                  Sign up
-                </button>
-              </p>
-            </div>
+                  <button
+                    className="login-btn"
+                    onClick={handleForgotPassword}
+                    disabled={resetLoading || !resetEmail}
+                  >
+                    {resetLoading ? "Sending..." : "Send Reset Link"}
+                  </button>
+                </div>
+              </>
+            )}
+
+            {/* ── FORGOT PASSWORD SENT VIEW ── */}
+            {view === "forgot-sent" && (
+              <>
+                <div className="sent-icon">
+                  <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#2563eb" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+                    <polyline points="22,6 12,13 2,6"/>
+                  </svg>
+                </div>
+
+                <header className="mb-6 text-left">
+                  <h1 className="text-3xl font-black text-slate-900 mb-2">Check your email</h1>
+                  <p className="text-gray-400 text-base">
+                    We sent a password reset link to <span className="font-semibold text-slate-700">{resetEmail}</span>.
+                    Check your inbox and follow the instructions.
+                  </p>
+                </header>
+
+                <div className="flex flex-col gap-3">
+                  <button
+                    className="login-btn"
+                    onClick={() => setView("login")}
+                  >
+                    Back to Sign In
+                  </button>
+                  <button
+                    onClick={handleForgotPassword}
+                    disabled={resetLoading}
+                    className="w-full py-3 text-sm font-semibold text-blue-600 hover:text-blue-800 bg-transparent border-none cursor-pointer disabled:opacity-50"
+                  >
+                    {resetLoading ? "Resending..." : "Didn't get it? Resend email"}
+                  </button>
+                </div>
+              </>
+            )}
 
           </div>
         </div>
