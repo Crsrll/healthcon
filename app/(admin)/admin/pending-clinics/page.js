@@ -47,7 +47,7 @@ export default function PendingClinicsPage() {
     docs: clinic.documentCount || 0,
     email: clinic.email,
     phone: clinic.phone,
-    hours: clinic.hours,
+    hours: clinic.hours, // This is an object, don't render directly
     image: clinic.image,
   });
 
@@ -229,7 +229,16 @@ export default function PendingClinicsPage() {
                     <p className="text-[10px] text-slate-400 uppercase font-bold mb-1">
                       Hours
                     </p>
-                    <p className="text-sm text-slate-700">{selected.hours}</p>
+                    <div className="space-y-0.5 text-xs text-slate-700">
+                      {Object.entries(selected.hours).map(([day, times]) => (
+                        <p key={day}>
+                          <span className="font-semibold capitalize">
+                            {day}:
+                          </span>{" "}
+                          {times.open} - {times.close}
+                        </p>
+                      ))}
+                    </div>
                   </div>
                 )}
 

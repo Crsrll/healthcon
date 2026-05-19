@@ -7,10 +7,10 @@ export function usePendingClinics() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  // Real-time snapshot listener
   useEffect(() => {
     setLoading(true);
 
-    // Real-time listener for clinics with role = "clinic"
     const q = query(collection(db, "users"), where("role", "==", "clinic"));
 
     const unsubscribe = onSnapshot(
@@ -21,7 +21,7 @@ export function usePendingClinics() {
           ...doc.data(),
         }));
 
-        // Filter only pending clinics (approved === false)
+        // Filter for pending clinics (not approved and not suspended)
         const pending = allClinics.filter((c) => c.approved === false);
         setPendingClinics(pending);
         setLoading(false);
@@ -51,7 +51,7 @@ export function usePendingClinics() {
       const json = await res.json();
 
       if (res.ok) {
-        // No need to manually update state - onSnapshot will handle it
+        // No need to manually filter - onSnapshot will update automatically
         return { success: true, message: json.message };
       } else {
         return { success: false, error: json.error };
@@ -76,11 +76,27 @@ export function usePendingClinics() {
     [updateClinicStatus],
   );
 
+  const suspendClinic = useCallback(
+    (clinicId) => {
+      return updateClinicStatus(clinicId, "suspend");
+    },
+    [updateClinicStatus],
+  );
+
+  const reinstateClinic = useCallback(
+    (clinicId) => {
+      return updateClinicStatus(clinicId, "reinstate");
+    },
+    [updateClinicStatus],
+  );
+
   return {
     pendingClinics,
     loading,
     error,
     approveClinic,
     rejectClinic,
+    suspendClinic,
+    reinstateClinic,
   };
 }

@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { doc, updateDoc, deleteDoc } from "firebase/firestore";
+import { doc, updateDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 
 export async function PUT(request) {
@@ -14,30 +14,55 @@ export async function PUT(request) {
     }
 
     const clinicRef = doc(db, "users", clinicId);
+    let updates = {};
 
-    if (action === "approve") {
-      // Update clinic to approved
-      await updateDoc(clinicRef, {
-        approved: true,
-        approvedAt: new Date().toISOString(),
-      });
-      return NextResponse.json({ success: true, message: "Clinic approved" });
-    } else if (action === "reject") {
-      // Option 1: Delete the clinic document
-      await deleteDoc(clinicRef);
-      // Option 2: Or update with rejected status
-      // await updateDoc(clinicRef, {
-      //   approved: "rejected",
-      //   rejectedAt: new Date().toISOString()
-      // });
-      return NextResponse.json({ success: true, message: "Clinic rejected" });
-    } else {
-      return NextResponse.json({ error: "Invalid action" }, { status: 400 });
+    switch (action) {
+      case "approve":
+        updates = {
+          approved: true,
+          suspended: false,
+          approvedAt: new Date().toISOString(),
+          status: "approved",
+        };
+        break;
+      case "reject":
+        updates = {
+          rejected: true,
+          suspended: false,
+          rejectedAt: new Date().toISOString(),
+          status: "rejected",
+        };
+        break;
+      case "suspend":
+        updates = {
+          suspended: true,
+          approved: false,
+          suspendedAt: new Date().toISOString(),
+          status: "suspended",
+        };
+        break;
+      case "reinstate":
+        updates = {
+          suspended: false,
+          approved: true,
+          reinstatedAt: new Date().toISOString(),
+          status: "reinstated",
+        };
+        break;
+      default:
+        return NextResponse.json({ error: "Invalid action" }, { status: 400 });
     }
+
+    await updateDoc(clinicRef, updates);
+
+    return NextResponse.json({
+      success: true,
+      message: `Clinic ${action}d successfully`,
+    });
   } catch (err) {
     console.error("updateClinicStatus error:", err);
     return NextResponse.json(
-      { error: "Failed to update clinic status." },
+      { error: "Failed to update clinic." },
       { status: 500 },
     );
   }
