@@ -310,7 +310,7 @@ export default function PatientDashboard() {
                   View All
                 </Link>
               </div>
-              <div className="divide-y divide-slate-100 max-h-80 overflow-y-auto">
+              <div className="divide-y divide-slate-100 max-h-90 overflow-y-auto">
                 {recentNotifications.length > 0 ? (
                   recentNotifications.map((notif) => (
                     <div key={notif.id} className="px-5 py-3 hover:bg-slate-50 transition-colors">
