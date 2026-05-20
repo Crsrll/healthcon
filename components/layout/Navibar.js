@@ -6,6 +6,7 @@ import { useAuth } from "@/context/authContext";
 import { usePathname } from "next/navigation";
 import Avatar from "@/components/ui/Avatar";
 import NotificationBell from "@/components/Notif/NotificationBell";
+import AdminNotificationBell from "@/components/Notif/AdminNotificationBell";
 import { useUnreadMessages } from "@/hooks/useUnreadMessages";
 
 const patientLinks = [
@@ -18,6 +19,14 @@ const clinicLinks = [
   { name: "Dashboard", href: "/clinic/dashboard" },
   { name: "Doctors", href: "/doctors" },
   { name: "Patients", href: "/clinic/patients" },
+];
+
+const adminLinks = [
+  { name: "Dashboard", href: "/admin/dashboard" },
+  { name: "Clinics", href: "/admin/clinics" },
+  { name: "Users", href: "/admin/users" },
+  { name: "Bookings", href: "/admin/bookings" },
+  { name: "System Logs", href: "/admin/audit-log" },
 ];
 
 export default function Navbar({ style }) {
@@ -62,17 +71,20 @@ export default function Navbar({ style }) {
   const links =
     role === "patient" ? patientLinks :
     role === "clinic"  ? clinicLinks  :
+    role === "admin"   ? adminLinks   :
     null;
 
   const profileName =
     role === "patient" ? `${user?.firstName} ${user?.lastName}` :
     role === "clinic"  ? user?.clinicName :
+    role === "admin"   ? user?.firstName || user?.email?.split('@')[0] :
     `${user?.firstName} ${user?.lastName}`;
 
   const profileLabel =
     role === "patient" ? "Patient" :
     role === "clinic"  ? "Clinic Staff" :
-    "Admin";
+    role === "admin"   ? "Administrator" :
+    "User";
 
   if (!mounted) return (
     <nav className={`${style} bg-navy-dark py-3`}>
@@ -154,22 +166,27 @@ export default function Navbar({ style }) {
           {user && (
             <div className="flex items-center gap-3">
 
-              {/* ── Message icon with unread dot ── */}
-              <Link
-                href={role === "patient" ? "/patient/messages" : "/clinic/inquiries"}
-                className="relative w-10 h-10 rounded-xl flex items-center justify-center text-slate-300 hover:text-teal-300 hover:bg-white/10 transition-all"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.7} stroke="currentColor" className="w-5 h-5">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 12.76c0 1.6 1.123 2.994 2.707 3.227 1.087.16 2.185.283 3.293.369V21l4.076-4.076a1.526 1.526 0 0 1 1.037-.443 48.282 48.282 0 0 0 5.68-.494c1.584-.233 2.707-1.626 2.707-3.228V6.741c0-1.602-1.123-2.995-2.707-3.228A48.394 48.394 0 0 0 12 3c-2.392 0-4.744.175-7.043.513C3.373 3.746 2.25 5.14 2.25 6.741v6.018Z" />
-                </svg>
-                {/* Unread dot — only shows when there are unread messages */}
-                {unreadMessages > 0 && (
-                  <span className="absolute top-1 right-1 h-2.5 w-2.5 rounded-full bg-red-400 ring-2 ring-navy-dark" />
-                )}
-              </Link>
+              {/* ── Message icon with unread dot (only for patients and clinics) ── */}
+              {(role === "patient" || role === "clinic") && (
+                <Link
+                  href={role === "patient" ? "/patient/messages" : "/clinic/inquiries"}
+                  className="relative w-10 h-10 rounded-xl flex items-center justify-center text-slate-300 hover:text-teal-300 hover:bg-white/10 transition-all"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.7} stroke="currentColor" className="w-5 h-5">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 12.76c0 1.6 1.123 2.994 2.707 3.227 1.087.16 2.185.283 3.293.369V21l4.076-4.076a1.526 1.526 0 0 1 1.037-.443 48.282 48.282 0 0 0 5.68-.494c1.584-.233 2.707-1.626 2.707-3.228V6.741c0-1.602-1.123-2.995-2.707-3.228A48.394 48.394 0 0 0 12 3c-2.392 0-4.744.175-7.043.513C3.373 3.746 2.25 5.14 2.25 6.741v6.018Z" />
+                  </svg>
+                  {unreadMessages > 0 && (
+                    <span className="absolute top-1 right-1 h-2.5 w-2.5 rounded-full bg-red-400 ring-2 ring-navy-dark" />
+                  )}
+                </Link>
+              )}
 
-              {/* ── Notification Bell ── */}
-              <NotificationBell uid={user?.uid} />
+              {/* ── Notification Bell (uses different bell for admin) ── */}
+              {role === "admin" ? (
+                <AdminNotificationBell adminId={user?.uid} />
+              ) : (
+                <NotificationBell uid={user?.uid} />
+              )}
 
               {/* Divider */}
               <div className="h-6 w-px bg-slate-600 mx-1" />
@@ -190,14 +207,20 @@ export default function Navbar({ style }) {
                       <p className="text-sm font-bold text-slate-800 truncate">{profileName}</p>
                     </div>
 
+                    {/* Profile link based on role */}
                     <Link
-                      href={role === "patient" ? "/patient/profile" : role === "clinic" ? "/clinic/profile" : "/admin/audit-logs"}
+                      href={
+                        role === "patient" ? "/patient/profile" :
+                        role === "clinic" ? "/clinic/profile" :
+                        "/admin/audit-log"
+                      }
                       onClick={() => setIsProfileOpen(false)}
                       className="flex items-center gap-2 px-4 py-2 text-xs text-slate-700 hover:bg-slate-50 transition-colors"
                     >
-                      {role === "patient" ? "My Profile" : role === "clinic" ? "Clinic Profile" : "Admin Logs"}
+                      {role === "patient" ? "My Profile" : role === "clinic" ? "Clinic Profile" : "Audit Logs"}
                     </Link>
 
+                    {/* Bills & Payments (patients only) */}
                     {role === "patient" && (
                       <Link
                         href="/bills-payments"
@@ -208,16 +231,22 @@ export default function Navbar({ style }) {
                       </Link>
                     )}
 
+                    {/* Settings based on role */}
                     <Link
-                      href={role === "patient" ? "/patient/settings" : role === "clinic" ? "/clinic/settings" : "/admin/audit-logs"}
+                      href={
+                        role === "patient" ? "/patient/settings" :
+                        role === "clinic" ? "/clinic/settings" :
+                        "/admin/system-settings"
+                      }
                       onClick={() => setIsProfileOpen(false)}
                       className="flex items-center gap-2 px-4 py-2 text-xs text-slate-700 hover:bg-slate-50 transition-colors"
                     >
                       {role === "patient" ? "Account Settings" : role === "clinic" ? "Clinic Settings" : "System Settings"}
                     </Link>
 
+                    {/* Help & Support (all roles) */}
                     <Link
-                      href="/patient/help"
+                      href={role === "admin" ? "/admin/help" : "/patient/help"}
                       onClick={() => setIsProfileOpen(false)}
                       className="flex items-center gap-2 px-4 py-2 text-xs text-slate-700 hover:bg-slate-50 transition-colors"
                     >
