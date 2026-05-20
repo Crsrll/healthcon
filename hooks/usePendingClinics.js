@@ -1,8 +1,9 @@
 import { useState, useEffect, useCallback } from "react";
 import { collection, query, where, onSnapshot } from "firebase/firestore";
 import { db } from "@/lib/firebase";
+import { createSystemLog, LOG_ACTIONS } from "@/lib/logHelper";
 
-export function usePendingClinics() {
+export function usePendingClinics(user) {  // Add user parameter
   const [pendingClinics, setPendingClinics] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -38,7 +39,7 @@ export function usePendingClinics() {
     return () => unsubscribe();
   }, []);
 
-  const updateClinicStatus = useCallback(async (clinicId, action) => {
+  const updateClinicStatus = useCallback(async (clinicId, action, clinicName) => {
     try {
       const res = await fetch("/api/clinics/updateClinicStatus", {
         method: "PUT",
@@ -51,7 +52,41 @@ export function usePendingClinics() {
       const json = await res.json();
 
       if (res.ok) {
-        // No need to manually filter - onSnapshot will update automatically
+        // Create system log based on action
+        if (action === "approve") {
+          await createSystemLog(
+            user,
+            LOG_ACTIONS.APPROVE_CLINIC,
+            "clinic",
+            clinicId,
+            `Approved clinic: ${clinicName || clinicId}`
+          );
+        } else if (action === "reject") {
+          await createSystemLog(
+            user,
+            LOG_ACTIONS.REJECT_CLINIC,
+            "clinic",
+            clinicId,
+            `Rejected clinic: ${clinicName || clinicId}`
+          );
+        } else if (action === "suspend") {
+          await createSystemLog(
+            user,
+            LOG_ACTIONS.SUSPEND_CLINIC,
+            "clinic",
+            clinicId,
+            `Suspended clinic: ${clinicName || clinicId}`
+          );
+        } else if (action === "reinstate") {
+          await createSystemLog(
+            user,
+            LOG_ACTIONS.REINSTATE_CLINIC,
+            "clinic",
+            clinicId,
+            `Reinstated clinic: ${clinicName || clinicId}`
+          );
+        }
+        
         return { success: true, message: json.message };
       } else {
         return { success: false, error: json.error };
@@ -60,32 +95,32 @@ export function usePendingClinics() {
       console.error("Error updating clinic status:", err);
       return { success: false, error: err.message };
     }
-  }, []);
+  }, [user]);
 
   const approveClinic = useCallback(
-    (clinicId) => {
-      return updateClinicStatus(clinicId, "approve");
+    (clinicId, clinicName) => {
+      return updateClinicStatus(clinicId, "approve", clinicName);
     },
     [updateClinicStatus],
   );
 
   const rejectClinic = useCallback(
-    (clinicId) => {
-      return updateClinicStatus(clinicId, "reject");
+    (clinicId, clinicName) => {
+      return updateClinicStatus(clinicId, "reject", clinicName);
     },
     [updateClinicStatus],
   );
 
   const suspendClinic = useCallback(
-    (clinicId) => {
-      return updateClinicStatus(clinicId, "suspend");
+    (clinicId, clinicName) => {
+      return updateClinicStatus(clinicId, "suspend", clinicName);
     },
     [updateClinicStatus],
   );
 
   const reinstateClinic = useCallback(
-    (clinicId) => {
-      return updateClinicStatus(clinicId, "reinstate");
+    (clinicId, clinicName) => {
+      return updateClinicStatus(clinicId, "reinstate", clinicName);
     },
     [updateClinicStatus],
   );

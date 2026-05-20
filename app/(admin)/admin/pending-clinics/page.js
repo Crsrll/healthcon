@@ -2,17 +2,19 @@
 import { useState } from "react";
 import { CheckCircle, XCircle, Eye, Loader2 } from "lucide-react";
 import { usePendingClinics } from "@/hooks/usePendingClinics";
+import { useAuth } from "@/context/authContext"; // ADD THIS
 
 export default function PendingClinicsPage() {
+  const { user } = useAuth(); // ADD THIS
   const { pendingClinics, loading, error, approveClinic, rejectClinic } =
-    usePendingClinics();
+    usePendingClinics(user); // ADD user parameter
 
   const [selected, setSelected] = useState(null);
   const [actionLoading, setActionLoading] = useState(null);
 
-  const handleApprove = async (id) => {
+  const handleApprove = async (id, clinicName) => { // ADD clinicName parameter
     setActionLoading(id);
-    const result = await approveClinic(id);
+    const result = await approveClinic(id, clinicName); // Pass clinicName
     setActionLoading(null);
 
     if (result.success) {
@@ -22,9 +24,9 @@ export default function PendingClinicsPage() {
     }
   };
 
-  const handleReject = async (id) => {
+  const handleReject = async (id, clinicName) => { // ADD clinicName parameter
     setActionLoading(id);
-    const result = await rejectClinic(id);
+    const result = await rejectClinic(id, clinicName); // Pass clinicName
     setActionLoading(null);
 
     if (result.success) {
@@ -47,7 +49,7 @@ export default function PendingClinicsPage() {
     docs: clinic.documentCount || 0,
     email: clinic.email,
     phone: clinic.phone,
-    hours: clinic.hours, // This is an object, don't render directly
+    hours: clinic.hours,
     image: clinic.image,
   });
 
@@ -278,7 +280,7 @@ export default function PendingClinicsPage() {
                 {/* Actions */}
                 <div className="flex gap-2 pt-2">
                   <button
-                    onClick={() => handleApprove(selected.id)}
+                    onClick={() => handleApprove(selected.id, selected.clinicName || selected.name)}
                     disabled={actionLoading === selected.id}
                     className="flex-1 bg-teal-500 hover:bg-teal-400 disabled:bg-teal-300
                                text-white font-bold text-sm py-2.5 rounded-xl transition-colors 
@@ -292,7 +294,7 @@ export default function PendingClinicsPage() {
                     Approve
                   </button>
                   <button
-                    onClick={() => handleReject(selected.id)}
+                    onClick={() => handleReject(selected.id, selected.clinicName || selected.name)}
                     disabled={actionLoading === selected.id}
                     className="flex-1 bg-red-50 hover:bg-red-100 disabled:bg-red-50/50
                                text-red-600 font-bold text-sm py-2.5 rounded-xl transition-colors 

@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import { useClinics } from "@/hooks/useClinics";
 import { usePendingClinics } from "@/hooks/usePendingClinics";
+import { useAuth } from "@/context/authContext"; // ADD THIS
 
 const STATUS_STYLE = {
   approved: "bg-teal-50 text-teal-700 border-teal-200",
@@ -22,8 +23,9 @@ export default function ClinicsPage() {
   const searchParams = useSearchParams();
   const urlQuery = searchParams.get("q") || "";
 
+  const { user } = useAuth(); // ADD THIS - get current user
   const { clinics, loading } = useClinics("all");
-  const { approveClinic, suspendClinic, reinstateClinic } = usePendingClinics();
+  const { approveClinic, suspendClinic, reinstateClinic } = usePendingClinics(user); // ADD user parameter
 
   const [search, setSearch] = useState(urlQuery);
   const [filter, setFilter] = useState("All");
@@ -34,16 +36,16 @@ export default function ClinicsPage() {
     setSearch(urlQuery);
   }, [urlQuery]);
 
-  const handleStatusUpdate = async (clinicId, action) => {
+  const handleStatusUpdate = async (clinicId, action, clinicName) => {
     setActionLoading(clinicId);
     let result;
 
     if (action === "approve") {
-      result = await approveClinic(clinicId);
+      result = await approveClinic(clinicId, clinicName);
     } else if (action === "suspend") {
-      result = await suspendClinic(clinicId);
+      result = await suspendClinic(clinicId, clinicName);
     } else if (action === "reinstate") {
-      result = await reinstateClinic(clinicId);
+      result = await reinstateClinic(clinicId, clinicName);
     }
 
     setActionLoading(null);
@@ -235,7 +237,7 @@ export default function ClinicsPage() {
                             {status === "approved" && (
                               <button
                                 onClick={() =>
-                                  handleStatusUpdate(clinic.id, "suspend")
+                                  handleStatusUpdate(clinic.id, "suspend", name)
                                 }
                                 disabled={actionLoading === clinic.id}
                                 className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all disabled:opacity-50"
@@ -252,7 +254,7 @@ export default function ClinicsPage() {
                             {status === "suspended" && (
                               <button
                                 onClick={() =>
-                                  handleStatusUpdate(clinic.id, "reinstate")
+                                  handleStatusUpdate(clinic.id, "reinstate", name)
                                 }
                                 disabled={actionLoading === clinic.id}
                                 className="p-2 text-slate-400 hover:text-teal-600 hover:bg-teal-50 rounded-lg transition-all disabled:opacity-50"
@@ -269,7 +271,7 @@ export default function ClinicsPage() {
                             {status === "pending" && (
                               <button
                                 onClick={() =>
-                                  handleStatusUpdate(clinic.id, "approve")
+                                  handleStatusUpdate(clinic.id, "approve", name)
                                 }
                                 disabled={actionLoading === clinic.id}
                                 className="p-2 text-slate-400 hover:text-teal-600 hover:bg-teal-50 rounded-lg transition-all disabled:opacity-50"
@@ -302,7 +304,7 @@ export default function ClinicsPage() {
         </section>
       </main>
 
-      {/* Modal - same as before but use selectedClinic state */}
+      {/* Modal */}
       {selectedClinic && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
@@ -424,7 +426,7 @@ export default function ClinicsPage() {
                 {selectedClinic.status === "approved" && (
                   <button
                     onClick={() =>
-                      handleStatusUpdate(selectedClinic.id, "suspend")
+                      handleStatusUpdate(selectedClinic.id, "suspend", selectedClinic.name)
                     }
                     disabled={actionLoading === selectedClinic.id}
                     className="flex-1 bg-red-500 hover:bg-red-600 disabled:bg-red-300 text-white font-bold py-2.5 rounded-xl transition-colors flex items-center justify-center gap-2"
@@ -441,7 +443,7 @@ export default function ClinicsPage() {
                 {selectedClinic.status === "suspended" && (
                   <button
                     onClick={() =>
-                      handleStatusUpdate(selectedClinic.id, "reinstate")
+                      handleStatusUpdate(selectedClinic.id, "reinstate", selectedClinic.name)
                     }
                     disabled={actionLoading === selectedClinic.id}
                     className="flex-1 bg-teal-500 hover:bg-teal-600 disabled:bg-teal-300 text-white font-bold py-2.5 rounded-xl transition-colors flex items-center justify-center gap-2"
@@ -458,7 +460,7 @@ export default function ClinicsPage() {
                 {selectedClinic.status === "pending" && (
                   <button
                     onClick={() =>
-                      handleStatusUpdate(selectedClinic.id, "approve")
+                      handleStatusUpdate(selectedClinic.id, "approve", selectedClinic.name)
                     }
                     disabled={actionLoading === selectedClinic.id}
                     className="flex-1 bg-teal-500 hover:bg-teal-600 disabled:bg-teal-300 text-white font-bold py-2.5 rounded-xl transition-colors flex items-center justify-center gap-2"

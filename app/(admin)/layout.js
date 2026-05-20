@@ -1,5 +1,5 @@
 "use client";
-import { Home, Clock, Building2, Stethoscope, Users, Calendar, Settings, Flag, History, Wallet } from "lucide-react";
+import { Home, Clock, Building2, Users, Calendar, Settings, Flag, History } from "lucide-react";
 import Sidebar from "@/components/dashboard/Sidebar";
 import { useRouter, usePathname } from "next/navigation";
 import { useState } from "react";
@@ -8,10 +8,8 @@ const buttons = [
   { label: "Dashboard", href: "/admin/dashboard", icon: <Home size={20} /> },
   { label: "Pending Clinics", href: "/admin/pending-clinics", icon: <Clock size={20} /> },
   { label: "Clinics", href: "/admin/clinics", icon: <Building2 size={20} /> },
-  { label: "Doctors", href: "/admin/doctors", icon: <Stethoscope size={20} /> },
   { label: "Users", href: "/admin/users", icon: <Users size={20} /> },
   { label: "Bookings", href: "/admin/bookings", icon: <Calendar size={20} /> },
-  { label: "Revenue", href: "/admin/revenue", icon: <Wallet size={20} /> },
   { label: "System Logs", href: "/admin/audit-log", icon: <History size={20} /> },
   { label: "System Settings", href: "/admin/system-settings", icon: <Settings size={20} /> },
   { label: "Reports & Flagged", href: "/admin/reports-flagged", icon: <Flag size={20} /> }
