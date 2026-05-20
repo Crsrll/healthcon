@@ -1,73 +1,56 @@
 import { useState, useEffect, useCallback } from "react";
-import { collection, query, where, orderBy, onSnapshot } from "firebase/firestore";
-import { db } from "@/lib/firebase";
 
 export function useAdminNotifications(adminId) {
   const [notifications, setNotifications] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  useEffect(() => {
-    if (!adminId) {
-      setLoading(false);
-      return;
-    }
-
-    // Real-time listener for admin notifications
-    const q = query(
-      collection(db, "adminNotifications"),
-      where("adminId", "in", [adminId, "all"]),
-      orderBy("createdAt", "desc"),
-      limit(50)
-    );
-
-    const unsubscribe = onSnapshot(
-      q,
-      (snapshot) => {
-        const notifs = snapshot.docs.map((doc) => ({
-          id: doc.id,
-          ...doc.data(),
-        }));
-        setNotifications(notifs);
-        setUnreadCount(notifs.filter((n) => !n.read).length);
-        setLoading(false);
-      },
-      (error) => {
-        console.error("Admin notifications listener error:", error);
-        setLoading(false);
+  const fetchNotifications = useCallback(async () => {
+    if (!adminId) return;
+    
+    try {
+      const res = await fetch(`/api/admin-notifications?adminId=${adminId}`);
+      const json = await res.json();
+      
+      if (res.ok) {
+        setNotifications(json.data);
+        setUnreadCount(json.data.filter((n) => !n.read).length);
+        setError(null);
+      } else {
+        setError(json.error);
       }
-    );
-
-    return () => unsubscribe();
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
   }, [adminId]);
+
+  // ONLY FETCH ONCE when component mounts - NO POLLING
+  useEffect(() => {
+    fetchNotifications();
+  }, [fetchNotifications]);
 
   const markAsRead = useCallback(async (notificationId) => {
     try {
-      await fetch("/api/admin-notifications", {
+      const res = await fetch("/api/admin-notifications", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ notificationId }),
       });
-      return true;
+      
+      if (res.ok) {
+        // Refresh after marking as read
+        await fetchNotifications();
+        return true;
+      }
+      return false;
     } catch (err) {
       console.error("Failed to mark as read:", err);
       return false;
     }
-  }, []);
+  }, [fetchNotifications]);
 
-  const markAllAsRead = useCallback(async () => {
-    try {
-      await fetch("/api/admin-notifications", {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ markAll: true }),
-      });
-      return true;
-    } catch (err) {
-      console.error("Failed to mark all as read:", err);
-      return false;
-    }
-  }, []);
-
-  return { notifications, unreadCount, loading, markAsRead, markAllAsRead };
+  return { notifications, unreadCount, loading, error, markAsRead, refresh: fetchNotifications };
 }

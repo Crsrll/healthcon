@@ -1,7 +1,7 @@
 "use client";
 import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { Bell, X, Check, Clock, Building2, Flag, Settings, CheckCircle } from "lucide-react";
+import { Bell, Clock, Building2, Flag, Settings, CheckCircle, X } from "lucide-react";
 import { useAdminNotifications } from "@/hooks/useAdminNotifications";
 
 function NotifIcon({ type }) {
@@ -14,14 +14,6 @@ function NotifIcon({ type }) {
     case "admin_action":
       return <div className={`${base} bg-blue-500`}><Settings size={15} className="text-white" /></div>;
     case "clinic_approved":
-      return <div className={`${base} bg-teal-500`}><CheckCircle size={15} className="text-white" /></div>;
-    case "clinic_rejected":
-      return <div className={`${base} bg-red-500`}><X size={15} className="text-white" /></div>;
-    case "report_resolved":
-      return <div className={`${base} bg-green-500`}><Check size={15} className="text-white" /></div>;
-    case "user_suspended":
-      return <div className={`${base} bg-red-500`}><X size={15} className="text-white" /></div>;
-    case "user_reinstated":
       return <div className={`${base} bg-teal-500`}><CheckCircle size={15} className="text-white" /></div>;
     default:
       return <div className={`${base} bg-slate-400`}><Bell size={15} className="text-white" /></div>;
@@ -79,13 +71,12 @@ export default function AdminNotificationBell({ adminId }) {
       >
         <Bell size={20} />
         {unreadCount > 0 && (
-          <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
+          <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full" />
         )}
       </button>
 
       {isOpen && (
         <div className="absolute right-0 mt-2 w-80 bg-white rounded-xl shadow-xl border border-slate-200 z-50 overflow-hidden">
-          {/* Header */}
           <div className="px-4 py-3 border-b border-slate-100 flex items-center justify-between bg-slate-50">
             <div className="flex items-center gap-2">
               <h3 className="font-bold text-sm text-slate-800">Admin Alerts</h3>
@@ -96,16 +87,12 @@ export default function AdminNotificationBell({ adminId }) {
               )}
             </div>
             {unreadCount > 0 && (
-              <button
-                onClick={markAllAsRead}
-                className="text-[10px] text-teal-600 hover:text-teal-700 font-semibold"
-              >
+              <button onClick={markAllAsRead} className="text-[10px] text-teal-600 hover:text-teal-700 font-semibold">
                 Mark all read
               </button>
             )}
           </div>
 
-          {/* List */}
           <div className="max-h-96 overflow-y-auto divide-y divide-slate-50">
             {loading ? (
               <div className="flex justify-center py-8">
@@ -132,7 +119,7 @@ export default function AdminNotificationBell({ adminId }) {
                     <p className={`text-xs ${!notif.read ? "font-bold text-slate-800" : "font-medium text-slate-600"}`}>
                       {notif.title}
                     </p>
-                    <p className="text-[11px] text-slate-500 mt-0.5 line-clamp-2">{notif.body}</p>
+                    <p className="text-[11px] text-slate-500 mt-0.5">{notif.body}</p>
                     <p className="text-[10px] text-slate-400 mt-1 flex items-center gap-1">
                       <Clock size={9} />
                       {formatTimeAgo(notif.createdAt)}
@@ -143,15 +130,6 @@ export default function AdminNotificationBell({ adminId }) {
               ))
             )}
           </div>
-
-          {/* Footer */}
-          {notifications.length > 0 && (
-            <div className="px-4 py-2 border-t border-slate-100 bg-slate-50">
-              <p className="text-[9px] text-slate-400 text-center">
-                Admin system notifications
-              </p>
-            </div>
-          )}
         </div>
       )}
     </div>

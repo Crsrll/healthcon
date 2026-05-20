@@ -30,6 +30,7 @@ export default function SystemSettingsPage() {
   const [commissionPct, setCommission] = useState("5");
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [clearing, setClearing] = useState(false);
 
   // Sync local state with settings from hook
   useEffect(() => {
@@ -66,7 +67,6 @@ export default function SystemSettingsPage() {
     const result = await updateSettings(newSettings);
     
     if (result.success) {
-      // Create system log
       await createSystemLog(
         user,
         LOG_ACTIONS.SYSTEM_SETTINGS_UPDATE,
@@ -83,44 +83,92 @@ export default function SystemSettingsPage() {
   };
 
   const handleClearLogs = async () => {
-    if (confirm("Are you sure you want to clear all audit logs? This action cannot be undone.")) {
-      try {
-        const res = await fetch("/api/logs", { method: "DELETE", body: JSON.stringify({ days: 0 }) });
-        if (res.ok) {
-          await createSystemLog(
-            user,
-            LOG_ACTIONS.SYSTEM_SETTINGS_UPDATE,
-            "logs",
-            "all",
-            "Cleared all audit logs"
-          );
-          alert("Audit logs cleared successfully");
-        } else {
-          alert("Failed to clear logs");
-        }
-      } catch (err) {
-        console.error("Clear logs error:", err);
-        alert("Failed to clear logs");
+    if (!confirm("WARNING: This will delete ALL audit logs permanently. This action cannot be undone. Are you sure?")) {
+      return;
+    }
+    
+    setClearing(true);
+    try {
+      const res = await fetch("/api/logs?all=true", { method: "DELETE" });
+      const json = await res.json();
+      
+      if (res.ok) {
+        await createSystemLog(
+          user,
+          LOG_ACTIONS.SYSTEM_SETTINGS_UPDATE,
+          "logs",
+          "all",
+          "Cleared all audit logs"
+        );
+        alert(json.message || "Audit logs cleared successfully");
+      } else {
+        alert(`Failed to clear logs: ${json.error}`);
       }
+    } catch (err) {
+      console.error("Clear logs error:", err);
+      alert("Failed to clear logs");
+    } finally {
+      setClearing(false);
+    }
+  };
+
+  const handleClearOldLogs = async () => {
+    const days = prompt("Delete logs older than how many days?", "30");
+    if (!days) return;
+    
+    const daysNum = parseInt(days);
+    if (isNaN(daysNum) || daysNum < 1) {
+      alert("Please enter a valid number of days");
+      return;
+    }
+    
+    if (!confirm(`Delete all audit logs older than ${daysNum} days? This action cannot be undone.`)) {
+      return;
+    }
+    
+    setClearing(true);
+    try {
+      const res = await fetch(`/api/logs?days=${daysNum}`, { method: "DELETE" });
+      const json = await res.json();
+      
+      if (res.ok) {
+        await createSystemLog(
+          user,
+          LOG_ACTIONS.SYSTEM_SETTINGS_UPDATE,
+          "logs",
+          "old",
+          `Cleared audit logs older than ${daysNum} days`
+        );
+        alert(json.message || `Deleted logs older than ${daysNum} days successfully`);
+      } else {
+        alert(`Failed to clear logs: ${json.error}`);
+      }
+    } catch (err) {
+      console.error("Clear old logs error:", err);
+      alert("Failed to clear logs");
+    } finally {
+      setClearing(false);
     }
   };
 
   const handleResetData = async () => {
-    if (confirm("WARNING: This will reset all platform data. This action cannot be undone. Click OK to reset to default settings.")) {
-      const result = await resetSettings();
-      
-      if (result.success) {
-        await createSystemLog(
-          user,
-          LOG_ACTIONS.SYSTEM_SETTINGS_UPDATE,
-          "platform",
-          "all",
-          "Reset platform settings to default"
-        );
-        alert("Settings reset to default successfully");
-      } else {
-        alert(`Failed to reset: ${result.error}`);
-      }
+    if (!confirm("WARNING: This will reset all platform settings to default values. This action cannot be undone. Continue?")) {
+      return;
+    }
+    
+    const result = await resetSettings();
+    
+    if (result.success) {
+      await createSystemLog(
+        user,
+        LOG_ACTIONS.SYSTEM_SETTINGS_UPDATE,
+        "platform",
+        "all",
+        "Reset platform settings to default"
+      );
+      alert("Settings reset to default successfully");
+    } else {
+      alert(`Failed to reset: ${result.error}`);
     }
   };
 
@@ -149,10 +197,10 @@ export default function SystemSettingsPage() {
         </div>
       )}
 
-      {/* General */}
+      {/* General Settings */}
       <section className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 space-y-5">
         <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider">
-          General
+          General Settings
         </h3>
         {[
           { label: "Email Notifications", sub: "Send system emails to clinic admins", val: emailNotifs, set: setEmailNotifs },
@@ -160,8 +208,7 @@ export default function SystemSettingsPage() {
           { label: "Maintenance Mode", sub: "Take platform offline for all users", val: maintenance, set: setMaintenance },
         ].map(item => (
           <div key={item.label}
-            className="flex items-center justify-between py-3 border-b border-slate-50
-                       last:border-0"
+            className="flex items-center justify-between py-3 border-b border-slate-50 last:border-0"
           >
             <div>
               <p className="text-sm font-semibold text-slate-700">{item.label}</p>
@@ -172,7 +219,7 @@ export default function SystemSettingsPage() {
         ))}
       </section>
 
-      {/* Platform config */}
+      {/* Platform Configuration */}
       <section className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 space-y-5">
         <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider">
           Platform Configuration
@@ -187,6 +234,8 @@ export default function SystemSettingsPage() {
             onChange={e => setMaxBookings(e.target.value)}
             className="border border-slate-200 rounded-xl px-4 py-2.5 text-sm w-32
                        outline-none focus:border-teal-400 transition-colors"
+            min="1"
+            max="100"
           />
         </div>
         <div>
@@ -200,29 +249,50 @@ export default function SystemSettingsPage() {
             className="border border-slate-200 rounded-xl px-4 py-2.5 text-sm w-32
                        outline-none focus:border-teal-400 transition-colors"
             step="0.5"
+            min="0"
+            max="100"
           />
         </div>
       </section>
 
-      {/* Danger zone */}
-      <section className="bg-white rounded-2xl border border-red-100 shadow-sm p-6">
-        <h3 className="text-xs font-bold text-red-400 uppercase tracking-wider mb-4">
+      {/* Danger Zone */}
+      <section className="bg-white rounded-2xl border border-red-200 shadow-sm p-6">
+        <h3 className="text-xs font-bold text-red-500 uppercase tracking-wider mb-4">
           Danger Zone
         </h3>
         <div className="space-y-3">
-          <div className="flex items-center justify-between py-3 border-b border-red-50">
+          <div className="flex items-center justify-between py-3 border-b border-red-100">
             <div>
-              <p className="text-sm font-semibold text-slate-700">Clear All Audit Logs</p>
-              <p className="text-xs text-slate-400">Permanently deletes system logs</p>
+              <p className="text-sm font-semibold text-slate-700">Delete All Audit Logs</p>
+              <p className="text-xs text-slate-400">Permanently deletes ALL system logs</p>
             </div>
             <button 
               onClick={handleClearLogs}
-              className="text-xs font-bold text-red-500 border border-red-200
-                         hover:bg-red-50 px-4 py-2 rounded-lg transition-colors"
+              disabled={clearing}
+              className="text-xs font-bold text-red-600 border border-red-300
+                         hover:bg-red-50 px-4 py-2 rounded-lg transition-colors
+                         disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              Clear Logs
+              {clearing ? "Deleting..." : "Delete All Logs"}
             </button>
           </div>
+          
+          <div className="flex items-center justify-between py-3 border-b border-red-100">
+            <div>
+              <p className="text-sm font-semibold text-slate-700">Delete Old Audit Logs</p>
+              <p className="text-xs text-slate-400">Delete logs older than X days</p>
+            </div>
+            <button 
+              onClick={handleClearOldLogs}
+              disabled={clearing}
+              className="text-xs font-bold text-amber-600 border border-amber-300
+                         hover:bg-amber-50 px-4 py-2 rounded-lg transition-colors
+                         disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {clearing ? "Processing..." : "Delete Old Logs"}
+            </button>
+          </div>
+          
           <div className="flex items-center justify-between py-3">
             <div>
               <p className="text-sm font-semibold text-slate-700">Reset to Default Settings</p>
@@ -230,7 +300,7 @@ export default function SystemSettingsPage() {
             </div>
             <button 
               onClick={handleResetData}
-              className="text-xs font-bold text-red-500 border border-red-200
+              className="text-xs font-bold text-red-600 border border-red-300
                          hover:bg-red-50 px-4 py-2 rounded-lg transition-colors"
             >
               Reset Settings
@@ -239,6 +309,7 @@ export default function SystemSettingsPage() {
         </div>
       </section>
 
+      {/* Save Button */}
       <div className="flex justify-end">
         <button 
           onClick={handleSaveSettings}

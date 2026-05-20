@@ -1,23 +1,19 @@
 import { NextResponse } from "next/server";
-import { collection, addDoc, getDocs, query, where, orderBy, limit, updateDoc, doc } from "firebase/firestore";
+import { collection, addDoc, updateDoc, doc, query, where, orderBy, limit, getDocs } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 
-// GET admin notifications
+// GET - Fetch notifications (called once)
 export async function GET(request) {
   try {
     const { searchParams } = new URL(request.url);
     const adminId = searchParams.get("adminId");
     
-    let q = query(collection(db, "adminNotifications"), orderBy("createdAt", "desc"), limit(50));
-    
-    if (adminId && adminId !== "all") {
-      q = query(
-        collection(db, "adminNotifications"), 
-        where("adminId", "==", adminId), 
-        orderBy("createdAt", "desc"), 
-        limit(50)
-      );
-    }
+    const q = query(
+      collection(db, "notifications"),
+      where("adminId", "in", [adminId, "all"]),
+      orderBy("createdAt", "desc"),
+      limit(50)
+    );
     
     const snapshot = await getDocs(q);
     const notifications = snapshot.docs.map((doc) => ({
@@ -32,14 +28,14 @@ export async function GET(request) {
   }
 }
 
-// POST - Create a new admin notification
+// POST - Create notification
 export async function POST(request) {
   try {
     const body = await request.json();
     const { adminId, type, title, body: message, linkTo, targetId, targetType } = body;
     
     const newNotification = {
-      adminId: adminId || "all", // "all" for all admins, or specific admin ID
+      adminId: adminId || "all",
       type,
       title,
       body: message,
@@ -50,7 +46,7 @@ export async function POST(request) {
       createdAt: new Date().toISOString(),
     };
     
-    const docRef = await addDoc(collection(db, "adminNotifications"), newNotification);
+    const docRef = await addDoc(collection(db, "notifications"), newNotification);
     
     return NextResponse.json({ success: true, id: docRef.id });
   } catch (err) {
@@ -59,17 +55,13 @@ export async function POST(request) {
   }
 }
 
-// PUT - Mark notification as read
+// PUT - Mark as read
 export async function PUT(request) {
   try {
-    const { notificationId, markAll } = await request.json();
+    const { notificationId } = await request.json();
     
-    if (markAll) {
-      const snapshot = await getDocs(collection(db, "adminNotifications"));
-      const updates = snapshot.docs.map(d => updateDoc(doc(db, "adminNotifications", d.id), { read: true }));
-      await Promise.all(updates);
-    } else if (notificationId) {
-      await updateDoc(doc(db, "adminNotifications", notificationId), { read: true });
+    if (notificationId) {
+      await updateDoc(doc(db, "notifications", notificationId), { read: true });
     }
     
     return NextResponse.json({ success: true });

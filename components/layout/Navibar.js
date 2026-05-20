@@ -21,14 +21,6 @@ const clinicLinks = [
   { name: "Patients", href: "/clinic/patients" },
 ];
 
-const adminLinks = [
-  { name: "Dashboard", href: "/admin/dashboard" },
-  { name: "Clinics", href: "/admin/clinics" },
-  { name: "Users", href: "/admin/users" },
-  { name: "Bookings", href: "/admin/bookings" },
-  { name: "System Logs", href: "/admin/audit-log" },
-];
-
 export default function Navbar({ style }) {
   const router = useRouter();
   const { user, logout } = useAuth();
@@ -71,7 +63,6 @@ export default function Navbar({ style }) {
   const links =
     role === "patient" ? patientLinks :
     role === "clinic"  ? clinicLinks  :
-    role === "admin"   ? adminLinks   :
     null;
 
   const profileName =
@@ -212,12 +203,12 @@ export default function Navbar({ style }) {
                       href={
                         role === "patient" ? "/patient/profile" :
                         role === "clinic" ? "/clinic/profile" :
-                        "/admin/audit-log"
+                        "/admin/dashboard"
                       }
                       onClick={() => setIsProfileOpen(false)}
                       className="flex items-center gap-2 px-4 py-2 text-xs text-slate-700 hover:bg-slate-50 transition-colors"
                     >
-                      {role === "patient" ? "My Profile" : role === "clinic" ? "Clinic Profile" : "Audit Logs"}
+                      {role === "patient" ? "My Profile" : role === "clinic" ? "Clinic Profile" : "Admin Dashboard"}
                     </Link>
 
                     {/* Bills & Payments (patients only) */}
@@ -245,22 +236,24 @@ export default function Navbar({ style }) {
                     </Link>
 
                     {/* Help & Support (all roles) */}
-                    <Link
-                      href={role === "admin" ? "/admin/help" : "/patient/help"}
-                      onClick={() => setIsProfileOpen(false)}
-                      className="flex items-center gap-2 px-4 py-2 text-xs text-slate-700 hover:bg-slate-50 transition-colors"
-                    >
-                      Help & Support
-                    </Link>
+{role === "patient" && (
+  <Link
+    href="/patient/help"
+    onClick={() => setIsProfileOpen(false)}
+    className="flex items-center gap-2 px-4 py-2 text-xs text-slate-700 hover:bg-slate-50 transition-colors"
+  >
+    Help & Support
+  </Link>
+)}
 
-                    <hr className="border-slate-100 my-1" />
+<hr className="border-slate-100 my-1" />
 
-                    <button
-                      onClick={handleLogout}
-                      className="w-full text-left flex items-center gap-2 px-4 py-2 text-xs text-red-600 font-semibold hover:bg-red-50 transition-colors"
-                    >
-                      Log Out
-                    </button>
+<button
+  onClick={handleLogout}
+  className="w-full text-left flex items-center gap-2 px-4 py-2 text-xs text-red-600 font-semibold hover:bg-red-50 transition-colors"
+>
+  Log Out
+</button>
                   </div>
                 )}
               </div>

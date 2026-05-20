@@ -71,19 +71,27 @@ export async function POST(request) {
   }
 }
 
-// DELETE - Clear old logs (optional, for admin)
+// DELETE - Clear logs (with options)
 export async function DELETE(request) {
   try {
     const { searchParams } = new URL(request.url);
     const daysOld = parseInt(searchParams.get("days") || "30");
+    const clearAll = searchParams.get("all") === "true";
     
-    const cutoffDate = new Date();
-    cutoffDate.setDate(cutoffDate.getDate() - daysOld);
+    let q;
     
-    const q = query(
-      collection(db, "systemLogs"),
-      where("timestamp", "<", cutoffDate.toISOString())
-    );
+    if (clearAll) {
+      // Delete ALL logs
+      q = query(collection(db, "systemLogs"));
+    } else {
+      // Delete logs older than specified days
+      const cutoffDate = new Date();
+      cutoffDate.setDate(cutoffDate.getDate() - daysOld);
+      q = query(
+        collection(db, "systemLogs"),
+        where("timestamp", "<", cutoffDate.toISOString())
+      );
+    }
     
     const snapshot = await getDocs(q);
     const deletePromises = snapshot.docs.map((doc) => deleteDoc(doc.ref));
@@ -91,7 +99,9 @@ export async function DELETE(request) {
     
     return NextResponse.json({ 
       success: true, 
-      message: `Deleted ${snapshot.size} logs older than ${daysOld} days` 
+      message: clearAll 
+        ? `Deleted all ${snapshot.size} logs` 
+        : `Deleted ${snapshot.size} logs older than ${daysOld} days`
     });
   } catch (err) {
     console.error("DELETE /api/logs error:", err);
