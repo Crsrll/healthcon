@@ -1,8 +1,9 @@
+// app/api/inquiries/route.js
 import { NextResponse } from "next/server";
 import { db } from "@/lib/firebase";
 import {
   collection, query, where, getDocs,
-  doc, addDoc, updateDoc,
+  doc, addDoc, updateDoc, getDoc,
   orderBy, serverTimestamp, limit
 } from "firebase/firestore";
 
@@ -83,50 +84,58 @@ export async function POST(req) {
     const body = await req.json();
     const { action } = body;
 
-    // Create new inquiry + first message
+    // ── Create new inquiry + first message ──────────────────────
     if (action === "create") {
       const { clinicID, clinicName, patientID, patientName, firstMessage } = body;
       if (!clinicID || !patientID || !firstMessage) {
         return NextResponse.json({ error: "Missing fields" }, { status: 400 });
       }
+
       const inquiryRef = await addDoc(collection(db, "inquiries"), {
         clinicID,
         clinicName,
         patientID,
         patientName,
         lastMessage: firstMessage,
-        unreadByClinic: true,
+        unreadByClinic:  true,
         unreadByPatient: false,
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
       });
+
       await addDoc(collection(db, "inquiries", inquiryRef.id, "messages"), {
         text: firstMessage,
         sender: "patient",
         seen: false,
         createdAt: serverTimestamp(),
       });
+
       return NextResponse.json({ success: true, inquiryId: inquiryRef.id });
     }
 
-    // Send message to existing inquiry
+    // ── Send message to existing inquiry ────────────────────────
     if (action === "message") {
       const { inquiryId, text, sender } = body;
       if (!inquiryId || !text || !sender) {
         return NextResponse.json({ error: "Missing fields" }, { status: 400 });
       }
+
+      // Save the message
       await addDoc(collection(db, "inquiries", inquiryId, "messages"), {
         text,
         sender,
         seen: false,
         createdAt: serverTimestamp(),
       });
+
+      // Update inquiry metadata
       await updateDoc(doc(db, "inquiries", inquiryId), {
-        lastMessage: text,
-        updatedAt: serverTimestamp(),
+        lastMessage:     text,
+        updatedAt:       serverTimestamp(),
         unreadByClinic:  sender === "patient",
         unreadByPatient: sender === "clinic",
       });
+
       return NextResponse.json({ success: true });
     }
 

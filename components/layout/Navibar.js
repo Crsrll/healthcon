@@ -5,8 +5,8 @@ import { useState, useRef, useEffect } from "react";
 import { useAuth } from "@/context/authContext";
 import { usePathname } from "next/navigation";
 import Avatar from "@/components/ui/Avatar";
-
-
+import NotificationBell from "@/components/Notif/NotificationBell";
+import { useUnreadMessages } from "@/hooks/useUnreadMessages";
 
 const patientLinks = [
   { name: "Dashboard", href: "/patient/dashboard" },
@@ -20,12 +20,6 @@ const clinicLinks = [
   { name: "Patients", href: "/clinic/patients" },
 ];
 
-const adminLinks = [
-  { name: "Overview", href: "/admin/dashboard" },
-  { name: "Clinics", href: "/clinic" },
-  { name: "Users", href: "/users" },
-];
-
 export default function Navbar({ style }) {
   const router = useRouter();
   const { user, logout } = useAuth();
@@ -34,7 +28,9 @@ export default function Navbar({ style }) {
   const [mounted, setMounted] = useState(false);
   const dropdownRef = useRef(null);
 
- 
+  // ── Unread message count (real-time) ──
+  const role = user?.role;
+  const unreadMessages = useUnreadMessages(user?.uid, role);
 
   useEffect(() => { setMounted(true); }, []);
 
@@ -54,8 +50,8 @@ export default function Navbar({ style }) {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const pathname = usePathname();                                              // ← inside function
-  const hideOn = ["/auth/login", "/auth/register", "/auth/register-clinic" , "/auth/login-clinic"];  // ← inside function
+  const pathname = usePathname();
+  const hideOn = ["/auth/login", "/auth/register", "/auth/register-clinic", "/auth/login-clinic"];
   if (hideOn.includes(pathname)) return null;
 
   const handleLogout = async () => {
@@ -63,11 +59,9 @@ export default function Navbar({ style }) {
     router.push("/");
   };
 
-  const role = user?.role;
   const links =
     role === "patient" ? patientLinks :
     role === "clinic"  ? clinicLinks  :
-    role === "admin"   ? adminLinks   :
     null;
 
   const profileName =
@@ -108,7 +102,7 @@ export default function Navbar({ style }) {
           <span>Health<span className="text-cyan-300">con</span></span>
         </div>
 
-        {/* CENTER: Dashboard nav links (logged in only) */}
+        {/* CENTER: Nav links */}
         <div className="flex items-center gap-8">
           {links && links.map((link) => (
             <Link
@@ -122,12 +116,12 @@ export default function Navbar({ style }) {
           ))}
         </div>
 
-        {/* RIGHT: Public links or logged-in icons */}
-        <div className="flex items-center gap-8">
+        {/* RIGHT */}
+        <div className="flex items-center gap-4">
 
-          {/* Public */}
+          {/* ── Public ── */}
           {!user && (
-            <>
+            <div className="flex items-center gap-8">
               <span
                 onClick={() => document.getElementById("about")?.scrollIntoView({ behavior: "smooth" })}
                 className="text-[12px] font-bold uppercase tracking-widest cursor-pointer relative group"
@@ -135,7 +129,6 @@ export default function Navbar({ style }) {
                 About
                 <span className="absolute left-0 bottom-0 w-0 h-0.5 bg-cyan-300 transition-all duration-200 group-hover:w-full" />
               </span>
-
               <span
                 onClick={() => router.push("/auth/register")}
                 className="text-[12px] font-bold uppercase tracking-widest cursor-pointer relative group"
@@ -143,7 +136,6 @@ export default function Navbar({ style }) {
                 Sign Up
                 <span className="absolute left-0 bottom-0 w-0 h-0.5 bg-cyan-300 transition-all duration-200 group-hover:w-full" />
               </span>
-
               <button
                 onClick={() => router.push("/auth/login")}
                 className="bg-[#2f80d0] px-5 py-2 text-[14px] font-bold rounded-[10px]
@@ -155,51 +147,52 @@ export default function Navbar({ style }) {
               >
                 Log In
               </button>
-            </>
+            </div>
           )}
 
-          {/* Logged in */}
+          {/* ── Logged in ── */}
           {user && (
-            <>
-              {/* Messages */}
+            <div className="flex items-center gap-3">
+
+              {/* ── Message icon with unread dot ── */}
               <Link
-                href={role === "patient" ? "/patient/messages" : role === "clinic" ? "/clinic/inquiries" : "/admin/audit-logs"}
-                className="relative p-1 text-slate-300 hover:text-teal-300 transition-colors group">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
+                href={role === "patient" ? "/patient/messages" : "/clinic/inquiries"}
+                className="relative w-10 h-10 rounded-xl flex items-center justify-center text-slate-300 hover:text-teal-300 hover:bg-white/10 transition-all"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.7} stroke="currentColor" className="w-5 h-5">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 12.76c0 1.6 1.123 2.994 2.707 3.227 1.087.16 2.185.283 3.293.369V21l4.076-4.076a1.526 1.526 0 0 1 1.037-.443 48.282 48.282 0 0 0 5.68-.494c1.584-.233 2.707-1.626 2.707-3.228V6.741c0-1.602-1.123-2.995-2.707-3.228A48.394 48.394 0 0 0 12 3c-2.392 0-4.744.175-7.043.513C3.373 3.746 2.25 5.14 2.25 6.741v6.018Z" />
                 </svg>
-                <span className="absolute top-0 right-0 h-2.5 w-2.5 rounded-full bg-red-500 ring-2 ring-navy-dark" />
+                {/* Unread dot — only shows when there are unread messages */}
+                {unreadMessages > 0 && (
+                  <span className="absolute top-1 right-1 h-2.5 w-2.5 rounded-full bg-red-400 ring-2 ring-navy-dark" />
+                )}
               </Link>
 
-              {/* Notifications */}
-              <button className="relative p-1 text-slate-300 hover:text-teal-300 transition-colors">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M14.857 17.082a23.848 23.848 0 0 0 5.454-1.31A8.967 8.967 0 0 1 18 9.75V9A6 6 0 0 0 6 9v.75a8.967 8.967 0 0 1-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 0 1-5.714 0m5.714 0a3 3 0 1 1-5.714 0" />
-                </svg>
-                <span className="absolute top-0 right-0 h-2.5 w-2.5 rounded-full bg-teal-400 ring-2 ring-navy-dark" />
-              </button>
+              {/* ── Notification Bell ── */}
+              <NotificationBell uid={user?.uid} />
 
-              {/* Profile Dropdown */}
+              {/* Divider */}
+              <div className="h-6 w-px bg-slate-600 mx-1" />
+
+              {/* Profile dropdown */}
               <div className="relative" ref={dropdownRef}>
-                <div className="flex items-center border-l border-slate-600 pl-4">
-                  <button
-                    onClick={() => setIsProfileOpen(!isProfileOpen)}
-                    className="w-9 h-9 bg-teal-500 rounded-full border border-slate-300 cursor-pointer hover:ring-2 ring-teal-300 transition-all flex items-center justify-center text-white font-bold text-xs"
-                  >
-                    {/* {profileInitial} */}
-                    <Avatar user={user} />
-                  </button>
-                </div>
+                <button
+                  onClick={() => setIsProfileOpen(!isProfileOpen)}
+                  className="w-9 h-9 bg-teal-500 rounded-full border border-slate-300 cursor-pointer hover:ring-2 ring-teal-300 transition-all flex items-center justify-center text-white font-bold text-xs"
+                >
+                  <Avatar user={user} />
+                </button>
 
                 {isProfileOpen && (
                   <div className="absolute right-0 mt-3 w-48 bg-white rounded-xl shadow-xl border border-slate-200 py-2 z-50">
                     <div className="px-4 py-2 border-b border-slate-100">
                       <p className="text-[10px] font-bold text-teal-600 uppercase">{profileLabel}</p>
-                      <p className="text-sm font-bold text-slate-800">{profileName}</p>
+                      <p className="text-sm font-bold text-slate-800 truncate">{profileName}</p>
                     </div>
 
                     <Link
                       href={role === "patient" ? "/patient/profile" : role === "clinic" ? "/clinic/profile" : "/admin/audit-logs"}
+                      onClick={() => setIsProfileOpen(false)}
                       className="flex items-center gap-2 px-4 py-2 text-xs text-slate-700 hover:bg-slate-50 transition-colors"
                     >
                       {role === "patient" ? "My Profile" : role === "clinic" ? "Clinic Profile" : "Admin Logs"}
@@ -207,7 +200,8 @@ export default function Navbar({ style }) {
 
                     {role === "patient" && (
                       <Link
-                        href="bills-payments"
+                        href="/bills-payments"
+                        onClick={() => setIsProfileOpen(false)}
                         className="flex items-center gap-2 px-4 py-2 text-xs text-slate-700 hover:bg-slate-50 transition-colors"
                       >
                         Bills & Payments
@@ -216,13 +210,15 @@ export default function Navbar({ style }) {
 
                     <Link
                       href={role === "patient" ? "/patient/settings" : role === "clinic" ? "/clinic/settings" : "/admin/audit-logs"}
+                      onClick={() => setIsProfileOpen(false)}
                       className="flex items-center gap-2 px-4 py-2 text-xs text-slate-700 hover:bg-slate-50 transition-colors"
                     >
                       {role === "patient" ? "Account Settings" : role === "clinic" ? "Clinic Settings" : "System Settings"}
                     </Link>
 
                     <Link
-                      href="patient/help"
+                      href="/patient/help"
+                      onClick={() => setIsProfileOpen(false)}
                       className="flex items-center gap-2 px-4 py-2 text-xs text-slate-700 hover:bg-slate-50 transition-colors"
                     >
                       Help & Support
@@ -239,7 +235,7 @@ export default function Navbar({ style }) {
                   </div>
                 )}
               </div>
-            </>
+            </div>
           )}
         </div>
       </div>

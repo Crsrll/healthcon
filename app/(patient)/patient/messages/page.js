@@ -1,7 +1,7 @@
 "use client";
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
-import { Search, Send, Building2, ChevronRight, Loader2, MessageSquare, Clock, Check } from "lucide-react";
+import { Search, Send, Building2, ChevronRight, Loader2, MessageSquare, Clock, Check, CheckCheck } from "lucide-react";
 import { useAuth } from "@/context/authContext";
 import { db } from "@/lib/firebase"; // Ensure this points to your firebase config
 import { collection, query, where, orderBy, onSnapshot } from "firebase/firestore";
@@ -73,6 +73,20 @@ export default function PatientInquiriesPage() {
     });
 
     return () => unsubscribe();
+  }, [activeId]);
+
+  // Place it right after the messages listener useEffect
+
+  useEffect(() => {
+    if (!activeId) return;
+
+    const role = user?.role === "clinic" ? "clinic" : "patient";
+
+    fetch("/api/inquiries/read", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ inquiryId: activeId, role }),
+    }).catch(e => console.error(e));
   }, [activeId]);
 
   // ── Send Message logic remains the same (POST to API) ──
@@ -247,13 +261,29 @@ export default function PatientInquiriesPage() {
                     <div className="flex justify-center mt-10"><Loader2 className="animate-spin text-slate-300" size={24} /></div>
                   ) : (
                     <div className="space-y-4">
-                      {messages.map((m) => (
-                        <div key={m.id} className={`flex flex-col ${m.sender === "patient" ? "items-end" : "items-start"}`}>
-                          <div className={`px-4 py-2.5 rounded-2xl text-sm max-w-[85%] shadow-sm ${m.sender === "patient" ? "bg-[#1a355d] text-white rounded-br-none" : "bg-white border border-slate-200 text-slate-700 rounded-bl-none"}`}>
-                            {m.text}
+                      {messages.map((m, idx) => {
+                        const isPatient = m.sender === "patient";
+                        const isLast    = idx === messages.length - 1;
+                        return (
+                          <div key={m.id} className={`flex flex-col ${isPatient ? "items-end" : "items-start"}`}>
+                            <div className={`px-4 py-2.5 rounded-2xl text-sm max-w-[85%] shadow-sm ${
+                              isPatient
+                                ? "bg-[#1a355d] text-white rounded-br-none"
+                                : "bg-white border border-slate-200 text-slate-700 rounded-bl-none"
+                            }`}>
+                              {m.text}
+                            </div>
+                            {isPatient && isLast && (
+                              <span className="text-[10px] text-slate-400 mt-1 flex items-center gap-1">
+                                {m.seen
+                                  ? <><CheckCheck size={11} className="text-teal-500" /> Seen</>
+                                  : <><Check size={11} /> Delivered</>
+                                }
+                              </span>
+                            )}
                           </div>
-                        </div>
-                      ))}
+                        );
+                      })}
                       <div ref={messagesEndRef} className="h-2" />
                     </div>
                   )}

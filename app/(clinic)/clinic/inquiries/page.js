@@ -70,6 +70,19 @@ export default function ClinicInquiriesPage() {
     return () => unsubscribe();
   }, [activeId]);
 
+  // Place it right after the messages listener useEffect
+  useEffect(() => {
+    if (!activeId) return;
+
+    const role = user?.role === "clinic" ? "clinic" : "patient";
+
+    fetch("/api/inquiries/read", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ inquiryId: activeId, role }),
+    }).catch(e => console.error(e));
+  }, [activeId]);
+
   const handleSendMessage = async (e) => {
     e.preventDefault();
     if (!replyText.trim() || !activeId) return;
@@ -83,17 +96,6 @@ export default function ClinicInquiriesPage() {
         body: JSON.stringify({ action: "message", inquiryId: activeId, text: tempText, sender: "clinic" }),
       });
     } catch (e) { alert("Failed to send"); }
-  };
-
-  const handleSelect = async (id) => {
-    setActiveId(id);
-    try {
-      await fetch("/api/inquiries/read", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ inquiryId: id, role: "clinic" }),
-      });
-    } catch (e) { console.error(e); }
   };
 
   const activeInquiry     = inquiries.find(i => i.id === activeId);
@@ -178,7 +180,7 @@ export default function ClinicInquiriesPage() {
                 filteredInquiries.map(inq => (
                   <button
                     key={inq.id}
-                    onClick={() => handleSelect(inq.id)}
+                    onClick={() => setActiveId(inq.id)}
                     className={`w-full text-left px-4 py-4 transition-all border-b border-slate-50 last:border-0
                       ${inq.id === activeId ? "bg-[#1a355d]/5 border-l-4 border-l-[#1a355d]" : "border-l-4 border-l-transparent hover:bg-slate-50"}`}
                   >

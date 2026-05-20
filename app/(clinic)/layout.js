@@ -14,7 +14,6 @@ const buttons = [
   { label: "Booking History",   href: "/clinic/bookings",   icon: <Calendar size={20} /> },
   { label: "Profile",   href:"/clinic/profile",   icon: <User size={20} /> },
   { label: "Edit",      href: "/clinic/edit",      icon: <Pencil size={20} /> },
-  { label: "Inquiries", href: "/clinic/inquiries",  icon: <MessageCircle size={20} /> },
   { label: "Settings", href: "/clinic/settings", icon: <Settings size={20} /> },
   { label: "Reports & Reviews", href: "/clinic/reports-reviews", icon: <Flag size={20} /> }
   
