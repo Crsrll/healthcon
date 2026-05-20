@@ -1,67 +1,75 @@
-// hooks/useNotifications.js
-// ─────────────────────────────────────────────────────────────
-// Polls /api/notifications every 15 seconds.
-// Returns:
-//   notifications  - array of notification objects
-//   unreadCount    - number of unread items
-//   markOne(id)    - mark a single notification as read
-//   markAll()      - mark all as read
-//   loading        - boolean
-// ─────────────────────────────────────────────────────────────
-
 import { useState, useEffect, useCallback } from "react";
+import { collection, query, orderBy, limit, onSnapshot } from "firebase/firestore";
+import { db } from "@/lib/firebase";
 
 export function useNotifications(uid) {
   const [notifications, setNotifications] = useState([]);
-  const [loading,       setLoading]       = useState(true);
+  const [unreadCount, setUnreadCount] = useState(0);
+  const [loading, setLoading] = useState(true);
 
-  const fetchNotifications = useCallback(async () => {
-    if (!uid) return;
-    try {
-      const res  = await fetch(`/api/notifications?uid=${uid}`);
-      const json = await res.json();
-      if (json.success) setNotifications(json.data);
-    } catch (e) {
-      console.error("useNotifications:", e);
-    } finally {
+  useEffect(() => {
+    if (!uid) {
       setLoading(false);
+      return;
     }
+
+    // REAL-TIME SNAPSHOT - matches your API's query exactly
+    const q = query(
+      collection(db, "notifications", uid, "items"),
+      orderBy("createdAt", "desc"),
+      limit(30)
+    );
+
+    const unsubscribe = onSnapshot(
+      q,
+      (snapshot) => {
+        const notifs = snapshot.docs.map((doc) => {
+          const data = doc.data();
+          return {
+            id: doc.id,
+            ...data,
+            // Convert Firestore Timestamp to ISO string if needed
+            createdAt: data.createdAt?.toDate?.()?.toISOString() ?? data.createdAt,
+          };
+        });
+        setNotifications(notifs);
+        setUnreadCount(notifs.filter((n) => !n.read).length);
+        setLoading(false);
+      },
+      (error) => {
+        console.error("Notifications snapshot error:", error);
+        setLoading(false);
+      }
+    );
+
+    return () => unsubscribe();
   }, [uid]);
 
-  // Initial load
-  useEffect(() => {
-    fetchNotifications();
-  }, [fetchNotifications]);
-
-  // Poll every 15 s
-  useEffect(() => {
-    if (!uid) return;
-    const id = setInterval(fetchNotifications, 10_000);
-    return () => clearInterval(id);
-  }, [uid, fetchNotifications]);
-
   const markOne = useCallback(async (notificationId) => {
-    // Optimistic
+    // Optimistic update
     setNotifications(prev =>
       prev.map(n => n.id === notificationId ? { ...n, read: true } : n)
     );
+    
+    // Call API to update in database
     await fetch("/api/notifications", {
-      method:  "PATCH",
+      method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body:    JSON.stringify({ uid, action: "read_one", notificationId }),
+      body: JSON.stringify({ uid, action: "read_one", notificationId }),
     });
   }, [uid]);
 
   const markAll = useCallback(async () => {
+    // Optimistic update
     setNotifications(prev => prev.map(n => ({ ...n, read: true })));
+    
+    // Call API to update in database
     await fetch("/api/notifications", {
-      method:  "PATCH",
+      method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body:    JSON.stringify({ uid, action: "read_all" }),
+      body: JSON.stringify({ uid, action: "read_all" }),
     });
   }, [uid]);
-
-  const unreadCount = notifications.filter(n => !n.read).length;
 
   return { notifications, unreadCount, markOne, markAll, loading };
 }
