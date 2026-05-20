@@ -2,8 +2,9 @@ import { useState, useEffect, useCallback } from "react";
 import { collection, query, where, onSnapshot } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { createSystemLog, LOG_ACTIONS } from "@/lib/logHelper";
+import { createAdminNotification, ADMIN_NOTIFICATION_TYPES } from "@/lib/adminNotificationHelper";
 
-export function usePendingClinics(user) {  // Add user parameter
+export function usePendingClinics(user) {
   const [pendingClinics, setPendingClinics] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -35,9 +36,34 @@ export function usePendingClinics(user) {  // Add user parameter
       },
     );
 
-    // Cleanup listener on unmount
     return () => unsubscribe();
   }, []);
+
+  // Check for new pending clinics and send notification (run when pendingClinics changes)
+  useEffect(() => {
+    if (pendingClinics.length > 0) {
+      // Get the most recent pending clinic
+      const latestPending = pendingClinics[0];
+      if (latestPending && latestPending.createdAt) {
+        const createdAt = new Date(latestPending.createdAt);
+        const now = new Date();
+        const hoursAgo = (now - createdAt) / (1000 * 60 * 60);
+        
+        // Only send notification if clinic was created in the last hour (new)
+        if (hoursAgo < 1) {
+          createAdminNotification({
+            adminId: "all",
+            type: ADMIN_NOTIFICATION_TYPES.PENDING_CLINIC,
+            title: "New Clinic Registration",
+            body: `${latestPending.clinicName || latestPending.name || "A clinic"} has registered and needs approval`,
+            linkTo: "/admin/pending-clinics",
+            targetId: latestPending.id,
+            targetType: "clinic",
+          });
+        }
+      }
+    }
+  }, [pendingClinics]);
 
   const updateClinicStatus = useCallback(async (clinicId, action, clinicName) => {
     try {
@@ -61,6 +87,16 @@ export function usePendingClinics(user) {  // Add user parameter
             clinicId,
             `Approved clinic: ${clinicName || clinicId}`
           );
+          // Send admin notification
+          await createAdminNotification({
+            adminId: "all",
+            type: ADMIN_NOTIFICATION_TYPES.CLINIC_APPROVED,
+            title: "Clinic Approved",
+            body: `${clinicName || clinicId} has been approved and is now live`,
+            linkTo: "/admin/clinics",
+            targetId: clinicId,
+            targetType: "clinic",
+          });
         } else if (action === "reject") {
           await createSystemLog(
             user,
@@ -69,6 +105,15 @@ export function usePendingClinics(user) {  // Add user parameter
             clinicId,
             `Rejected clinic: ${clinicName || clinicId}`
           );
+          await createAdminNotification({
+            adminId: "all",
+            type: ADMIN_NOTIFICATION_TYPES.CLINIC_REJECTED,
+            title: "Clinic Rejected",
+            body: `${clinicName || clinicId} has been rejected`,
+            linkTo: "/admin/pending-clinics",
+            targetId: clinicId,
+            targetType: "clinic",
+          });
         } else if (action === "suspend") {
           await createSystemLog(
             user,
@@ -77,6 +122,15 @@ export function usePendingClinics(user) {  // Add user parameter
             clinicId,
             `Suspended clinic: ${clinicName || clinicId}`
           );
+          await createAdminNotification({
+            adminId: "all",
+            type: ADMIN_NOTIFICATION_TYPES.ADMIN_ACTION,
+            title: "Clinic Suspended",
+            body: `${clinicName || clinicId} has been suspended by ${user?.email?.split('@')[0] || "Admin"}`,
+            linkTo: "/admin/clinics",
+            targetId: clinicId,
+            targetType: "clinic",
+          });
         } else if (action === "reinstate") {
           await createSystemLog(
             user,
@@ -85,6 +139,15 @@ export function usePendingClinics(user) {  // Add user parameter
             clinicId,
             `Reinstated clinic: ${clinicName || clinicId}`
           );
+          await createAdminNotification({
+            adminId: "all",
+            type: ADMIN_NOTIFICATION_TYPES.CLINIC_APPROVED,
+            title: "Clinic Reinstated",
+            body: `${clinicName || clinicId} has been reinstated`,
+            linkTo: "/admin/clinics",
+            targetId: clinicId,
+            targetType: "clinic",
+          });
         }
         
         return { success: true, message: json.message };

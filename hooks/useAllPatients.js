@@ -2,8 +2,9 @@ import { useState, useEffect, useCallback } from "react";
 import { collection, query, where, onSnapshot } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { createSystemLog, LOG_ACTIONS } from "@/lib/logHelper";
+import { createAdminNotification, ADMIN_NOTIFICATION_TYPES } from "@/lib/adminNotificationHelper";
 
-export function useAllPatients(user) {  // Add user parameter
+export function useAllPatients(user) {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -11,7 +12,6 @@ export function useAllPatients(user) {  // Add user parameter
   useEffect(() => {
     setLoading(true);
     
-    // Real-time listener for patients only
     const q = query(collection(db, "users"), where("role", "==", "patient"));
     
     const unsubscribe = onSnapshot(
@@ -48,7 +48,6 @@ export function useAllPatients(user) {  // Add user parameter
       const json = await res.json();
 
       if (res.ok) {
-        // Create system log based on action
         if (action === "suspend") {
           await createSystemLog(
             user,
@@ -57,6 +56,15 @@ export function useAllPatients(user) {  // Add user parameter
             userId,
             `Suspended patient: ${userName || userId}`
           );
+          await createAdminNotification({
+            adminId: "all",
+            type: ADMIN_NOTIFICATION_TYPES.USER_SUSPENDED,
+            title: "User Suspended",
+            body: `${userName || userId} has been suspended by ${user?.email?.split('@')[0] || "Admin"}`,
+            linkTo: "/admin/users",
+            targetId: userId,
+            targetType: "user",
+          });
         } else if (action === "reinstate") {
           await createSystemLog(
             user,
@@ -65,6 +73,15 @@ export function useAllPatients(user) {  // Add user parameter
             userId,
             `Reinstated patient: ${userName || userId}`
           );
+          await createAdminNotification({
+            adminId: "all",
+            type: ADMIN_NOTIFICATION_TYPES.USER_REINSTATED,
+            title: "User Reinstated",
+            body: `${userName || userId} has been reinstated by ${user?.email?.split('@')[0] || "Admin"}`,
+            linkTo: "/admin/users",
+            targetId: userId,
+            targetType: "user",
+          });
         }
         
         return { success: true, message: json.message };

@@ -23,8 +23,13 @@ export default function ClinicLayout({ children }) {
   
   const { user } = useAuth();
   const [search, setSearch] = useState("");
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false); // ADD THIS
   const router = useRouter();
   const progressPct = Math.round((7 / 12) * 100);
+
+  const toggleSidebar = () => { // ADD THIS
+    setSidebarCollapsed(!sidebarCollapsed);
+  };
 
   const handleSearch = (e) => {
     e.preventDefault();
@@ -108,7 +113,11 @@ export default function ClinicLayout({ children }) {
         </div>
       </div>
       <div className="flex">
-        <Sidebar buttons={buttons} />
+        <Sidebar 
+          buttons={buttons} 
+          isCollapsed={sidebarCollapsed}  // ADD THIS
+          onToggle={toggleSidebar}         // ADD THIS
+        />
         <main className="flex-1">{children}</main>
       </div>
     </div>
