@@ -4,7 +4,6 @@ import Link from "next/link";
 import { CalendarCheck, CheckCircle2, Clock, Sidebar } from "lucide-react";
 import SidebarWrapper from "@/components/dashboard/SidebarWrapper";
 import PulseCard from "@/components/ui/PulseCard";
-import { CalendarCheck, Clock, MessageSquare, CheckCircle2  } from "lucide-react";
 
 export default function ClinicDashboard() {
   const [mode, setMode] = useState("Dashboard");

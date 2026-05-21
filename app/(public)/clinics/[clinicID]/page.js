@@ -7,7 +7,12 @@ import { useDoctors } from '@/hooks/useDoctors';
 import { useAuth } from '@/hooks/useAuth';
 import { useBookedSlots } from '@/hooks/useBookedSlots';
 import { generateTimeSlots } from '@/lib/generateTimeSlots';
-import { MessageCircle, Send, X, ChevronDown } from 'lucide-react';
+import { 
+  MessageCircle, Send, X, ChevronDown, Star, 
+  Flag, Calendar, Clock, MapPin, Phone, Mail, 
+  Building2, Stethoscope, Award, ThumbsUp, 
+  Share2, Heart, Loader2, CheckCircle, AlertCircle 
+} from 'lucide-react';
 
 // ── Helpers ─────────────────────────────────────────────────────
 const ALL_DAYS  = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
@@ -40,7 +45,7 @@ function formatDate(isoDate) {
 
 function InfoChip({ icon, text }) {
   return (
-    <div className="flex items-center gap-2 text-sm text-gray-600">
+    <div className="flex items-center gap-2 text-sm text-gray-600 bg-gray-50/80 backdrop-blur-sm px-3 py-1.5 rounded-full">
       <span className="text-[#3182ce]">{icon}</span>
       <span>{text}</span>
     </div>
@@ -49,12 +54,314 @@ function InfoChip({ icon, text }) {
 
 function SectionHeader({ title, count }) {
   return (
-    <div className="flex items-center justify-between mb-4">
-      <h2 className="text-lg font-bold text-[#1a355d]">{title}</h2>
+    <div className="flex items-center justify-between mb-6">
+      <h2 className="text-xl font-bold text-[#1a355d] tracking-tight">{title}</h2>
       {count !== undefined && (
         <span className="text-xs font-medium text-gray-500 bg-gray-100 rounded-full px-2.5 py-1">
           {count}
         </span>
+      )}
+    </div>
+  );
+}
+
+function StarRating({ rating, onRatingChange, size = "md" }) {
+  const [hoverRating, setHoverRating] = useState(0);
+  const sizes = { sm: 16, md: 24, lg: 32 };
+  const iconSize = sizes[size] || 24;
+
+  return (
+    <div className="flex gap-1">
+      {[1, 2, 3, 4, 5].map((star) => (
+        <button
+          key={star}
+          type="button"
+          onClick={() => onRatingChange?.(star)}
+          onMouseEnter={() => setHoverRating(star)}
+          onMouseLeave={() => setHoverRating(0)}
+          className="transition-all duration-150 hover:scale-110"
+        >
+          <Star
+            size={iconSize}
+            className={`${(hoverRating || rating) >= star 
+              ? 'fill-yellow-400 text-yellow-400' 
+              : 'text-gray-300'} transition-colors`}
+          />
+        </button>
+      ))}
+    </div>
+  );
+}
+
+// ── Report Modal ──────────────────────────────────────────────
+function ReportModal({ clinicID, clinicName, user, onClose }) {
+  const [reportType, setReportType] = useState('inappropriate');
+  const [description, setDescription] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
+
+  const handleSubmit = async () => {
+    if (!user?.uid) {
+      alert('Please log in to submit a report');
+      return;
+    }
+    if (!description.trim()) {
+      alert('Please provide details for your report');
+      return;
+    }
+
+    setSubmitting(true);
+    try {
+      const res = await fetch('/api/reports', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          clinicID,
+          clinicName,
+          patientID: user.uid,
+          patientName: user.displayName || user.email,
+          reportType,
+          description: description.trim(),
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed to submit report');
+      setSubmitted(true);
+    } catch (err) {
+      alert(err.message);
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  if (submitted) {
+    return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4">
+        <div className="bg-white rounded-2xl max-w-md w-full p-6 text-center shadow-xl">
+          <div className="w-16 h-16 rounded-full bg-green-100 text-green-600 flex items-center justify-center mx-auto mb-4">
+            <CheckCircle size={32} />
+          </div>
+          <h3 className="text-xl font-bold text-[#1a355d] mb-2">Report Submitted</h3>
+          <p className="text-gray-500 text-sm mb-6">
+            Thank you for helping keep our community safe. We'll review your report.
+          </p>
+          <button onClick={onClose} className="w-full py-3 bg-[#1a355d] text-white rounded-xl font-semibold">
+            Close
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4">
+      <div className="bg-white rounded-2xl max-w-md w-full shadow-xl overflow-hidden">
+        <div className="bg-red-50 px-6 py-4 border-b border-red-100 flex items-center gap-3">
+          <div className="w-10 h-10 rounded-full bg-red-100 text-red-500 flex items-center justify-center">
+            <Flag size={20} />
+          </div>
+          <div className="flex-1">
+            <h3 className="font-bold text-red-700">Report Clinic</h3>
+            <p className="text-xs text-red-500">Help us maintain quality standards</p>
+          </div>
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
+            <X size={20} />
+          </button>
+        </div>
+
+        <div className="p-6 space-y-5">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Issue Type</label>
+            <select
+              value={reportType}
+              onChange={(e) => setReportType(e.target.value)}
+              className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-red-200 focus:border-red-300 outline-none"
+            >
+              <option value="inappropriate">Inappropriate Content</option>
+              <option value="spam">Spam or Misleading</option>
+              <option value="fake">Fake Clinic</option>
+              <option value="harassment">Harassment</option>
+              <option value="other">Other</option>
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Description</label>
+            <textarea
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              rows={4}
+              placeholder="Please provide details about your report..."
+              className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-red-200 focus:border-red-300 outline-none resize-none"
+            />
+          </div>
+
+          <div className="bg-amber-50 rounded-xl p-3 text-xs text-amber-700">
+            <AlertCircle size={14} className="inline mr-1" />
+            Reports are anonymous. False reports may lead to account restrictions.
+          </div>
+        </div>
+
+        <div className="px-6 py-4 border-t border-gray-100 flex gap-3 bg-gray-50/30">
+          <button onClick={onClose} className="flex-1 py-2.5 border border-gray-200 rounded-xl text-sm font-medium text-gray-600">
+            Cancel
+          </button>
+          <button
+            onClick={handleSubmit}
+            disabled={submitting || !description.trim()}
+            className="flex-1 py-2.5 bg-red-500 hover:bg-red-600 text-white rounded-xl text-sm font-medium disabled:opacity-50 transition-all"
+          >
+            {submitting ? <Loader2 size={16} className="animate-spin mx-auto" /> : 'Submit Report'}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── Reviews Section ───────────────────────────────────────────
+function ReviewsSection({ clinicID }) {
+  const { user } = useAuth();
+  const [reviews, setReviews] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [userRating, setUserRating] = useState(0);
+  const [userReview, setUserReview] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+  const [hasUserReviewed, setHasUserReviewed] = useState(false);
+
+  useEffect(() => {
+    loadReviews();
+  }, [clinicID]);
+
+  const loadReviews = async () => {
+    try {
+      const res = await fetch(`/api/reviews?clinicID=${clinicID}`);
+      const data = await res.json();
+      if (data.success) {
+        setReviews(data.reviews || []);
+        if (user?.uid && data.reviews) {
+          const userReviewExists = data.reviews.some(r => r.patientID === user.uid);
+          setHasUserReviewed(userReviewExists);
+        }
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSubmitReview = async () => {
+    if (!user?.uid) {
+      alert('Please log in to leave a review');
+      return;
+    }
+    if (userRating === 0) {
+      alert('Please select a rating');
+      return;
+    }
+    if (!userReview.trim()) {
+      alert('Please write a review message');
+      return;
+    }
+
+    setSubmitting(true);
+    try {
+      const res = await fetch('/api/reviews', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          clinicID,
+          patientID: user.uid,
+          patientName: user.displayName || user.email,
+          rating: userRating,
+          message: userReview.trim(),
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed to submit review');
+      
+      await loadReviews();
+      setUserRating(0);
+      setUserReview('');
+      setHasUserReviewed(true);
+    } catch (err) {
+      alert(err.message);
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const averageRating = reviews.length > 0
+    ? (reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length).toFixed(1)
+    : 0;
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h3 className="font-bold text-gray-900">Patient Reviews</h3>
+          <div className="flex items-center gap-2 mt-1">
+            <div className="flex items-center">
+              <Star size={18} className="fill-yellow-400 text-yellow-400" />
+              <span className="font-bold ml-1">{averageRating}</span>
+              <span className="text-gray-400 text-sm ml-1">({reviews.length} reviews)</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Write Review */}
+      {!hasUserReviewed && user && (
+        <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-2xl p-5 border border-blue-100">
+          <p className="text-sm font-medium text-gray-700 mb-3">Share your experience</p>
+          <StarRating rating={userRating} onRatingChange={setUserRating} size="md" />
+          <textarea
+            value={userReview}
+            onChange={(e) => setUserReview(e.target.value)}
+            placeholder="Write your review here..."
+            rows={3}
+            className="w-full mt-4 border border-gray-200 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-blue-200 outline-none resize-none"
+          />
+          <button
+            onClick={handleSubmitReview}
+            disabled={submitting || userRating === 0 || !userReview.trim()}
+            className="mt-3 px-5 py-2 bg-[#1a355d] text-white rounded-xl text-sm font-medium disabled:opacity-50 transition-all hover:bg-[#22447a]"
+          >
+            {submitting ? <Loader2 size={16} className="animate-spin mx-auto" /> : 'Submit Review'}
+          </button>
+        </div>
+      )}
+
+      {/* Reviews List */}
+      {loading ? (
+        <div className="flex justify-center py-8">
+          <Loader2 size={24} className="animate-spin text-gray-400" />
+        </div>
+      ) : reviews.length === 0 ? (
+        <div className="text-center py-8 bg-gray-50 rounded-2xl">
+          <MessageCircle size={32} className="mx-auto text-gray-300 mb-2" />
+          <p className="text-gray-400 text-sm">No reviews yet. Be the first to review!</p>
+        </div>
+      ) : (
+        <div className="space-y-4 max-h-[400px] overflow-y-auto pr-2">
+          {reviews.map((review) => (
+            <div key={review.id} className="bg-white rounded-xl border border-gray-100 p-4 shadow-sm">
+              <div className="flex items-center justify-between mb-2">
+                <div>
+                  <p className="font-medium text-gray-800 text-sm">{review.patientName}</p>
+                  <p className="text-[10px] text-gray-400">{new Date(review.createdAt).toLocaleDateString()}</p>
+                </div>
+                <div className="flex items-center">
+                  {[...Array(5)].map((_, i) => (
+                    <Star key={i} size={14} className={i < review.rating ? 'fill-yellow-400 text-yellow-400' : 'text-gray-200'} />
+                  ))}
+                </div>
+              </div>
+              <p className="text-sm text-gray-600 leading-relaxed">{review.message}</p>
+            </div>
+          ))}
+        </div>
       )}
     </div>
   );
@@ -68,7 +375,7 @@ function InquiryDrawer({ clinicID, clinicName, user, onClose }) {
   const [loading, setLoading] = useState(true);
   const [inquiryId, setInquiryId] = useState(null);
   const messagesEndRef = useRef(null);
-  const inquiryIdRef = useRef(null); // ← ref so polling can access latest value
+  const inquiryIdRef = useRef(null);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -82,7 +389,6 @@ function InquiryDrawer({ clinicID, clinicName, user, onClose }) {
     } catch (e) { console.error(e); }
   };
 
-  // Load existing inquiry
   useEffect(() => {
     const load = async () => {
       if (!user?.uid) return;
@@ -100,7 +406,6 @@ function InquiryDrawer({ clinicID, clinicName, user, onClose }) {
     load();
   }, [user, clinicID]);
 
-  // ✅ Poll every 5 seconds for new messages
   useEffect(() => {
     const interval = setInterval(() => {
       if (inquiryIdRef.current) {
@@ -139,7 +444,7 @@ function InquiryDrawer({ clinicID, clinicName, user, onClose }) {
         if (!createJson.success) throw new Error('Failed to create inquiry');
         currentInquiryId = createJson.inquiryId;
         setInquiryId(currentInquiryId);
-        inquiryIdRef.current = currentInquiryId; // ← keep ref in sync
+        inquiryIdRef.current = currentInquiryId;
       } else {
         await fetch('/api/inquiries', {
           method: 'POST',
@@ -163,12 +468,11 @@ function InquiryDrawer({ clinicID, clinicName, user, onClose }) {
   };
 
   return (
-    <div className="fixed bottom-6 right-6 z-50 w-[360px] rounded-2xl shadow-2xl border border-slate-200 flex flex-col bg-white"
-      style={{ height: 480, boxShadow: '0 24px 64px rgba(26,53,93,0.18)' }}>
+    <div className="fixed bottom-6 right-6 z-50 w-[380px] rounded-2xl shadow-2xl border border-slate-200 flex flex-col bg-white overflow-hidden"
+      style={{ height: 520, boxShadow: '0 24px 64px rgba(26,53,93,0.18)' }}>
 
-      {/* Header */}
-      <div className="bg-[#1a355d] px-5 py-4 flex items-center gap-3">
-        <div className="w-9 h-9 rounded-xl bg-white/10 border border-white/20 flex items-center justify-center text-white font-bold text-sm">
+      <div className="bg-gradient-to-r from-[#1a355d] to-[#22447a] px-5 py-4 flex items-center gap-3">
+        <div className="w-10 h-10 rounded-xl bg-white/10 border border-white/20 flex items-center justify-center text-white font-bold text-sm">
           {clinicName?.[0]?.toUpperCase()}
         </div>
         <div className="flex-1">
@@ -181,11 +485,10 @@ function InquiryDrawer({ clinicID, clinicName, user, onClose }) {
         </button>
       </div>
 
-      {/* Messages */}
-      <div className="flex-1 overflow-y-auto py-4 space-y-3 bg-slate-50/40" style={{ paddingLeft: 16, paddingRight: 10 }}>
+      <div className="flex-1 overflow-y-auto py-4 space-y-3 bg-gradient-to-b from-slate-50/40 to-white" style={{ paddingLeft: 16, paddingRight: 10 }}>
         {loading ? (
           <div className="flex items-center justify-center h-full">
-            <div className="w-6 h-6 border-2 border-teal-400 border-t-transparent rounded-full animate-spin" />
+            <Loader2 size={24} className="animate-spin text-teal-400" />
           </div>
         ) : messages.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full gap-3 text-center">
@@ -216,9 +519,10 @@ function InquiryDrawer({ clinicID, clinicName, user, onClose }) {
                     {m.text}
                   </div>
                 </div>
-                {/*Delivered on last patient message */}
                 {m.sender === 'patient' && isLast && (
-                  <span className="text-[10px] text-slate-400 mt-1">✓ Delivered</span>
+                  <span className="text-[10px] text-slate-400 mt-1 flex items-center gap-1">
+                    <CheckCircle size={10} /> Delivered
+                  </span>
                 )}  
               </div>
             );
@@ -227,7 +531,6 @@ function InquiryDrawer({ clinicID, clinicName, user, onClose }) {
         <div ref={messagesEndRef} />
       </div>
 
-      {/* Input */}
       <div className="px-4 py-3 border-t border-slate-100 bg-white flex items-center gap-2">
         <input
           value={inputText}
@@ -241,7 +544,7 @@ function InquiryDrawer({ clinicID, clinicName, user, onClose }) {
           disabled={!inputText.trim() || sending}
           className="w-10 h-10 bg-teal-500 hover:bg-teal-600 disabled:opacity-40 text-white rounded-xl flex items-center justify-center transition-all shrink-0"
         >
-          <Send size={16} strokeWidth={2.5} />
+          {sending ? <Loader2 size={16} className="animate-spin" /> : <Send size={16} strokeWidth={2.5} />}
         </button>
       </div>
     </div>
@@ -328,7 +631,7 @@ function BookingModal({ doctor, services, clinicID, patientID, onClose }) {
   return (
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 px-0 sm:px-4">
       <div className="bg-white w-full sm:max-w-md rounded-t-2xl sm:rounded-2xl border border-gray-200 overflow-hidden shadow-xl">
-        <div className="bg-[#1a355d] px-6 py-5 flex items-start gap-4">
+        <div className="bg-gradient-to-r from-[#1a355d] to-[#22447a] px-6 py-5 flex items-start gap-4">
           <div className="w-12 h-12 rounded-full bg-[#2a4f8a] border-2 border-white/20 flex items-center justify-center text-white font-bold text-lg">
             {doctor.name?.[0]}
           </div>
@@ -336,7 +639,9 @@ function BookingModal({ doctor, services, clinicID, patientID, onClose }) {
             <p className="text-white font-bold">Dr. {doctor.name}</p>
             <p className="text-white/60 text-xs">{doctor.specialty}</p>
           </div>
-          <button onClick={onClose} className="text-white/60 hover:text-white">✕</button>
+          <button onClick={onClose} className="text-white/60 hover:text-white transition-colors">
+            <X size={20} />
+          </button>
         </div>
 
         <div className="px-6 py-5 flex flex-col gap-5 max-h-[75vh] overflow-y-auto">
@@ -365,7 +670,7 @@ function BookingModal({ doctor, services, clinicID, patientID, onClose }) {
                 return (
                   <button key={day} type="button" disabled={!isAvailable} onClick={() => handleDayChange(day)}
                     className={`py-2 rounded-xl text-xs font-bold transition-all
-                      ${selectedDay === day ? 'bg-[#1a355d] text-white' : isAvailable ? 'border border-gray-200 text-gray-600' : 'bg-gray-50 text-gray-200'}`}>
+                      ${selectedDay === day ? 'bg-[#1a355d] text-white' : isAvailable ? 'border border-gray-200 text-gray-600 hover:border-[#1a355d]' : 'bg-gray-50 text-gray-200'}`}>
                     {day}
                   </button>
                 );
@@ -382,7 +687,7 @@ function BookingModal({ doctor, services, clinicID, patientID, onClose }) {
                   <button key={slot} type="button" disabled={isBooked || slotsLoading}
                     onClick={() => setSelectedTime(slot)}
                     className={`py-2 rounded-xl text-xs font-medium border transition-all
-                      ${selectedTime === slot ? 'bg-[#1a355d] text-white' : 'border-gray-200 text-gray-600'}`}>
+                      ${selectedTime === slot ? 'bg-[#1a355d] text-white' : 'border-gray-200 text-gray-600 hover:border-[#1a355d]'}`}>
                     {slot}
                   </button>
                 );
@@ -428,6 +733,8 @@ export default function ClinicProfilePage() {
   const [highlightDoctor, setHighlightDoctor] = useState(null);
   const [bookingDoctor,   setBookingDoctor]   = useState(null);
   const [showInquiry,     setShowInquiry]     = useState(false);
+  const [showReport,      setShowReport]      = useState(false);
+  const [liked, setLiked] = useState(false);
   const doctorRefs = useRef({});
 
   useEffect(() => {
@@ -444,9 +751,9 @@ export default function ClinicProfilePage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-[#f7fafc] flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 flex items-center justify-center">
         <div className="text-center">
-          <div className="w-10 h-10 border-2 border-[#1a355d] border-t-transparent rounded-full animate-spin mx-auto mb-3" />
+          <Loader2 size={32} className="animate-spin text-[#1a355d] mx-auto mb-3" />
           <p className="text-sm text-gray-400">Loading clinic profile...</p>
         </div>
       </div>
@@ -455,7 +762,7 @@ export default function ClinicProfilePage() {
 
   if (!clinic) {
     return (
-      <div className="min-h-screen bg-[#f7fafc] flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 flex items-center justify-center">
         <div className="text-center">
           <p className="font-semibold text-[#1a355d] mb-4">Clinic not found</p>
           <button onClick={() => router.push('/clinics')}
@@ -468,7 +775,7 @@ export default function ClinicProfilePage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#f7fafc] pb-20">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50/30 pb-20">
 
       {/* Booking Modal */}
       {bookingDoctor && (
@@ -478,6 +785,16 @@ export default function ClinicProfilePage() {
           clinicID={params.clinicID}
           patientID={user?.uid}
           onClose={() => setBookingDoctor(null)}
+        />
+      )}
+
+      {/* Report Modal */}
+      {showReport && (
+        <ReportModal
+          clinicID={params.clinicID}
+          clinicName={clinic.clinicName}
+          user={user}
+          onClose={() => setShowReport(false)}
         />
       )}
 
@@ -491,26 +808,41 @@ export default function ClinicProfilePage() {
         />
       )}
 
-      {!showInquiry && (
-      <button
-        onClick={() => setShowInquiry(true)}
-        className="fixed bottom-6 right-6 z-40 flex items-center gap-3 bg-[#1a355d] hover:bg-[#22447a] text-white px-5 py-3.5 rounded-2xl transition-all hover:scale-105 active:scale-95"
-        style={{ boxShadow: '0 8px 32px rgba(26,53,93,0.35)' }}
-      >
-        <MessageCircle size={20} strokeWidth={2.5} className="shrink-0" />
-        <div className="flex flex-col items-start">
-          <p className="text-[10px] text-white/60 font-semibold uppercase tracking-wider leading-none mb-0.5">Have a question?</p>
-          <span className="text-sm font-bold leading-none">Message Clinic</span>
-        </div>
-      </button>
-    )}
+      {/* Action Buttons */}
+      <div className="fixed bottom-6 right-6 z-40 flex flex-col gap-3">
+        <button
+          onClick={() => setShowReport(true)}
+          className="flex items-center gap-2 bg-white/90 backdrop-blur-md hover:bg-red-50 text-gray-700 hover:text-red-600 px-4 py-2.5 rounded-full transition-all shadow-lg border border-gray-200"
+        >
+          <Flag size={18} />
+          <span className="text-sm font-medium">Report</span>
+        </button>
+        <button
+          onClick={() => setLiked(!liked)}
+          className={`flex items-center gap-2 bg-white/90 backdrop-blur-md px-4 py-2.5 rounded-full transition-all shadow-lg border border-gray-200 ${liked ? 'text-red-500' : 'text-gray-600'}`}
+        >
+          <Heart size={18} fill={liked ? 'currentColor' : 'none'} />
+          <span className="text-sm font-medium">{liked ? 'Liked' : 'Like'}</span>
+        </button>
+        <button
+          onClick={() => setShowInquiry(true)}
+          className="flex items-center gap-3 bg-[#1a355d] hover:bg-[#22447a] text-white px-5 py-3 rounded-2xl transition-all hover:scale-105 active:scale-95 shadow-xl"
+        >
+          <MessageCircle size={20} strokeWidth={2.5} className="shrink-0" />
+          <div className="flex flex-col items-start">
+            <p className="text-[10px] text-white/60 font-semibold uppercase tracking-wider leading-none mb-0.5">Have a question?</p>
+            <span className="text-sm font-bold leading-none">Message Clinic</span>
+          </div>
+        </button>
+      </div>
 
-      {/* ── HERO ── */}
-      <div className="relative h-72 bg-[#1a355d] overflow-hidden">
+      {/* HERO */}
+      <div className="relative h-80 bg-[#1a355d] overflow-hidden">
         {clinic.image && (
-          <img src={clinic.image} alt={clinic.clinicName} className="w-full h-full object-cover opacity-60" />
+          <img src={clinic.image} alt={clinic.clinicName} className="w-full h-full object-cover opacity-50" />
         )}
-        <div className="absolute inset-0 bg-linear-to-t from-[#1a355d] via-[#1a355d]/40 to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-t from-[#1a355d] via-[#1a355d]/40 to-transparent" />
+        <div className="absolute inset-0 bg-black/20" />
         <button
           onClick={() => router.push('/clinics')}
           className="absolute top-6 left-6 bg-white/10 backdrop-blur-md text-white text-xs font-medium px-4 py-2 rounded-full flex items-center gap-2 hover:bg-white/20 transition-all border border-white/20"
@@ -528,67 +860,73 @@ export default function ClinicProfilePage() {
               </span>
             ))}
           </div>
-          <h1 className="text-3xl font-bold text-white leading-tight mb-2">{clinic.clinicName}</h1>
-          <div className="flex items-center gap-2 text-white/80 text-sm">{clinic.address}</div>
+          <h1 className="text-4xl font-bold text-white leading-tight mb-2 tracking-tight">{clinic.clinicName}</h1>
+          <div className="flex items-center gap-2 text-white/80 text-sm">
+            <MapPin size={14} /> {clinic.address}
+          </div>
         </div>
       </div>
 
-      {/* ── QUICK INFO ── */}
-      <div className="bg-white border-b border-gray-200 sticky top-0 z-10 shadow-sm">
-        <div className="max-w-5xl mx-auto px-8 py-4 flex flex-wrap gap-x-10 gap-y-3">
-          <InfoChip icon="🕒" text={todayHours ? `${todayHours.open} to ${todayHours.close}` : 'No schedule'} />
-          <InfoChip icon="📞" text={clinic.phone} />
-          <InfoChip icon="✉️" text={clinic.email} />
-          <InfoChip icon="📍" text={clinic.city} />
+      {/* QUICK INFO */}
+      <div className="bg-white/80 backdrop-blur-sm border-b border-gray-200 sticky top-0 z-10 shadow-sm">
+        <div className="max-w-6xl mx-auto px-8 py-4 flex flex-wrap gap-x-8 gap-y-3">
+          <InfoChip icon={<Calendar size={14} />} text={todayHours ? `${todayHours.open} to ${todayHours.close}` : 'No schedule'} />
+          <InfoChip icon={<Phone size={14} />} text={clinic.phone} />
+          <InfoChip icon={<Mail size={14} />} text={clinic.email} />
+          <InfoChip icon={<MapPin size={14} />} text={clinic.city} />
         </div>
       </div>
 
-      {/* ── BODY ── */}
-      <div className="max-w-5xl mx-auto px-8 py-10 grid grid-cols-1 lg:grid-cols-3 gap-10">
+      {/* BODY */}
+      <div className="max-w-6xl mx-auto px-8 py-10 grid grid-cols-1 lg:grid-cols-3 gap-10">
 
-        {/* LEFT */}
+        {/* LEFT COLUMN */}
         <div className="lg:col-span-2 space-y-12">
 
-          {/* About */}
+          {/* About Section */}
           <section>
             <SectionHeader title="About the Clinic" />
-            <div className="bg-white rounded-2xl border border-gray-200 p-6 shadow-sm">
+            <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm hover:shadow-md transition-shadow">
               <p className="text-gray-600 leading-relaxed">{clinic.about}</p>
               <div className="flex flex-wrap gap-2 mt-6 pt-6 border-t border-gray-100">
                 {(clinic.amenities ?? []).map(a => (
-                  <span key={a} className="text-xs font-medium bg-gray-50 border border-gray-200 text-gray-500 rounded-lg px-3 py-1.5">
-                    ✓ {a}
+                  <span key={a} className="text-xs font-medium bg-gray-50 border border-gray-200 text-gray-600 rounded-lg px-3 py-1.5 flex items-center gap-1">
+                    <Award size={12} /> {a}
                   </span>
                 ))}
               </div>
             </div>
           </section>
 
-          {/* Doctors */}
+          {/* Doctors Section */}
           <section>
-            <SectionHeader title="Medical Staff" count={`${doctors.length} Registered`} />
+            <SectionHeader title="Medical Staff" count={`${doctors.length} Providers`} />
             <div className="flex flex-col gap-4">
               {doctors.map(doctor => (
                 <div
                   key={doctor.id}
                   ref={el => (doctorRefs.current[doctor.id] = el)}
-                  className={`bg-white rounded-2xl border p-5 flex items-center gap-5 transition-all duration-500
+                  className={`bg-white rounded-2xl border p-5 flex items-center gap-5 transition-all duration-500 shadow-sm hover:shadow-md
                     ${doctor.id === highlightDoctor
-                      ? 'border-blue-500 ring-4 ring-blue-50 bg-blue-50/20 scale-[1.02]'
-                      : 'border-gray-200 hover:border-blue-200'}`}
+                      ? 'border-blue-500 ring-4 ring-blue-50 bg-blue-50/20 scale-[1.01]'
+                      : 'border-gray-100 hover:border-blue-200'}`}
                 >
-                  <div className="w-14 h-14 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center text-xl font-bold shrink-0">
+                  <div className="w-16 h-16 rounded-full bg-gradient-to-br from-blue-100 to-blue-200 text-blue-700 flex items-center justify-center text-xl font-bold shrink-0">
                     {doctor.name?.split(' ').pop()?.[0]}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="font-bold text-gray-900">Dr. {doctor.name}</p>
-                    <p className="text-sm text-blue-600 font-medium mb-1">{doctor.specialty}</p>
-                    <p className="text-xs text-gray-400">{doctor.schedule}</p>
+                    <p className="font-bold text-gray-900 text-lg">Dr. {doctor.name}</p>
+                    <p className="text-sm text-blue-600 font-medium mb-1 flex items-center gap-1">
+                      <Stethoscope size={14} /> {doctor.specialty}
+                    </p>
+                    <p className="text-xs text-gray-400 flex items-center gap-1">
+                      <Clock size={12} /> {doctor.schedule}
+                    </p>
                   </div>
                   <button
                     disabled={!doctor.available}
                     onClick={() => setBookingDoctor(doctor)}
-                    className="shrink-0 bg-[#1a355d] hover:bg-blue-700 text-white text-sm font-bold px-6 py-2.5 rounded-xl transition-all disabled:opacity-20 disabled:grayscale disabled:cursor-not-allowed shadow-md"
+                    className="shrink-0 bg-gradient-to-r from-[#1a355d] to-[#22447a] hover:from-[#22447a] hover:to-[#2a558a] text-white text-sm font-bold px-6 py-2.5 rounded-xl transition-all disabled:opacity-20 disabled:grayscale disabled:cursor-not-allowed shadow-md"
                   >
                     Book
                   </button>
@@ -598,33 +936,50 @@ export default function ClinicProfilePage() {
           </section>
         </div>
 
-        {/* RIGHT */}
+        {/* RIGHT COLUMN */}
         <div className="space-y-8">
 
-          {/* Clinic Info */}
+          {/* Clinic Info Card */}
           <section>
-            <SectionHeader title="Clinic Info" />
-            <div className="bg-white rounded-2xl border border-gray-200 p-5 shadow-sm space-y-3">
-              <div className="flex items-start gap-3">
+            <SectionHeader title="Clinic Information" />
+            <div className="bg-white rounded-2xl border border-gray-100 p-5 shadow-sm space-y-4">
+              <div className="flex items-start gap-3 p-2 rounded-lg bg-gray-50/50">
+                <Building2 size={18} className="text-[#1a355d] mt-0.5" />
                 <div>
-                  <p className="text-xs text-gray-400 mb-0.5">Specialty</p>
+                  <p className="text-xs text-gray-400 mb-0.5">Specialties</p>
                   <p className="text-sm text-gray-700 font-medium">
-                    {(clinic.specialty ?? []).join(', ') || '—'}
+                    {(clinic.specialty ?? []).join(', ') || 'General Practice'}
                   </p>
+                </div>
+              </div>
+              <div className="flex items-start gap-3 p-2 rounded-lg">
+                <Award size={18} className="text-[#1a355d] mt-0.5" />
+                <div>
+                  <p className="text-xs text-gray-400 mb-0.5">Established</p>
+                  <p className="text-sm text-gray-700 font-medium">{clinic.established || 'Information coming soon'}</p>
                 </div>
               </div>
             </div>
           </section>
 
-          {/* Services */}
+          {/* Services Section */}
           <section>
-            <SectionHeader title="Services" />
-            <div className="bg-white rounded-2xl border border-gray-200 p-2 shadow-sm">
+            <SectionHeader title="Services & Treatments" />
+            <div className="bg-white rounded-2xl border border-gray-100 p-1 shadow-sm">
               {(clinic.services ?? []).map((service, i) => (
-                <div key={i} className="p-3 text-sm text-gray-700 border-b border-gray-50 last:border-0">
+                <div key={i} className="p-3 text-sm text-gray-700 border-b border-gray-50 last:border-0 hover:bg-gray-50 transition-colors rounded-lg flex items-center gap-2">
+                  <div className="w-2 h-2 rounded-full bg-blue-400" />
                   {service}
                 </div>
               ))}
+            </div>
+          </section>
+
+          {/* Reviews Section */}
+          <section>
+            <SectionHeader title="Patient Reviews" />
+            <div className="bg-white rounded-2xl border border-gray-100 p-5 shadow-sm">
+              <ReviewsSection clinicID={params.clinicID} />
             </div>
           </section>
         </div>

@@ -112,18 +112,6 @@ export default function PatientInquiriesPage() {
     }
   };
 
-  const handleSelect = async (id) => {
-    setActiveId(id);
-    // Mark as read
-    try {
-      await fetch("/api/inquiries/read", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ inquiryId: id, role: "patient" }),
-      });
-    } catch (e) { console.error(e); }
-  };
-
   const activeInquiry = inquiries.find(i => i.id === activeId);
   const filteredInquiries = inquiries.filter(i =>
     i.clinicName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -210,7 +198,7 @@ export default function PatientInquiriesPage() {
                 filteredInquiries.map(inq => (
                   <button
                     key={inq.id}
-                    onClick={() => handleSelect(inq.id)}
+                    onClick={() => setActiveId(inq.id)}
                     className={`w-full text-left px-4 py-4 transition-all border-b border-slate-50 last:border-0
                       ${inq.id === activeId ? "bg-[#1a355d]/5 border-l-4 border-l-[#1a355d]" : "border-l-4 border-l-transparent hover:bg-slate-50"}`}
                   >

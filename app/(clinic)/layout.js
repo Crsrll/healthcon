@@ -76,20 +76,6 @@ export default function ClinicLayout({ children }) {
 
             {/* Progress ring area */}
             <div className="hidden sm:flex items-center gap-6">
-              {/* Daily progress */}
-              <div className="text-right">
-                <p className="text-slate-400 text-[10px] uppercase tracking-wider mb-1">Daily Progress</p>
-                <div className="flex items-center gap-3">
-                  <div className="w-32 h-2 bg-white/10 rounded-full overflow-hidden">
-                    <div
-                      className="h-full bg-teal-400 rounded-full transition-all"
-                      style={{ width: `${progressPct}%` }}
-                    />
-                  </div>
-                  <span className="text-white font-bold text-sm">7/12</span>
-                </div>
-              </div>
-              <div className="h-10 w-px bg-slate-600" />
               {/* Quick action */}
               <div className="mt-6 flex gap-2 max-w-xxl">
               <form onSubmit={handleSearch} className="mt-6 flex gap-2 max-w-xxl">

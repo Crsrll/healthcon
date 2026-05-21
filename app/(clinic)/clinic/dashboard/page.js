@@ -27,6 +27,7 @@ export default function DashboardPage() {
   });
   const [todayAppointments, setTodayAppointments] = useState([]);
   const [inquiries, setInquiries] = useState([]);
+  const [upcomingAppointments, setUpcomingAppointments] = useState([]);
 
   // Modal States
   const [isInquiryModalOpen, setIsInquiryModalOpen] = useState(false);
@@ -37,31 +38,36 @@ export default function DashboardPage() {
   const todayDate = new Date().toLocaleDateString('en-CA'); 
 
   // --- 2. DATA FETCHING ---
-  const fetchDashboardData = async () => {
-    if (!user?.uid) return;
-    setLoading(true);
-    try {
-      // Fetch Stats
-      const sRes = await fetch(`/api/clinics/stats?clinicID=${user.uid}`);
-      const sJson = await sRes.json();
-      if (sJson.success) setStats(sJson.stats);
+const fetchDashboardData = async () => {
+  if (!user?.uid) return;
+  setLoading(true);
+  try {
+    // Fetch Stats
+    const sRes = await fetch(`/api/clinics/stats?clinicID=${user.uid}`);
+    const sJson = await sRes.json();
+    if (sJson.success) setStats(sJson.stats);
 
-      // Fetch Today's Queue
-      const qRes = await fetch(`/api/bookings/daily?clinicID=${user.uid}&date=${todayDate}`);
-      const qJson = await qRes.json();
-      if (qJson.success) setTodayAppointments(qJson.data);
+    // Fetch Today's Queue (limit to 10)
+    const qRes = await fetch(`/api/bookings/daily?clinicID=${user.uid}&date=${todayDate}`);
+    const qJson = await qRes.json();
+    if (qJson.success) setTodayAppointments(qJson.data.slice(0, 10));
 
-      // Fetch Recent Inquiries
-      const iRes = await fetch(`/api/inquiries?clinicID=${user.uid}`);
-      const iJson = await iRes.json();
-      if (iJson.success) setInquiries(iJson.data.slice(0, 5)); // Only show top 5
+    // Fetch Recent Inquiries (limit to 3)
+    const iRes = await fetch(`/api/inquiries?clinicID=${user.uid}`);
+    const iJson = await iRes.json();
+    if (iJson.success) setInquiries(iJson.data.slice(0, 3));
 
-    } catch (e) {
-      console.error("Dashboard Load Error:", e);
-    } finally {
-      setLoading(false);
-    }
-  };
+    // Fetch Upcoming Appointments (NEW)
+    const uRes = await fetch(`/api/bookings/upcoming?clinicID=${user.uid}`);
+    const uJson = await uRes.json();
+    if (uJson.success) setUpcomingAppointments(uJson.data.slice(0, 4)); // Max 4
+
+  } catch (e) {
+    console.error("Dashboard Load Error:", e);
+  } finally {
+    setLoading(false);
+  }
+};
 
   useEffect(() => {
     if (!authLoading && user) fetchDashboardData();
@@ -140,7 +146,7 @@ export default function DashboardPage() {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         
-        {/* ── LEFT: TODAY'S QUEUE ── */}
+        {/* ── LEFT: TODAY'S QUEUE (max 10 patients) ── */}
         <div className="lg:col-span-2">
           <section className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden h-full">
             <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
@@ -167,7 +173,7 @@ export default function DashboardPage() {
                   {loading ? (
                     <tr><td colSpan="4" className="py-20 text-center"><Loader2 className="animate-spin mx-auto text-slate-200" /></td></tr>
                   ) : todayAppointments.length > 0 ? (
-                    todayAppointments.map((apt) => (
+                    todayAppointments.slice(0, 10).map((apt) => (
                       <tr key={apt.id} className="hover:bg-slate-50/70 transition-colors">
                         <td className="px-6 py-4 font-bold text-slate-700 text-sm">{apt.time}</td>
                         <td className="px-6 py-4 font-semibold text-slate-800 text-sm">{apt.patientName}</td>
@@ -188,8 +194,10 @@ export default function DashboardPage() {
           </section>
         </div>
 
-         {/* ── RIGHT: RECENT INQUIRIES ── */}
+        {/* ── RIGHT: RECENT INQUIRIES (max 3) & UPCOMING APPOINTMENTS (max 4) ── */}
         <div className="space-y-5">
+          
+          {/* Recent Inquiries - max 3 */}
           <section className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden flex flex-col">
             <div className="px-5 py-4 border-b border-slate-100 flex justify-between items-center">
               <h3 className="font-bold text-slate-800 text-sm">Recent Inquiries</h3>
@@ -198,81 +206,74 @@ export default function DashboardPage() {
               </span>
             </div>
             <div className="divide-y divide-slate-50 max-h-[400px] overflow-y-auto">
-              {inquiries.length > 0 ? inquiries.map((inq) => (
-                <div key={inq.id} onClick={() => handleOpenReply(inq)}
-                  className={`p-4 cursor-pointer transition-colors group ${inq.unreadByClinic ? "bg-teal-50/30 hover:bg-teal-50/60" : "hover:bg-slate-50"}`}
-                >
-                  <div className="flex items-start gap-3">
-                    <div className={`w-8 h-8 rounded-full flex items-center justify-center text-[10px] font-black shrink-0 ${inq.unreadByClinic ? "bg-[#1a355d] text-white" : "bg-slate-100 text-slate-400"}`}>
-                      {inq.patientName?.charAt(0)}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center justify-between mb-0.5">
-                        <p className={`text-xs font-bold truncate ${inq.unreadByClinic ? "text-slate-800" : "text-slate-500"}`}>{inq.patientName}</p>
+              {inquiries.length > 0 ? (
+                inquiries.slice(0, 3).map((inq) => (
+                  <div key={inq.id} onClick={() => handleOpenReply(inq)}
+                    className={`p-4 cursor-pointer transition-colors group ${inq.unreadByClinic ? "bg-teal-50/30 hover:bg-teal-50/60" : "hover:bg-slate-50"}`}
+                  >
+                    <div className="flex items-start gap-3">
+                      <div className={`w-8 h-8 rounded-full flex items-center justify-center text-[10px] font-black shrink-0 ${inq.unreadByClinic ? "bg-[#1a355d] text-white" : "bg-slate-100 text-slate-400"}`}>
+                        {inq.patientName?.charAt(0)}
                       </div>
-                      <p className="text-[11px] text-slate-500 truncate leading-relaxed">{inq.lastMessage}</p>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center justify-between mb-0.5">
+                          <p className={`text-xs font-bold truncate ${inq.unreadByClinic ? "text-slate-800" : "text-slate-500"}`}>{inq.patientName}</p>
+                        </div>
+                        <p className="text-[11px] text-slate-500 truncate leading-relaxed">{inq.lastMessage}</p>
+                      </div>
                     </div>
                   </div>
-                </div>
-              )) : (
+                ))
+              ) : (
                 <div className="p-10 text-center text-slate-300 text-xs italic">No inquiries found.</div>
               )}
             </div>
             <Link href="/clinic/inquiries" className="block px-5 py-3 border-t border-slate-100 bg-slate-50/50 text-[10px] font-black text-slate-400 hover:text-teal-600 text-center uppercase tracking-widest">
-                Open Message Center
+              Open Message Center
             </Link>
           </section>
-        </div>
-        
-          {/* MINI ANALYTICS */}
-          <section className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-              <div>
-                <div className="flex items-center justify-between mb-6">
-                  <h3 className="text-slate-400 text-xs font-bold uppercase tracking-wider">Weekly patient volume</h3>
-                  <span className="bg-amber-50 text-amber-600 text-[10px] font-bold px-2 py-0.5 rounded-lg">This week</span>
-                </div>
-                <div className="relative h-32 w-full mt-4">
-                  <svg className="w-full h-full overflow-visible" viewBox="0 0 300 100" preserveAspectRatio="none">
-                    <line x1="0" y1="0"  x2="300" y2="0"  stroke="#f1f5f9" strokeWidth="1" />
-                    <line x1="0" y1="25" x2="300" y2="25" stroke="#f1f5f9" strokeWidth="1" />
-                    <line x1="0" y1="50" x2="300" y2="50" stroke="#f1f5f9" strokeWidth="1" />
-                    <line x1="0" y1="75" x2="300" y2="75" stroke="#f1f5f9" strokeWidth="1" />
-                    <path d="M0,60 Q25,40 50,45 T100,65 T150,30 T200,55 T250,80 T300,45" fill="none" stroke="#0d9488" strokeWidth="3" strokeLinecap="round" />
-                    <circle cx="0"   cy="60" r="4" fill="#0d9488" />
-                    <circle cx="50"  cy="45" r="4" fill="#0d9488" />
-                    <circle cx="150" cy="30" r="4" fill="#0d9488" />
-                    <circle cx="300" cy="45" r="4" fill="#0d9488" />
-                  </svg>
-                  <div className="flex justify-between mt-2 text-[10px] font-bold text-slate-400 uppercase tracking-tighter">
-                    <span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span><span className="text-teal-600">Today</span>
-                  </div>
-                </div>
+
+          {/* Upcoming Appointments - max 4 */}
+            <section className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="text-slate-400 text-xs font-bold uppercase tracking-wider">Upcoming Appointments</h3>
+                <Link href="/clinic/bookings" className="text-[10px] font-bold text-teal-600">View All →</Link>
               </div>
-              <div>
-                <h3 className="text-slate-400 text-xs font-bold uppercase tracking-wider mb-6">Top Services</h3>
-                <div className="space-y-4">
-                  {[
-                    { name: "Dental Checkup",   count: 42, color: "bg-teal-500",   total: 50 },
-                    { name: "Tooth Extraction",  count: 31, color: "bg-blue-500",   total: 50 },
-                    { name: "General Checkup",  count: 21, color: "bg-orange-500", total: 50 },
-                    { name: "Eye Exam",     count: 17, color: "bg-amber-500",  total: 50 },
-                  ].map((service) => (
-                    <div key={service.name}>
-                      <div className="flex justify-between items-center mb-1">
-                        <span className="text-xs font-semibold text-slate-700">{service.name}</span>
-                        <span className="text-xs font-bold text-slate-400">{service.count}</span>
+              <div className="space-y-3">
+                {loading ? (
+                  <div className="flex justify-center py-8">
+                    <Loader2 className="animate-spin text-slate-300" size={24} />
+                  </div>
+                ) : upcomingAppointments.length > 0 ? (
+                  upcomingAppointments.slice(0, 4).map((apt) => (
+                    <div key={apt.id} className="flex items-center gap-3 p-2 hover:bg-slate-50 rounded-lg group">
+                      {/* Date Badge */}
+                      <div className="min-w-[60px] text-center">
+                        <p className="text-xs font-bold text-slate-700">{apt.shortDate}</p>
+                        <p className="text-[9px] text-slate-400">{apt.dayName}</p>
                       </div>
-                      <div className="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden">
-                        <div className={`h-full ${service.color} rounded-full`} style={{ width: `${(service.count / service.total) * 100}%` }} />
+                      
+                      {/* Patient Info */}
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-semibold text-slate-800 truncate">{apt.patientName}</p>
+                        <p className="text-[10px] text-slate-400 truncate">{apt.service}</p>
+                      </div>
+                      
+                      {/* Time */}
+                      <div className="shrink-0">
+                        <p className="text-[10px] font-medium text-teal-600">{apt.time}</p>
                       </div>
                     </div>
-                  ))}
-                </div>
+                  ))
+                ) : (
+                  <div className="text-center py-8 text-slate-400 text-xs italic">
+                    No upcoming appointments
+                  </div>
+                )}
               </div>
-            </div>
-          </section>
-        </div>
+            </section>
+          </div>
+      </div>
 
       {/* ── MODAL: QUICK REPLY ── */}
       <Modal isOpen={isInquiryModalOpen} onClose={() => setIsInquiryModalOpen(false)} title={`Reply to ${selectedInquiry?.patientName}`}>
