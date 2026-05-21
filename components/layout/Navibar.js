@@ -8,6 +8,7 @@ import Avatar from "@/components/ui/Avatar";
 import NotificationBell from "@/components/Notif/NotificationBell";
 import AdminNotificationBell from "@/components/Notif/AdminNotificationBell";
 import { useUnreadMessages } from "@/hooks/useUnreadMessages";
+import { useRealtimeUnreadResponses } from "@/hooks/useRealtimeUnreadResponses";
 
 const patientLinks = [
   { name: "Dashboard", href: "/patient/dashboard" },
@@ -32,6 +33,9 @@ export default function Navbar({ style }) {
   // ── Unread message count (real-time) ──
   const role = user?.role;
   const unreadMessages = useUnreadMessages(user?.uid, role);
+  
+  // ── Unread responses count for reports (patient only) ──
+  const { unreadCount } = useRealtimeUnreadResponses(user?.uid);
 
   useEffect(() => { setMounted(true); }, []);
 
@@ -87,6 +91,34 @@ export default function Navbar({ style }) {
       </div>
     </nav>
   );
+
+  // Add this function inside your Navbar component
+const markAllReportsAsRead = async () => {
+  if (!user?.uid) return;
+  try {
+    // Fetch all report IDs for this patient
+    const res = await fetch(`/api/reports/to-clinic?reporterID=${user.uid}`);
+    const data = await res.json();
+    if (data.success && data.reports) {
+      // For each report, get its reply thread and mark as read
+      for (const report of data.reports) {
+        const replyRes = await fetch(`/api/clinic-replies?reportId=${report.id}`);
+        const replyData = await replyRes.json();
+        if (replyData.success && replyData.reply && replyData.reply.unreadByPatient === true) {
+          await fetch(`/api/clinic-replies`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ replyId: replyData.reply.id }),
+          });
+        }
+      }
+      // Refresh unread count
+      window.dispatchEvent(new Event('unread-update'));
+    }
+  } catch (error) {
+    console.error("Failed to mark reports as read:", error);
+  }
+};
 
   return (
     <nav
@@ -211,14 +243,21 @@ export default function Navbar({ style }) {
                       {role === "patient" ? "My Profile" : role === "clinic" ? "Clinic Profile" : "Admin Dashboard"}
                     </Link>
 
-                    {/* Bills & Payments (patients only) */}
+                    {/* Reports & Responses (patients only) - Fixed version */}
                     {role === "patient" && (
                       <Link
-                        href="/bills-payments"
-                        onClick={() => setIsProfileOpen(false)}
-                        className="flex items-center gap-2 px-4 py-2 text-xs text-slate-700 hover:bg-slate-50 transition-colors"
+                        href="/patient/reports-responses"
+                        onClick={() => {
+                          setIsProfileOpen(false);
+                        }}
+                        className="flex items-center justify-between px-4 py-2 text-xs text-slate-700 hover:bg-slate-50 transition-colors"
                       >
-                        Bills & Payments
+                        <span>Reports & Responses</span>
+                        {unreadCount > 0 && (
+                          <span className="ml-2 px-1.5 py-0.5 text-[10px] font-bold bg-red-500 text-white rounded-full">
+                            {unreadCount > 9 ? '9+' : unreadCount}
+                          </span>
+                        )}
                       </Link>
                     )}
 
@@ -236,24 +275,24 @@ export default function Navbar({ style }) {
                     </Link>
 
                     {/* Help & Support (all roles) */}
-{role === "patient" && (
-  <Link
-    href="/patient/help"
-    onClick={() => setIsProfileOpen(false)}
-    className="flex items-center gap-2 px-4 py-2 text-xs text-slate-700 hover:bg-slate-50 transition-colors"
-  >
-    Help & Support
-  </Link>
-)}
+                    {role === "patient" && (
+                      <Link
+                        href="/patient/help"
+                        onClick={() => setIsProfileOpen(false)}
+                        className="flex items-center gap-2 px-4 py-2 text-xs text-slate-700 hover:bg-slate-50 transition-colors"
+                      >
+                        Help & Support
+                      </Link>
+                    )}
 
-<hr className="border-slate-100 my-1" />
+                    <hr className="border-slate-100 my-1" />
 
-<button
-  onClick={handleLogout}
-  className="w-full text-left flex items-center gap-2 px-4 py-2 text-xs text-red-600 font-semibold hover:bg-red-50 transition-colors"
->
-  Log Out
-</button>
+                    <button
+                      onClick={handleLogout}
+                      className="w-full text-left flex items-center gap-2 px-4 py-2 text-xs text-red-600 font-semibold hover:bg-red-50 transition-colors"
+                    >
+                      Log Out
+                    </button>
                   </div>
                 )}
               </div>

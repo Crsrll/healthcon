@@ -8,30 +8,37 @@ import { useAuth } from '@/hooks/useAuth';
 import { useBookedSlots } from '@/hooks/useBookedSlots';
 import { generateTimeSlots } from '@/lib/generateTimeSlots';
 import { 
-  MessageCircle, Send, X, ChevronDown, Star, 
-  Flag, Calendar, Clock, MapPin, Phone, Mail, 
-  Building2, Stethoscope, Award, ThumbsUp, 
-  Share2, Heart, Loader2, CheckCircle, AlertCircle 
+  MessageCircle, Send, X, ChevronDown, Flag, Star, AlertTriangle, 
+  Shield, FileText, Stethoscope, Calendar, Clock, User, Phone, 
+  Mail, MapPin, Building2, Award, CheckCircle, Loader2
 } from 'lucide-react';
 
+// ── Admin Report Reasons (for reporting clinic TO super admin) ──────────
+const ADMIN_REPORT_REASONS = [
+  { value: "fraudulent_services",   label: "Fraudulent Services",    desc: "Billing for services not rendered or fake treatments" },
+  { value: "unlicensed_practice",   label: "Unlicensed Practice",    desc: "Operating without proper medical licenses" },
+  { value: "patient_safety",        label: "Patient Safety Risk",    desc: "Unsafe conditions or dangerous medical practices" },
+  { value: "data_privacy",          label: "Data Privacy Breach",    desc: "Unauthorized use or sharing of patient information" },
+  { value: "harassment",            label: "Harassment or Abuse",    desc: "Staff harassment, discrimination, or patient abuse" },
+  { value: "false_advertising",     label: "False Advertising",      desc: "Misleading claims about services, doctors, or credentials" },
+  { value: "overcharging",          label: "Illegal Overcharging",   desc: "Excessive billing beyond agreed or standard rates" },
+  { value: "other",                 label: "Other Violation",        desc: "Other serious violation not listed above" },
+];
+
 // ── Helpers ─────────────────────────────────────────────────────
-const ALL_DAYS  = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+const ALL_DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
 const DAY_NAME_MAP = {
   Mon: "Monday", Tue: "Tuesday", Wed: "Wednesday",
   Thu: "Thursday", Fri: "Friday", Sat: "Saturday", Sun: "Sunday",
 };
 
-function parseAvailableDays(scheduleStr = '') {
-  return ALL_DAYS.filter(d => scheduleStr.includes(d));
-}
-
 function getNextDateForDay(dayName) {
-  const dayMap = { Sun:0, Mon:1, Tue:2, Wed:3, Thu:4, Fri:5, Sat:6 };
+  const dayMap = { Sun: 0, Mon: 1, Tue: 2, Wed: 3, Thu: 4, Fri: 5, Sat: 6 };
   const target = dayMap[dayName];
-  const today  = new Date();
-  const diff   = (target - today.getDay() + 7) % 7 || 7;
-  const next   = new Date(today);
+  const today = new Date();
+  const diff = (target - today.getDay() + 7) % 7 || 7;
+  const next = new Date(today);
   next.setDate(today.getDate() + diff);
   return next.toISOString().split('T')[0];
 }
@@ -65,304 +72,34 @@ function SectionHeader({ title, count }) {
   );
 }
 
-function StarRating({ rating, onRatingChange, size = "md" }) {
+// ── Star Rating Component ──────────────────────────────────────────
+function StarRating({ rating, onRatingChange, interactive = false, size = "md" }) {
   const [hoverRating, setHoverRating] = useState(0);
-  const sizes = { sm: 16, md: 24, lg: 32 };
-  const iconSize = sizes[size] || 24;
-
+  const starSizes = { sm: 16, md: 20, lg: 28 };
+  const starSize = starSizes[size];
+  
   return (
     <div className="flex gap-1">
       {[1, 2, 3, 4, 5].map((star) => (
         <button
           key={star}
           type="button"
-          onClick={() => onRatingChange?.(star)}
-          onMouseEnter={() => setHoverRating(star)}
-          onMouseLeave={() => setHoverRating(0)}
-          className="transition-all duration-150 hover:scale-110"
+          onClick={() => interactive && onRatingChange?.(star)}
+          onMouseEnter={() => interactive && setHoverRating(star)}
+          onMouseLeave={() => interactive && setHoverRating(0)}
+          className={interactive ? "cursor-pointer transition-transform hover:scale-110" : "cursor-default"}
+          disabled={!interactive}
         >
           <Star
-            size={iconSize}
-            className={`${(hoverRating || rating) >= star 
-              ? 'fill-yellow-400 text-yellow-400' 
-              : 'text-gray-300'} transition-colors`}
+            size={starSize}
+            className={`${
+              (hoverRating || rating) >= star
+                ? "fill-yellow-400 text-yellow-400"
+                : "text-gray-300 fill-gray-200"
+            } transition-colors`}
           />
         </button>
       ))}
-    </div>
-  );
-}
-
-// ── Report Modal ──────────────────────────────────────────────
-function ReportModal({ clinicID, clinicName, user, onClose }) {
-  const [reportType, setReportType] = useState('inappropriate');
-  const [description, setDescription] = useState('');
-  const [submitting, setSubmitting] = useState(false);
-  const [submitted, setSubmitted] = useState(false);
-
-  const handleSubmit = async () => {
-    if (!user?.uid) {
-      alert('Please log in to submit a report');
-      return;
-    }
-    if (!description.trim()) {
-      alert('Please provide details for your report');
-      return;
-    }
-
-    setSubmitting(true);
-    try {
-      const res = await fetch('/api/reports', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          clinicID,
-          clinicName,
-          patientID: user.uid,
-          patientName: user.displayName || user.email,
-          reportType,
-          description: description.trim(),
-        }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Failed to submit report');
-      setSubmitted(true);
-    } catch (err) {
-      alert(err.message);
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
-  if (submitted) {
-    return (
-      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4">
-        <div className="bg-white rounded-2xl max-w-md w-full p-6 text-center shadow-xl">
-          <div className="w-16 h-16 rounded-full bg-green-100 text-green-600 flex items-center justify-center mx-auto mb-4">
-            <CheckCircle size={32} />
-          </div>
-          <h3 className="text-xl font-bold text-[#1a355d] mb-2">Report Submitted</h3>
-          <p className="text-gray-500 text-sm mb-6">
-            Thank you for helping keep our community safe. We'll review your report.
-          </p>
-          <button onClick={onClose} className="w-full py-3 bg-[#1a355d] text-white rounded-xl font-semibold">
-            Close
-          </button>
-        </div>
-      </div>
-    );
-  }
-
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4">
-      <div className="bg-white rounded-2xl max-w-md w-full shadow-xl overflow-hidden">
-        <div className="bg-red-50 px-6 py-4 border-b border-red-100 flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full bg-red-100 text-red-500 flex items-center justify-center">
-            <Flag size={20} />
-          </div>
-          <div className="flex-1">
-            <h3 className="font-bold text-red-700">Report Clinic</h3>
-            <p className="text-xs text-red-500">Help us maintain quality standards</p>
-          </div>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
-            <X size={20} />
-          </button>
-        </div>
-
-        <div className="p-6 space-y-5">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Issue Type</label>
-            <select
-              value={reportType}
-              onChange={(e) => setReportType(e.target.value)}
-              className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-red-200 focus:border-red-300 outline-none"
-            >
-              <option value="inappropriate">Inappropriate Content</option>
-              <option value="spam">Spam or Misleading</option>
-              <option value="fake">Fake Clinic</option>
-              <option value="harassment">Harassment</option>
-              <option value="other">Other</option>
-            </select>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Description</label>
-            <textarea
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              rows={4}
-              placeholder="Please provide details about your report..."
-              className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-red-200 focus:border-red-300 outline-none resize-none"
-            />
-          </div>
-
-          <div className="bg-amber-50 rounded-xl p-3 text-xs text-amber-700">
-            <AlertCircle size={14} className="inline mr-1" />
-            Reports are anonymous. False reports may lead to account restrictions.
-          </div>
-        </div>
-
-        <div className="px-6 py-4 border-t border-gray-100 flex gap-3 bg-gray-50/30">
-          <button onClick={onClose} className="flex-1 py-2.5 border border-gray-200 rounded-xl text-sm font-medium text-gray-600">
-            Cancel
-          </button>
-          <button
-            onClick={handleSubmit}
-            disabled={submitting || !description.trim()}
-            className="flex-1 py-2.5 bg-red-500 hover:bg-red-600 text-white rounded-xl text-sm font-medium disabled:opacity-50 transition-all"
-          >
-            {submitting ? <Loader2 size={16} className="animate-spin mx-auto" /> : 'Submit Report'}
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-// ── Reviews Section ───────────────────────────────────────────
-function ReviewsSection({ clinicID }) {
-  const { user } = useAuth();
-  const [reviews, setReviews] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [userRating, setUserRating] = useState(0);
-  const [userReview, setUserReview] = useState('');
-  const [submitting, setSubmitting] = useState(false);
-  const [hasUserReviewed, setHasUserReviewed] = useState(false);
-
-  useEffect(() => {
-    loadReviews();
-  }, [clinicID]);
-
-  const loadReviews = async () => {
-    try {
-      const res = await fetch(`/api/reviews?clinicID=${clinicID}`);
-      const data = await res.json();
-      if (data.success) {
-        setReviews(data.reviews || []);
-        if (user?.uid && data.reviews) {
-          const userReviewExists = data.reviews.some(r => r.patientID === user.uid);
-          setHasUserReviewed(userReviewExists);
-        }
-      }
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleSubmitReview = async () => {
-    if (!user?.uid) {
-      alert('Please log in to leave a review');
-      return;
-    }
-    if (userRating === 0) {
-      alert('Please select a rating');
-      return;
-    }
-    if (!userReview.trim()) {
-      alert('Please write a review message');
-      return;
-    }
-
-    setSubmitting(true);
-    try {
-      const res = await fetch('/api/reviews', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          clinicID,
-          patientID: user.uid,
-          patientName: user.displayName || user.email,
-          rating: userRating,
-          message: userReview.trim(),
-        }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Failed to submit review');
-      
-      await loadReviews();
-      setUserRating(0);
-      setUserReview('');
-      setHasUserReviewed(true);
-    } catch (err) {
-      alert(err.message);
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
-  const averageRating = reviews.length > 0
-    ? (reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length).toFixed(1)
-    : 0;
-
-  return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h3 className="font-bold text-gray-900">Patient Reviews</h3>
-          <div className="flex items-center gap-2 mt-1">
-            <div className="flex items-center">
-              <Star size={18} className="fill-yellow-400 text-yellow-400" />
-              <span className="font-bold ml-1">{averageRating}</span>
-              <span className="text-gray-400 text-sm ml-1">({reviews.length} reviews)</span>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Write Review */}
-      {!hasUserReviewed && user && (
-        <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-2xl p-5 border border-blue-100">
-          <p className="text-sm font-medium text-gray-700 mb-3">Share your experience</p>
-          <StarRating rating={userRating} onRatingChange={setUserRating} size="md" />
-          <textarea
-            value={userReview}
-            onChange={(e) => setUserReview(e.target.value)}
-            placeholder="Write your review here..."
-            rows={3}
-            className="w-full mt-4 border border-gray-200 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-blue-200 outline-none resize-none"
-          />
-          <button
-            onClick={handleSubmitReview}
-            disabled={submitting || userRating === 0 || !userReview.trim()}
-            className="mt-3 px-5 py-2 bg-[#1a355d] text-white rounded-xl text-sm font-medium disabled:opacity-50 transition-all hover:bg-[#22447a]"
-          >
-            {submitting ? <Loader2 size={16} className="animate-spin mx-auto" /> : 'Submit Review'}
-          </button>
-        </div>
-      )}
-
-      {/* Reviews List */}
-      {loading ? (
-        <div className="flex justify-center py-8">
-          <Loader2 size={24} className="animate-spin text-gray-400" />
-        </div>
-      ) : reviews.length === 0 ? (
-        <div className="text-center py-8 bg-gray-50 rounded-2xl">
-          <MessageCircle size={32} className="mx-auto text-gray-300 mb-2" />
-          <p className="text-gray-400 text-sm">No reviews yet. Be the first to review!</p>
-        </div>
-      ) : (
-        <div className="space-y-4 max-h-[400px] overflow-y-auto pr-2">
-          {reviews.map((review) => (
-            <div key={review.id} className="bg-white rounded-xl border border-gray-100 p-4 shadow-sm">
-              <div className="flex items-center justify-between mb-2">
-                <div>
-                  <p className="font-medium text-gray-800 text-sm">{review.patientName}</p>
-                  <p className="text-[10px] text-gray-400">{new Date(review.createdAt).toLocaleDateString()}</p>
-                </div>
-                <div className="flex items-center">
-                  {[...Array(5)].map((_, i) => (
-                    <Star key={i} size={14} className={i < review.rating ? 'fill-yellow-400 text-yellow-400' : 'text-gray-200'} />
-                  ))}
-                </div>
-              </div>
-              <p className="text-sm text-gray-600 leading-relaxed">{review.message}</p>
-            </div>
-          ))}
-        </div>
-      )}
     </div>
   );
 }
@@ -383,7 +120,7 @@ function InquiryDrawer({ clinicID, clinicName, user, onClose }) {
 
   const fetchMessages = async (id) => {
     try {
-      const msgRes  = await fetch(`/api/inquiries?inquiryId=${id}`);
+      const msgRes = await fetch(`/api/inquiries?inquiryId=${id}`);
       const msgJson = await msgRes.json();
       if (msgJson.success) setMessages(msgJson.data);
     } catch (e) { console.error(e); }
@@ -393,7 +130,7 @@ function InquiryDrawer({ clinicID, clinicName, user, onClose }) {
     const load = async () => {
       if (!user?.uid) return;
       try {
-        const res  = await fetch(`/api/inquiries?patientID=${user.uid}&clinicID=${clinicID}`);
+        const res = await fetch(`/api/inquiries?patientID=${user.uid}&clinicID=${clinicID}`);
         const json = await res.json();
         if (json.success && json.inquiry) {
           setInquiryId(json.inquiry.id);
@@ -428,7 +165,7 @@ function InquiryDrawer({ clinicID, clinicName, user, onClose }) {
       let currentInquiryId = inquiryId;
 
       if (!currentInquiryId) {
-        const createRes  = await fetch('/api/inquiries', {
+        const createRes = await fetch('/api/inquiries', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -468,11 +205,10 @@ function InquiryDrawer({ clinicID, clinicName, user, onClose }) {
   };
 
   return (
-    <div className="fixed bottom-6 right-6 z-50 w-[380px] rounded-2xl shadow-2xl border border-slate-200 flex flex-col bg-white overflow-hidden"
-      style={{ height: 520, boxShadow: '0 24px 64px rgba(26,53,93,0.18)' }}>
-
-      <div className="bg-gradient-to-r from-[#1a355d] to-[#22447a] px-5 py-4 flex items-center gap-3">
-        <div className="w-10 h-10 rounded-xl bg-white/10 border border-white/20 flex items-center justify-center text-white font-bold text-sm">
+    <div className="fixed bottom-6 right-6 z-50 w-[360px] rounded-2xl shadow-2xl border border-slate-200 flex flex-col bg-white"
+      style={{ height: 480, boxShadow: '0 24px 64px rgba(26,53,93,0.18)' }}>
+      <div className="bg-[#1a355d] px-5 py-4 flex items-center gap-3">
+        <div className="w-9 h-9 rounded-xl bg-white/10 border border-white/20 flex items-center justify-center text-white font-bold text-sm">
           {clinicName?.[0]?.toUpperCase()}
         </div>
         <div className="flex-1">
@@ -485,10 +221,10 @@ function InquiryDrawer({ clinicID, clinicName, user, onClose }) {
         </button>
       </div>
 
-      <div className="flex-1 overflow-y-auto py-4 space-y-3 bg-gradient-to-b from-slate-50/40 to-white" style={{ paddingLeft: 16, paddingRight: 10 }}>
+      <div className="flex-1 overflow-y-auto py-4 space-y-3 bg-slate-50/40" style={{ paddingLeft: 16, paddingRight: 10 }}>
         {loading ? (
           <div className="flex items-center justify-center h-full">
-            <Loader2 size={24} className="animate-spin text-teal-400" />
+            <div className="w-6 h-6 border-2 border-teal-400 border-t-transparent rounded-full animate-spin" />
           </div>
         ) : messages.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full gap-3 text-center">
@@ -520,9 +256,7 @@ function InquiryDrawer({ clinicID, clinicName, user, onClose }) {
                   </div>
                 </div>
                 {m.sender === 'patient' && isLast && (
-                  <span className="text-[10px] text-slate-400 mt-1 flex items-center gap-1">
-                    <CheckCircle size={10} /> Delivered
-                  </span>
+                  <span className="text-[10px] text-slate-400 mt-1">✓ Delivered</span>
                 )}  
               </div>
             );
@@ -544,9 +278,651 @@ function InquiryDrawer({ clinicID, clinicName, user, onClose }) {
           disabled={!inputText.trim() || sending}
           className="w-10 h-10 bg-teal-500 hover:bg-teal-600 disabled:opacity-40 text-white rounded-xl flex items-center justify-center transition-all shrink-0"
         >
-          {sending ? <Loader2 size={16} className="animate-spin" /> : <Send size={16} strokeWidth={2.5} />}
+          <Send size={16} strokeWidth={2.5} />
         </button>
       </div>
+    </div>
+  );
+}
+
+// ── Report Type Selection Modal ──────────────────────────────────────────
+function ReportTypeModal({ onSelect, onClose }) {
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4">
+      <div className="bg-white rounded-2xl border border-gray-200 w-full max-w-md shadow-xl overflow-hidden">
+        <div className="border-b border-gray-100 px-6 py-4">
+          <h3 className="font-bold text-[#1a355d] text-center">Report Issue</h3>
+          <p className="text-xs text-gray-500 text-center mt-1">Choose where to send your report</p>
+        </div>
+        
+        <div className="p-6 space-y-4">
+          <button
+            onClick={() => onSelect('clinic')}
+            className="w-full text-left p-4 rounded-xl border border-gray-200 hover:border-blue-300 hover:bg-blue-50/30 transition-all group"
+          >
+            <div className="flex items-start gap-3">
+              <div className="w-10 h-10 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center shrink-0">
+                <FileText size={18} />
+              </div>
+              <div className="flex-1">
+                <div className="flex items-center gap-2 mb-1">
+                  <h4 className="font-semibold text-gray-800 group-hover:text-blue-700">Report to Clinic</h4>
+                  <span className="text-[10px] bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full">Direct</span>
+                </div>
+                <p className="text-xs text-gray-500">Send feedback directly to the clinic management.</p>
+                <p className="text-xs text-blue-600 mt-2">Write freely about your concern →</p>
+              </div>
+            </div>
+          </button>
+
+          <button
+            onClick={() => onSelect('admin')}
+            className="w-full text-left p-4 rounded-xl border border-gray-200 hover:border-red-300 hover:bg-red-50/30 transition-all group"
+          >
+            <div className="flex items-start gap-3">
+              <div className="w-10 h-10 rounded-full bg-red-100 text-red-600 flex items-center justify-center shrink-0">
+                <Shield size={18} />
+              </div>
+              <div className="flex-1">
+                <div className="flex items-center gap-2 mb-1">
+                  <h4 className="font-semibold text-gray-800 group-hover:text-red-700">Report to Super Admin</h4>
+                  <span className="text-[10px] bg-red-100 text-red-600 px-2 py-0.5 rounded-full">Escalate</span>
+                </div>
+                <p className="text-xs text-gray-500">Report serious violations to our administrative team.</p>
+                <p className="text-xs text-red-600 mt-2">Select from violation categories →</p>
+              </div>
+            </div>
+          </button>
+        </div>
+
+        <div className="px-6 py-4 border-t border-gray-100 bg-gray-50/30">
+          <button onClick={onClose} className="w-full py-2.5 border border-gray-200 rounded-xl text-sm font-medium text-gray-600 hover:bg-gray-200 transition-all">
+            Cancel
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── Report to Clinic Modal (with doctor selection & appointment) ─────────────
+function ReportToClinicModal({ clinicID, clinicName, user, onClose, onSuccess }) {
+  const [doctors, setDoctors] = useState([]);
+  const [loadingDoctors, setLoadingDoctors] = useState(true);
+  const [subject, setSubject] = useState("");
+  const [message, setMessage] = useState("");
+  const [selectedDoctorId, setSelectedDoctorId] = useState("");
+  const [selectedDoctorName, setSelectedDoctorName] = useState("");
+  const [preferredDate, setPreferredDate] = useState("");
+  const [preferredTime, setPreferredTime] = useState("");
+  const [appointmentType, setAppointmentType] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    const fetchDoctors = async () => {
+      if (!clinicID) return;
+      try {
+        const res = await fetch(`/api/doctors?clinicID=${clinicID}`);
+        const data = await res.json();
+        if (data.success) {
+          setDoctors(data.data || []);
+        }
+      } catch (error) {
+        console.error("Failed to fetch doctors:", error);
+      } finally {
+        setLoadingDoctors(false);
+      }
+    };
+    fetchDoctors();
+  }, [clinicID]);
+
+  const handleDoctorChange = (e) => {
+    const doctorId = e.target.value;
+    const doctor = doctors.find(d => d.id === doctorId);
+    setSelectedDoctorId(doctorId);
+    setSelectedDoctorName(doctor ? doctor.name : "");
+  };
+
+  const handleSubmit = async () => {
+    if (!user?.uid) {
+      setError("You must be logged in to submit a report.");
+      return;
+    }
+    if (!subject.trim()) {
+      setError("Please provide a subject for your report.");
+      return;
+    }
+    if (!message.trim()) {
+      setError("Please provide details about your concern.");
+      return;
+    }
+
+    setSubmitting(true);
+    setError("");
+
+    try {
+      const res = await fetch("/api/reports/to-clinic", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          clinicID,
+          clinicName,
+          reporterID: user.uid,
+          reporterName: user.displayName || user.email,
+          reporterEmail: user.email,
+          subject: subject.trim(),
+          message: message.trim(),
+          doctorId: selectedDoctorId || null,
+          doctorName: selectedDoctorName || null,
+          preferredDate: preferredDate || null,
+          preferredTime: preferredTime || null,
+          appointmentType: appointmentType || null,
+        }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to submit report");
+      setSubmitted(true);
+      onSuccess?.();
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  if (submitted) {
+    return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4">
+        <div className="bg-white rounded-2xl border border-gray-200 w-full max-w-md p-8 text-center shadow-xl">
+          <div className="w-16 h-16 rounded-full bg-green-100 text-green-600 flex items-center justify-center text-3xl mx-auto mb-4">✓</div>
+          <h3 className="text-lg font-bold text-[#1a355d] mb-2">Report Submitted</h3>
+          <p className="text-sm text-gray-500 mb-6">The clinic management has received your report.</p>
+          <button onClick={onClose} className="w-full py-2.5 bg-[#1a355d] text-white rounded-xl text-sm font-bold">Close</button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4">
+      <div className="bg-white rounded-2xl border border-gray-200 w-full max-w-md max-h-[90vh] overflow-y-auto shadow-xl">
+        <div className="sticky top-0 bg-white border-b border-gray-100 px-6 py-4 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center">
+              <FileText size={16} />
+            </div>
+            <div>
+              <h3 className="font-bold text-[#1a355d]">Report to Clinic</h3>
+              <p className="text-xs text-gray-400">{clinicName}</p>
+            </div>
+          </div>
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-600">✕</button>
+        </div>
+
+        <div className="p-6 space-y-5">
+          <div className="bg-blue-50 border-l-4 border-blue-400 rounded-r-xl p-4">
+            <p className="text-xs text-blue-800">This report will be sent directly to the clinic management.</p>
+          </div>
+
+          <div>
+            <label className="block text-xs font-semibold text-gray-500 mb-2">Subject *</label>
+            <input
+              type="text"
+              value={subject}
+              onChange={(e) => setSubject(e.target.value)}
+              placeholder="e.g., Billing concern, Service issue, Staff conduct..."
+              className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:ring-2 focus:ring-blue-200 outline-none"
+            />
+          </div>
+
+          <div>
+            <label className="block text-xs font-semibold text-gray-500 mb-2">Message *</label>
+            <textarea
+              value={message}
+              onChange={(e) => setMessage(e.target.value)}
+              placeholder="Please describe your concern in detail..."
+              rows={4}
+              className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:ring-2 focus:ring-blue-200 outline-none resize-none"
+            />
+          </div>
+
+          <div>
+            <label className="block text-xs font-semibold text-gray-500 mb-2">
+              <Stethoscope size={12} className="inline mr-1" /> Doctor (Optional)
+            </label>
+            {loadingDoctors ? (
+              <div className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm text-gray-400">
+                Loading doctors...
+              </div>
+            ) : doctors.length > 0 ? (
+              <select
+                value={selectedDoctorId}
+                onChange={handleDoctorChange}
+                className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:ring-2 focus:ring-blue-200 outline-none"
+              >
+                <option value="">Select a doctor (optional)</option>
+                {doctors.map((doctor) => (
+                  <option key={doctor.id} value={doctor.id}>
+                    Dr. {doctor.name} - {doctor.specialty}
+                  </option>
+                ))}
+              </select>
+            ) : (
+              <div className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm text-gray-400">
+                No doctors registered yet
+              </div>
+            )}
+          </div>
+
+          <div>
+            <label className="block text-xs font-semibold text-gray-500 mb-2">Appointment Type (Optional)</label>
+            <select
+              value={appointmentType}
+              onChange={(e) => setAppointmentType(e.target.value)}
+              className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:ring-2 focus:ring-blue-200 outline-none"
+            >
+              <option value="">Select type (optional)</option>
+              <option value="Consultation">Consultation</option>
+              <option value="Follow-up">Follow-up</option>
+              <option value="Check-up">Check-up</option>
+              <option value="Procedure">Procedure</option>
+              <option value="Vaccination">Vaccination</option>
+              <option value="Lab Test">Lab Test</option>
+            </select>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-xs font-semibold text-gray-500 mb-2">
+                <Calendar size={12} className="inline mr-1" /> Date of Appointment
+              </label>
+              <input
+                type="date"
+                value={preferredDate}
+                onChange={(e) => setPreferredDate(e.target.value)}
+                className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:ring-2 focus:ring-blue-200 outline-none"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-semibold text-gray-500 mb-2">
+                <Clock size={12} className="inline mr-1" /> Time of Appointment
+              </label>
+              <input
+                type="time"
+                value={preferredTime}
+                onChange={(e) => setPreferredTime(e.target.value)}
+                className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:ring-2 focus:ring-blue-200 outline-none"
+              />
+            </div>
+          </div>
+
+          {error && (
+            <p className="text-xs text-red-500 bg-red-50 border border-red-100 rounded-xl px-4 py-3">{error}</p>
+          )}
+
+          <div className="flex gap-3 pt-2">
+            <button onClick={onClose} className="flex-1 py-2.5 border border-gray-200 rounded-xl text-sm font-bold text-gray-500 hover:bg-gray-200 transition-all">
+              Cancel
+            </button>
+            <button onClick={handleSubmit} disabled={submitting}
+              className="flex-1 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-sm font-bold disabled:opacity-50">
+              {submitting ? 'Sending...' : 'Send Report'}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── Report to Admin Modal ─────────────────────────────────────────────
+function ReportToAdminModal({ clinicID, clinicName, user, onClose, onSuccess }) {
+  const [selectedReason, setSelectedReason] = useState('');
+  const [customReason, setCustomReason] = useState('');
+  const [description, setDescription] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
+  const [error, setError] = useState('');
+
+  const handleSubmit = async () => {
+    if (!user?.uid) {
+      setError("You must be logged in to submit a report.");
+      return;
+    }
+    if (!selectedReason) {
+      setError("Please select a violation reason.");
+      return;
+    }
+    if (selectedReason === 'other' && !customReason.trim()) {
+      setError("Please specify the other violation.");
+      return;
+    }
+    if (!description.trim()) {
+      setError("Please provide a detailed description.");
+      return;
+    }
+
+    setSubmitting(true);
+    setError('');
+
+    try {
+      const reasonText = selectedReason === 'other' ? customReason : 
+        ADMIN_REPORT_REASONS.find(r => r.value === selectedReason)?.label || selectedReason;
+      
+      const res = await fetch('/api/reports/to-admin', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          clinicID,
+          clinicName,
+          reporterID: user.uid,
+          reporterName: user.displayName || user.email,
+          reporterEmail: user.email,
+          reason: reasonText,
+          description: description.trim(),
+        }),
+      });
+      
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed to submit report');
+      setSubmitted(true);
+      onSuccess?.();
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  if (submitted) {
+    return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4">
+        <div className="bg-white rounded-2xl border border-gray-200 w-full max-w-md p-8 text-center shadow-xl">
+          <div className="w-16 h-16 rounded-full bg-green-100 text-green-600 flex items-center justify-center text-3xl mx-auto mb-4">✓</div>
+          <h3 className="text-lg font-bold text-[#1a355d] mb-2">Report Submitted</h3>
+          <p className="text-sm text-gray-500 mb-6">Our team will review your report.</p>
+          <button onClick={onClose} className="w-full py-2.5 bg-[#1a355d] text-white rounded-xl text-sm font-bold">Close</button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4">
+      <div className="bg-white rounded-2xl border border-gray-200 w-full max-w-md max-h-[90vh] overflow-y-auto shadow-xl">
+        <div className="sticky top-0 bg-white border-b border-gray-100 px-6 py-4 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded-full bg-red-100 text-red-600 flex items-center justify-center">
+              <Shield size={16} />
+            </div>
+            <div>
+              <h3 className="font-bold text-[#1a355d]">Report to Super Admin</h3>
+              <p className="text-xs text-gray-400">{clinicName}</p>
+            </div>
+          </div>
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-600">✕</button>
+        </div>
+
+        <div className="p-6 space-y-5">
+          <div className="bg-red-50 border-l-4 border-red-400 rounded-r-xl p-4">
+            <p className="text-xs text-red-800">This report goes directly to our administrative team.</p>
+          </div>
+
+          <div>
+            <label className="block text-xs font-semibold text-gray-500 mb-2">Violation Type *</label>
+            <select
+              value={selectedReason}
+              onChange={(e) => setSelectedReason(e.target.value)}
+              className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:ring-2 focus:ring-red-100 outline-none"
+            >
+              <option value="">Select a violation reason...</option>
+              {ADMIN_REPORT_REASONS.map(reason => (
+                <option key={reason.value} value={reason.value}>{reason.label}</option>
+              ))}
+            </select>
+          </div>
+
+          {selectedReason === 'other' && (
+            <div>
+              <label className="block text-xs font-semibold text-gray-500 mb-2">Please specify *</label>
+              <input
+                type="text"
+                value={customReason}
+                onChange={(e) => setCustomReason(e.target.value)}
+                className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:ring-2 focus:ring-red-100 outline-none"
+              />
+            </div>
+          )}
+
+          <div>
+            <label className="block text-xs font-semibold text-gray-500 mb-2">Detailed Description *</label>
+            <textarea
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              rows={5}
+              className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:ring-2 focus:ring-red-100 outline-none resize-none"
+            />
+          </div>
+
+          {error && (
+            <p className="text-xs text-red-500 bg-red-50 border border-red-100 rounded-xl px-4 py-3">{error}</p>
+          )}
+
+          <div className="flex gap-3 pt-2">
+            <button onClick={onClose} className="flex-1 py-2.5 border border-gray-200 rounded-xl text-sm font-bold text-gray-500 hover:bg-gray-200 transition-all">
+              Cancel
+            </button>
+            <button onClick={handleSubmit} disabled={submitting}
+              className="flex-1 py-2.5 bg-red-600 hover:bg-red-700 text-white rounded-xl text-sm font-bold disabled:opacity-50">
+              {submitting ? 'Submitting...' : 'Submit Report'}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── Review Modal ──────────────────────────────────────────────
+function ReviewModal({ clinicID, clinicName, user, onClose, onReviewSubmitted }) {
+  const [rating, setRating] = useState(0);
+  const [reviewText, setReviewText] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
+  const [error, setError] = useState('');
+
+  const handleSubmit = async () => {
+    if (!user?.uid) {
+      setError("You must be logged in to leave a review.");
+      return;
+    }
+    if (rating === 0) {
+      setError("Please select a rating.");
+      return;
+    }
+    if (!reviewText.trim()) {
+      setError("Please write a review message.");
+      return;
+    }
+
+    setSubmitting(true);
+    setError('');
+
+    try {
+      const res = await fetch('/api/reviews', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          clinicID,
+          clinicName,
+          patientID: user.uid,
+          patientName: user.displayName || user.email,
+          rating,
+          review: reviewText.trim(),
+        }),
+      });
+      
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed to submit review');
+      setSubmitted(true);
+      onReviewSubmitted?.();
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  if (submitted) {
+    return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4">
+        <div className="bg-white rounded-2xl border border-gray-200 w-full max-w-md p-8 text-center shadow-xl">
+          <div className="w-16 h-16 rounded-full bg-green-100 text-green-600 flex items-center justify-center text-3xl mx-auto mb-4">✓</div>
+          <h3 className="text-lg font-bold text-[#1a355d] mb-2">Review Posted</h3>
+          <p className="text-sm text-gray-500 mb-6">Thank you for sharing your experience!</p>
+          <button onClick={onClose} className="w-full py-2.5 bg-[#1a355d] text-white rounded-xl text-sm font-bold">Close</button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4">
+      <div className="bg-white rounded-2xl border border-gray-200 w-full max-w-md shadow-xl">
+        <div className="border-b border-gray-100 px-6 py-4 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded-full bg-amber-100 text-amber-600 flex items-center justify-center">
+              <Star size={16} />
+            </div>
+            <h3 className="font-bold text-[#1a355d]">Write a Review</h3>
+          </div>
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-600">✕</button>
+        </div>
+
+        <div className="p-6 space-y-5">
+          <div className="text-center">
+            <p className="text-sm text-gray-600 mb-2">How would you rate your experience at</p>
+            <p className="font-semibold text-[#1a355d] mb-3">{clinicName}</p>
+            <div className="flex justify-center">
+              <StarRating rating={rating} onRatingChange={setRating} interactive={true} size="lg" />
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-xs font-semibold text-gray-500 mb-2">Your Review *</label>
+            <textarea
+              value={reviewText}
+              onChange={(e) => setReviewText(e.target.value)}
+              rows={4}
+              className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:ring-2 focus:ring-amber-100 outline-none resize-none"
+            />
+          </div>
+
+          {error && (
+            <p className="text-xs text-red-500 bg-red-50 border border-red-100 rounded-xl px-4 py-3">{error}</p>
+          )}
+
+          <div className="flex gap-3 pt-2">
+            <button onClick={onClose} className="flex-1 py-2.5 border border-gray-200 rounded-xl text-sm font-bold text-gray-500 hover:bg-gray-200 transition-all">
+              Cancel
+            </button>
+            <button onClick={handleSubmit} disabled={submitting}
+              className="flex-1 py-2.5 bg-amber-500 hover:bg-amber-600 text-white rounded-xl text-sm font-bold disabled:opacity-50">
+              {submitting ? 'Posting...' : 'Post Review'}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── Reviews Section Component ──────────────────────────────────────────
+function ReviewsSection({ clinicID, clinicName }) {
+  const [reviews, setReviews] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [averageRating, setAverageRating] = useState(0);
+  const [totalReviews, setTotalReviews] = useState(0);
+
+  const fetchReviews = async () => {
+    try {
+      const res = await fetch(`/api/reviews?clinicID=${clinicID}`);
+      const data = await res.json();
+      if (data.success) {
+        setReviews(data.reviews || []);
+        setAverageRating(data.averageRating || 0);
+        setTotalReviews(data.totalReviews || 0);
+      }
+    } catch (error) {
+      console.error('Failed to fetch reviews:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchReviews();
+  }, [clinicID]);
+
+  if (loading) {
+    return (
+      <div className="bg-white rounded-2xl border border-gray-200 p-6 shadow-sm">
+        <div className="animate-pulse space-y-4">
+          <div className="h-6 bg-gray-200 rounded w-32" />
+          <div className="h-20 bg-gray-100 rounded" />
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="bg-white rounded-2xl border border-gray-200 p-6 shadow-sm">
+      <div className="flex items-center justify-between mb-6">
+        <div>
+          <h3 className="font-bold text-[#1a355d] text-lg">Patient Reviews</h3>
+          {totalReviews > 0 && (
+            <div className="flex items-center gap-3 mt-1">
+              <StarRating rating={averageRating} size="sm" />
+              <span className="text-sm font-medium text-gray-700">{averageRating.toFixed(1)}</span>
+              <span className="text-xs text-gray-400">({totalReviews} {totalReviews === 1 ? 'review' : 'reviews'})</span>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {totalReviews === 0 ? (
+        <div className="text-center py-8">
+          <div className="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center mx-auto mb-3">
+            <Star size={24} className="text-gray-300" />
+          </div>
+          <p className="text-sm text-gray-500">No reviews yet. Be the first to share your experience!</p>
+        </div>
+      ) : (
+        <div className="space-y-4 max-h-[400px] overflow-y-auto pr-2">
+          {reviews.map((review, idx) => (
+            <div key={idx} className="border-b border-gray-100 pb-4 last:border-0">
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center gap-2">
+                  <div className="w-8 h-8 rounded-full bg-[#1a355d]/10 text-[#1a355d] flex items-center justify-center text-sm font-bold">
+                    {review.patientName?.[0]?.toUpperCase() || 'U'}
+                  </div>
+                  <div>
+                    <p className="text-sm font-semibold text-gray-800">{review.patientName || 'Anonymous Patient'}</p>
+                    <StarRating rating={review.rating} size="sm" />
+                  </div>
+                </div>
+                <span className="text-xs text-gray-400">
+                  {review.createdAt?.toDate ? new Date(review.createdAt.toDate()).toLocaleDateString() : ''}
+                </span>
+              </div>
+              <p className="text-sm text-gray-600 ml-10">{review.review}</p>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
@@ -639,9 +1015,7 @@ function BookingModal({ doctor, services, clinicID, patientID, onClose }) {
             <p className="text-white font-bold">Dr. {doctor.name}</p>
             <p className="text-white/60 text-xs">{doctor.specialty}</p>
           </div>
-          <button onClick={onClose} className="text-white/60 hover:text-white transition-colors">
-            <X size={20} />
-          </button>
+          <button onClick={onClose} className="text-white/60 hover:text-white">✕</button>
         </div>
 
         <div className="px-6 py-5 flex flex-col gap-5 max-h-[75vh] overflow-y-auto">
@@ -654,9 +1028,9 @@ function BookingModal({ doctor, services, clinicID, patientID, onClose }) {
           </div>
 
           <div>
-            <label htmlFor="service-select" className="block text-xs font-semibold text-gray-500 mb-2">Service</label>
-            <select id="service-select" value={selectedService} onChange={e => setSelectedService(e.target.value)}
-              className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm text-gray-800 focus:ring-2 focus:ring-blue-100 outline-none">
+            <label className="block text-xs font-semibold text-gray-500 mb-2">Service</label>
+            <select value={selectedService} onChange={e => setSelectedService(e.target.value)}
+              className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:ring-2 focus:ring-blue-100 outline-none">
               <option value="">Select a service...</option>
               {services.map(s => <option key={s} value={s}>{s}</option>)}
             </select>
@@ -670,7 +1044,7 @@ function BookingModal({ doctor, services, clinicID, patientID, onClose }) {
                 return (
                   <button key={day} type="button" disabled={!isAvailable} onClick={() => handleDayChange(day)}
                     className={`py-2 rounded-xl text-xs font-bold transition-all
-                      ${selectedDay === day ? 'bg-[#1a355d] text-white' : isAvailable ? 'border border-gray-200 text-gray-600 hover:border-[#1a355d]' : 'bg-gray-50 text-gray-200'}`}>
+                      ${selectedDay === day ? 'bg-[#1a355d] text-white' : isAvailable ? 'border border-gray-200 text-gray-600' : 'bg-gray-50 text-gray-200'}`}>
                     {day}
                   </button>
                 );
@@ -687,7 +1061,7 @@ function BookingModal({ doctor, services, clinicID, patientID, onClose }) {
                   <button key={slot} type="button" disabled={isBooked || slotsLoading}
                     onClick={() => setSelectedTime(slot)}
                     className={`py-2 rounded-xl text-xs font-medium border transition-all
-                      ${selectedTime === slot ? 'bg-[#1a355d] text-white' : 'border-gray-200 text-gray-600 hover:border-[#1a355d]'}`}>
+                      ${selectedTime === slot ? 'bg-[#1a355d] text-white' : 'border-gray-200 text-gray-600'}`}>
                     {slot}
                   </button>
                 );
@@ -700,12 +1074,14 @@ function BookingModal({ doctor, services, clinicID, patientID, onClose }) {
           )}
 
           <div className="bg-blue-50 border-l-4 border-blue-400 rounded-r-xl px-4 py-3">
-            <p className="text-xs text-blue-700">Booking is subject to clinic confirmation. You will receive a notification once approved.</p>
+            <p className="text-xs text-blue-700">Booking is subject to clinic confirmation.</p>
           </div>
         </div>
 
         <div className="px-6 py-4 border-t border-gray-100 flex gap-3 bg-gray-50/30">
-          <button onClick={onClose} className="flex-1 py-2.5 border border-gray-200 rounded-xl text-sm font-bold text-gray-500">Cancel</button>
+          <button onClick={onClose} className="flex-1 py-2.5 border border-gray-200 rounded-xl text-sm font-bold text-gray-500 hover:bg-gray-200 transition-all">
+            Cancel
+          </button>
           <button onClick={handleConfirm} disabled={!canConfirm}
             className="flex-[2] py-2.5 bg-[#1a355d] text-white rounded-xl text-sm font-bold disabled:opacity-30">
             {submitting ? 'Processing...' : 'Confirm Appointment'}
@@ -718,12 +1094,12 @@ function BookingModal({ doctor, services, clinicID, patientID, onClose }) {
 
 // ── Main Page ────────────────────────────────────────────────────
 export default function ClinicProfilePage() {
-  const params       = useParams();
+  const params = useParams();
   const searchParams = useSearchParams();
-  const router       = useRouter();
-  const { user }     = useAuth();
+  const router = useRouter();
+  const { user } = useAuth();
 
-  const { clinic,  loading: clinicLoading } = useClinic(params.clinicID);
+  const { clinic, loading: clinicLoading } = useClinic(params.clinicID);
   const { doctors, loading: doctorLoading } = useDoctors(params.clinicID);
 
   const isLoading = clinicLoading || doctorLoading;
@@ -731,10 +1107,13 @@ export default function ClinicProfilePage() {
   const todayHours = clinic?.hours?.[today];
 
   const [highlightDoctor, setHighlightDoctor] = useState(null);
-  const [bookingDoctor,   setBookingDoctor]   = useState(null);
-  const [showInquiry,     setShowInquiry]     = useState(false);
-  const [showReport,      setShowReport]      = useState(false);
-  const [liked, setLiked] = useState(false);
+  const [bookingDoctor, setBookingDoctor] = useState(null);
+  const [showInquiry, setShowInquiry] = useState(false);
+  const [showReportType, setShowReportType] = useState(false);
+  const [showReportToClinic, setShowReportToClinic] = useState(false);
+  const [showReportToAdmin, setShowReportToAdmin] = useState(false);
+  const [showReviewModal, setShowReviewModal] = useState(false);
+  const [refreshReviews, setRefreshReviews] = useState(0);
   const doctorRefs = useRef({});
 
   useEffect(() => {
@@ -742,12 +1121,25 @@ export default function ClinicProfilePage() {
     const doctorID = searchParams.get('doctor');
     if (!doctorID) return;
     setHighlightDoctor(doctorID);
-    const scrollTimer    = setTimeout(() => {
+    const scrollTimer = setTimeout(() => {
       doctorRefs.current[doctorID]?.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }, 300);
     const highlightTimer = setTimeout(() => setHighlightDoctor(null), 2000);
     return () => { clearTimeout(scrollTimer); clearTimeout(highlightTimer); };
   }, [clinic, searchParams]);
+
+  const handleReviewSubmitted = () => {
+    setRefreshReviews(prev => prev + 1);
+  };
+
+  const handleReportTypeSelect = (type) => {
+    setShowReportType(false);
+    if (type === 'clinic') {
+      setShowReportToClinic(true);
+    } else if (type === 'admin') {
+      setShowReportToAdmin(true);
+    }
+  };
 
   if (isLoading) {
     return (
@@ -788,16 +1180,6 @@ export default function ClinicProfilePage() {
         />
       )}
 
-      {/* Report Modal */}
-      {showReport && (
-        <ReportModal
-          clinicID={params.clinicID}
-          clinicName={clinic.clinicName}
-          user={user}
-          onClose={() => setShowReport(false)}
-        />
-      )}
-
       {/* Inquiry Drawer */}
       {showInquiry && (
         <InquiryDrawer
@@ -808,41 +1190,82 @@ export default function ClinicProfilePage() {
         />
       )}
 
-      {/* Action Buttons */}
+      {/* Report Type Selection Modal */}
+      {showReportType && (
+        <ReportTypeModal
+          onSelect={handleReportTypeSelect}
+          onClose={() => setShowReportType(false)}
+        />
+      )}
+
+      {/* Report to Clinic Modal */}
+      {showReportToClinic && (
+        <ReportToClinicModal
+          clinicID={params.clinicID}
+          clinicName={clinic.clinicName}
+          user={user}
+          onClose={() => setShowReportToClinic(false)}
+        />
+      )}
+
+      {/* Report to Admin Modal */}
+      {showReportToAdmin && (
+        <ReportToAdminModal
+          clinicID={params.clinicID}
+          clinicName={clinic.clinicName}
+          user={user}
+          onClose={() => setShowReportToAdmin(false)}
+        />
+      )}
+
+      {/* Review Modal */}
+      {showReviewModal && (
+        <ReviewModal
+          clinicID={params.clinicID}
+          clinicName={clinic.clinicName}
+          user={user}
+          onClose={() => setShowReviewModal(false)}
+          onReviewSubmitted={handleReviewSubmitted}
+        />
+      )}
+
+      {/* Floating Action Buttons */}
       <div className="fixed bottom-6 right-6 z-40 flex flex-col gap-3">
         <button
-          onClick={() => setShowReport(true)}
-          className="flex items-center gap-2 bg-white/90 backdrop-blur-md hover:bg-red-50 text-gray-700 hover:text-red-600 px-4 py-2.5 rounded-full transition-all shadow-lg border border-gray-200"
+          onClick={() => setShowReportType(true)}
+          className="flex items-center gap-3 bg-red-600 hover:bg-red-700 text-white px-4 py-3 rounded-2xl transition-all hover:scale-105 shadow-lg"
         >
           <Flag size={18} />
-          <span className="text-sm font-medium">Report</span>
+          <span className="text-sm font-semibold">Write a Report</span>
         </button>
+
         <button
-          onClick={() => setLiked(!liked)}
-          className={`flex items-center gap-2 bg-white/90 backdrop-blur-md px-4 py-2.5 rounded-full transition-all shadow-lg border border-gray-200 ${liked ? 'text-red-500' : 'text-gray-600'}`}
+          onClick={() => setShowReviewModal(true)}
+          className="flex items-center gap-3 bg-amber-500 hover:bg-amber-600 text-white px-4 py-3 rounded-2xl transition-all hover:scale-105 shadow-lg"
         >
-          <Heart size={18} fill={liked ? 'currentColor' : 'none'} />
-          <span className="text-sm font-medium">{liked ? 'Liked' : 'Like'}</span>
+          <Star size={18} />
+          <span className="text-sm font-semibold">Write a Review</span>
         </button>
-        <button
-          onClick={() => setShowInquiry(true)}
-          className="flex items-center gap-3 bg-[#1a355d] hover:bg-[#22447a] text-white px-5 py-3 rounded-2xl transition-all hover:scale-105 active:scale-95 shadow-xl"
-        >
-          <MessageCircle size={20} strokeWidth={2.5} className="shrink-0" />
-          <div className="flex flex-col items-start">
-            <p className="text-[10px] text-white/60 font-semibold uppercase tracking-wider leading-none mb-0.5">Have a question?</p>
-            <span className="text-sm font-bold leading-none">Message Clinic</span>
-          </div>
-        </button>
+
+        {!showInquiry && (
+          <button
+            onClick={() => setShowInquiry(true)}
+            className="flex items-center gap-3 bg-[#1a355d] hover:bg-[#22447a] text-white px-4 py-3 rounded-2xl transition-all hover:scale-105 shadow-lg"
+          >
+            <MessageCircle size={18} />
+            <span className="text-sm font-semibold">Message Clinic</span>
+          </button>
+        )}
       </div>
 
-      {/* HERO */}
+      {/* HERO SECTION */}
       <div className="relative h-80 bg-[#1a355d] overflow-hidden">
         {clinic.image && (
           <img src={clinic.image} alt={clinic.clinicName} className="w-full h-full object-cover opacity-50" />
         )}
         <div className="absolute inset-0 bg-gradient-to-t from-[#1a355d] via-[#1a355d]/40 to-transparent" />
         <div className="absolute inset-0 bg-black/20" />
+        
         <button
           onClick={() => router.push('/clinics')}
           className="absolute top-6 left-6 bg-white/10 backdrop-blur-md text-white text-xs font-medium px-4 py-2 rounded-full flex items-center gap-2 hover:bg-white/20 transition-all border border-white/20"
@@ -852,6 +1275,7 @@ export default function ClinicProfilePage() {
           </svg>
           Back to directory
         </button>
+
         <div className="absolute bottom-8 left-8 right-8">
           <div className="flex flex-wrap gap-2 mb-4">
             {(clinic.specialty ?? []).map(s => (
@@ -870,7 +1294,7 @@ export default function ClinicProfilePage() {
       {/* QUICK INFO */}
       <div className="bg-white/80 backdrop-blur-sm border-b border-gray-200 sticky top-0 z-10 shadow-sm">
         <div className="max-w-6xl mx-auto px-8 py-4 flex flex-wrap gap-x-8 gap-y-3">
-          <InfoChip icon={<Calendar size={14} />} text={todayHours ? `${todayHours.open} to ${todayHours.close}` : 'No schedule'} />
+          <InfoChip icon={<Clock size={14} />} text={todayHours ? `${todayHours.open} to ${todayHours.close}` : 'No schedule'} />
           <InfoChip icon={<Phone size={14} />} text={clinic.phone} />
           <InfoChip icon={<Mail size={14} />} text={clinic.email} />
           <InfoChip icon={<MapPin size={14} />} text={clinic.city} />
@@ -886,7 +1310,7 @@ export default function ClinicProfilePage() {
           {/* About Section */}
           <section>
             <SectionHeader title="About the Clinic" />
-            <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm hover:shadow-md transition-shadow">
+            <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm">
               <p className="text-gray-600 leading-relaxed">{clinic.about}</p>
               <div className="flex flex-wrap gap-2 mt-6 pt-6 border-t border-gray-100">
                 {(clinic.amenities ?? []).map(a => (
@@ -926,7 +1350,7 @@ export default function ClinicProfilePage() {
                   <button
                     disabled={!doctor.available}
                     onClick={() => setBookingDoctor(doctor)}
-                    className="shrink-0 bg-gradient-to-r from-[#1a355d] to-[#22447a] hover:from-[#22447a] hover:to-[#2a558a] text-white text-sm font-bold px-6 py-2.5 rounded-xl transition-all disabled:opacity-20 disabled:grayscale disabled:cursor-not-allowed shadow-md"
+                    className="shrink-0 bg-gradient-to-r from-[#1a355d] to-[#22447a] hover:from-[#22447a] hover:to-[#2a558a] text-white text-sm font-bold px-6 py-2.5 rounded-xl transition-all disabled:opacity-20 shadow-md"
                   >
                     Book
                   </button>
@@ -976,11 +1400,8 @@ export default function ClinicProfilePage() {
           </section>
 
           {/* Reviews Section */}
-          <section>
-            <SectionHeader title="Patient Reviews" />
-            <div className="bg-white rounded-2xl border border-gray-100 p-5 shadow-sm">
-              <ReviewsSection clinicID={params.clinicID} />
-            </div>
+          <section key={refreshReviews}>
+            <ReviewsSection clinicID={params.clinicID} clinicName={clinic.clinicName} />
           </section>
         </div>
       </div>
