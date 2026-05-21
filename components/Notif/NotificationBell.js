@@ -1,9 +1,8 @@
-// components/NotificationBell.jsx
 "use client";
 
 import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { Bell, X, Check, CheckCheck, Calendar, Star, Clock } from "lucide-react";
+import { Bell, X, Check, CheckCheck, Calendar, Star, Clock, Flag, MessageCircle } from "lucide-react";
 import { useNotifications } from "@/hooks/useNotifications";
 
 // ── Icon per notification type ───────────────────────────────
@@ -20,6 +19,15 @@ function NotifIcon({ type }) {
       return <div className={`${base} bg-amber-400`}><Clock size={15} /></div>;
     case "new_rating":
       return <div className={`${base} bg-yellow-400`}><Star size={15} /></div>;
+    // Report notification types
+    case "new_report":
+      return <div className={`${base} bg-red-500`}><Flag size={15} /></div>;
+    case "new_review":
+      return <div className={`${base} bg-yellow-500`}><Star size={15} /></div>;
+    case "new_patient_response":
+      return <div className={`${base} bg-purple-500`}><MessageCircle size={15} /></div>;
+    case "clinic_response":
+      return <div className={`${base} bg-teal-500`}><MessageCircle size={15} /></div>;
     default:
       return <div className={`${base} bg-slate-400`}><Bell size={15} /></div>;
   }
@@ -43,7 +51,7 @@ export default function NotificationBell({ uid }) {
   const { notifications, unreadCount, markOne, markAll, loading } = useNotifications(uid);
 
   const [open, setOpen] = useState(false);
-  const ref  = useRef(null);
+  const ref = useRef(null);
 
   // Close dropdown on outside click
   useEffect(() => {
@@ -77,7 +85,7 @@ export default function NotificationBell({ uid }) {
 
       {/* ── Dropdown ── */}
       {open && (
-        <div className="absolute right-0 mt-2 w-[360px] bg-white rounded-2xl shadow-2xl border border-slate-200/80 z-50"
+        <div className="absolute right-0 mt-2 w-[380px] bg-white rounded-2xl shadow-2xl border border-slate-200/80 z-50"
           style={{ boxShadow: "0 16px 48px rgba(0,0,0,0.12)" }}>
 
           {/* Header */}
@@ -122,8 +130,6 @@ export default function NotificationBell({ uid }) {
                 <button
                   key={notif.id}
                   onClick={() => handleClick(notif)}
-                  // className={`w-full text-left px-4 py-3.5 flex items-start gap-3 transition-colors border-b border-slate-50 last:border-0
-                  // ${notif.read ? "hover:bg-slate-50" : "bg-slate-50 hover:bg-slate-100"}`}
                   className={`w-full text-left px-4 py-3.5 flex items-start gap-3 transition-colors border-b border-slate-50 last:border-0
                   ${notif.read 
                     ? "hover:bg-slate-50 border-l-4 border-l-transparent" 

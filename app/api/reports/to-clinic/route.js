@@ -3,8 +3,35 @@ import { db } from "@/lib/firebase";
 import {
   collection, query, where, getDocs,
   doc, addDoc, updateDoc, getDoc,
-  serverTimestamp
+  serverTimestamp, setDoc
 } from "firebase/firestore";
+
+// Helper function to create notification
+async function createNotification({ recipientID, type, title, body, linkTo, meta = {} }) {
+  if (!recipientID) {
+    console.error("Cannot create notification: missing recipientID");
+    return;
+  }
+  
+  try {
+    const notificationId = `${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    const notificationRef = doc(db, "notifications", recipientID, "items", notificationId);
+    
+    await setDoc(notificationRef, {
+      id: notificationId,
+      type,
+      title,
+      body,
+      linkTo: linkTo || "/",
+      read: false,
+      createdAt: serverTimestamp(),
+      ...meta,
+    });
+    console.log(`Notification created for ${recipientID}: ${type}`);
+  } catch (error) {
+    console.error("Error creating notification:", error);
+  }
+}
 
 // POST - Submit a report to clinic
 export async function POST(req) {
@@ -24,6 +51,8 @@ export async function POST(req) {
       preferredTime,
       appointmentType,
     } = body;
+
+    console.log("Received report:", { clinicID, reporterID, subject });
 
     if (!clinicID || !reporterID || !subject || !message) {
       return NextResponse.json(
@@ -52,6 +81,20 @@ export async function POST(req) {
     };
 
     const reportRef = await addDoc(collection(db, "clinicReports"), reportData);
+    console.log("Report created with ID:", reportRef.id);
+
+    // ── SEND NOTIFICATION TO CLINIC FOR NEW REPORT ──
+    await createNotification({
+      recipientID: clinicID,
+      type: "new_report",
+      title: "📋 New Patient Report",
+      body: `${reporterName || "A patient"} submitted a report: "${subject.substring(0, 80)}${subject.length > 80 ? '...' : ''}"`,
+      linkTo: "/clinic/reports-reviews",
+      meta: {
+        reportId: reportRef.id,
+        subject: subject,
+      },
+    });
 
     return NextResponse.json({
       success: true,

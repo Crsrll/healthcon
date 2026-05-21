@@ -1,7 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import Modal from "@/components/ui/Modal";
-import { Star, Calendar, User, Search, AlertTriangle, CheckCircle2, Clock, X, Mail, Phone, MessageCircle, Flag, Stethoscope } from "lucide-react";
+import { Star, Calendar, User, Search, AlertTriangle, CheckCircle2, Clock, X, Mail, Phone, MessageCircle, Flag, Stethoscope, Send } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 
 export default function ClinicReportsPage() {
@@ -13,13 +13,14 @@ export default function ClinicReportsPage() {
   const [tab, setTab] = useState("Reports");
   const [searchQuery, setSearchQuery] = useState("");
   const [loading, setLoading] = useState(true);
-  const [respondingTo, setRespondingTo] = useState(null);
-  const [responseText, setResponseText] = useState("");
-  const [sendingResponse, setSendingResponse] = useState(false);
-  const [inquiryMessages, setInquiryMessages] = useState([]);
-  const [showInquiry, setShowInquiry] = useState(false);
-  const [selectedInquiryId, setSelectedInquiryId] = useState(null);
+  const [replyText, setReplyText] = useState("");
+  const [sendingReply, setSendingReply] = useState(false);
+  const [messages, setMessages] = useState([]);
+  const [showChat, setShowChat] = useState(false);
+  const [selectedReplyId, setSelectedReplyId] = useState(null);
+  const [activeReport, setActiveReport] = useState(null);
   const [clinicID, setClinicID] = useState(null);
+  const messagesEndRef = useState(null);
 
   // Get clinic ID from user or localStorage
   useEffect(() => {
@@ -66,13 +67,13 @@ export default function ClinicReportsPage() {
     }
   };
 
-  // Fetch Reply Messages
-  const fetchReplyMessages = async (replyId) => {
+  // Fetch messages for a reply thread
+  const fetchMessages = async (replyId) => {
     try {
       const res = await fetch(`/api/clinic-replies?replyId=${replyId}`);
       const data = await res.json();
       if (data.success) {
-        setInquiryMessages(data.messages || []);
+        setMessages(data.messages || []);
       }
     } catch (error) {
       console.error("Failed to fetch messages:", error);
@@ -108,13 +109,13 @@ export default function ClinicReportsPage() {
     }
   };
 
-  // Handle Response to Report
-  const handleSendResponse = async () => {
-    if (!respondingTo || !responseText.trim()) return;
+  // Send a reply message
+  const sendReply = async () => {
+    if (!replyText.trim() || sendingReply || !activeReport) return;
 
-    setSendingResponse(true);
+    setSendingReply(true);
     try {
-      const replyRes = await fetch(`/api/clinic-replies?reportId=${respondingTo.id}`);
+      const replyRes = await fetch(`/api/clinic-replies?reportId=${activeReport.id}`);
       const replyData = await replyRes.json();
       
       let replyId = replyData.reply?.id;
@@ -125,17 +126,18 @@ export default function ClinicReportsPage() {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             action: 'create',
-            clinicID: respondingTo.clinicID,
-            clinicName: respondingTo.clinicName,
-            patientID: respondingTo.reporterID,
-            patientName: respondingTo.reporterName,
-            firstMessage: responseText.trim(),
-            reportId: respondingTo.id,
+            clinicID: activeReport.clinicID,
+            clinicName: activeReport.clinicName,
+            patientID: activeReport.reporterID,
+            patientName: activeReport.reporterName,
+            firstMessage: replyText.trim(),
+            reportId: activeReport.id,
           }),
         });
         const createJson = await createRes.json();
         if (createJson.success) {
           replyId = createJson.replyId;
+          setSelectedReplyId(replyId);
         }
       } else {
         await fetch('/api/clinic-replies', {
@@ -144,38 +146,42 @@ export default function ClinicReportsPage() {
           body: JSON.stringify({
             action: 'message',
             replyId,
-            text: responseText.trim(),
+            text: replyText.trim(),
             sender: 'clinic',
             senderName: 'Clinic Staff',
           }),
         });
       }
 
-      setResponseText("");
-      setRespondingTo(null);
+      setReplyText("");
+      await fetchMessages(replyId);
       await fetchReports();
     } catch (error) {
-      console.error("Failed to send response:", error);
+      console.error("Failed to send reply:", error);
     } finally {
-      setSendingResponse(false);
+      setSendingReply(false);
     }
   };
 
-  // Open Reply Thread
-  const openReply = async (report) => {
+  // Open chat modal (merged Chat + Respond)
+  const openChatModal = async (report) => {
+    setActiveReport(report);
+    setReplyText("");
+    
     try {
       const res = await fetch(`/api/clinic-replies?reportId=${report.id}`);
       const data = await res.json();
       if (data.success && data.reply) {
-        setSelectedInquiryId(data.reply.id);
-        await fetchReplyMessages(data.reply.id);
-        setShowInquiry(true);
+        setSelectedReplyId(data.reply.id);
+        await fetchMessages(data.reply.id);
       } else {
-        setInquiryMessages([]);
-        setShowInquiry(true);
+        setMessages([]);
       }
+      setShowChat(true);
     } catch (error) {
-      console.error("Failed to load reply thread:", error);
+      console.error("Failed to load conversation:", error);
+      setMessages([]);
+      setShowChat(true);
     }
   };
 
@@ -183,6 +189,13 @@ export default function ClinicReportsPage() {
     high: "bg-red-50 text-red-600 border-red-100",
     medium: "bg-amber-50 text-amber-600 border-amber-100",
     low: "bg-blue-50 text-blue-600 border-blue-100",
+  };
+
+  const getSeverity = (message) => {
+    const lowerMsg = message?.toLowerCase() || "";
+    if (lowerMsg.includes('urgent') || lowerMsg.includes('emergency') || lowerMsg.includes('critical')) return 'high';
+    if (lowerMsg.includes('delay') || lowerMsg.includes('waiting') || lowerMsg.includes('issue')) return 'medium';
+    return 'low';
   };
 
   const filteredReports = reports.filter((r) => {
@@ -269,7 +282,7 @@ export default function ClinicReportsPage() {
         ))}
       </div>
 
-      {/* Content */}
+      {/* Reports Content */}
       <div className="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
         {tab === "Reports" ? (
           <div className="divide-y divide-slate-100">
@@ -278,6 +291,9 @@ export default function ClinicReportsPage() {
                 <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
                   <div className="space-y-2 flex-1">
                     <div className="flex items-center gap-3 flex-wrap">
+                      <span className={`px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider border ${severityStyles[getSeverity(r.message)]}`}>
+                        {getSeverity(r.message)} Priority
+                      </span>
                       <span className="flex items-center gap-1 text-xs text-slate-400">
                         <Clock size={12} /> {r.createdAt?.toDate ? new Date(r.createdAt.toDate()).toLocaleDateString() : r.timestamp ? new Date(r.timestamp).toLocaleDateString() : 'Recent'}
                       </span>
@@ -304,16 +320,10 @@ export default function ClinicReportsPage() {
                   </div>
                   <div className="flex gap-2 shrink-0">
                     <button 
-                      onClick={() => openReply(r)} 
-                      className="text-xs font-medium text-teal-600 px-3 py-2 bg-teal-50 rounded-lg hover:bg-teal-100 transition flex items-center gap-1"
+                      onClick={() => openChatModal(r)} 
+                      className="text-xs font-bold text-teal-600 px-4 py-2 bg-teal-50 rounded-lg hover:bg-teal-100 transition flex items-center gap-1"
                     >
-                      <MessageCircle size={12} /> Chat
-                    </button>
-                    <button 
-                      onClick={() => setRespondingTo(r)} 
-                      className="text-xs font-bold text-teal-600 px-4 py-2 bg-teal-50 rounded-lg hover:bg-teal-100 transition"
-                    >
-                      Respond
+                      <MessageCircle size={12} /> Respond
                     </button>
                     <button 
                       onClick={() => setSelectedReport(r)} 
@@ -361,6 +371,53 @@ export default function ClinicReportsPage() {
                       </div>
                     </div>
                     <p className="text-sm text-slate-600 leading-relaxed italic">"{r.review}"</p>
+                    <div className="flex items-center justify-between mt-4">
+                      <span className={`text-[10px] px-2 py-0.5 rounded-full ${
+                        r.status === 'approved' ? 'bg-green-100 text-green-700' : 
+                        r.status === 'rejected' ? 'bg-red-100 text-red-700' : 
+                        'bg-amber-100 text-amber-700'
+                      }`}>
+                        {r.status || 'pending'}
+                      </span>
+                      {(!r.status || r.status === 'pending') && (
+                        <div className="flex gap-2">
+                          <button 
+                            onClick={async () => {
+                              try {
+                                const res = await fetch(`/api/reviews`, {
+                                  method: 'PUT',
+                                  headers: { 'Content-Type': 'application/json' },
+                                  body: JSON.stringify({ reviewId: r.id, status: 'approved' }),
+                                });
+                                if (res.ok) await fetchReviews();
+                              } catch (error) {
+                                console.error("Failed to approve review:", error);
+                              }
+                            }}
+                            className="text-xs font-medium text-green-600 px-3 py-1 bg-green-50 rounded-lg hover:bg-green-100"
+                          >
+                            Approve
+                          </button>
+                          <button 
+                            onClick={async () => {
+                              try {
+                                const res = await fetch(`/api/reviews`, {
+                                  method: 'PUT',
+                                  headers: { 'Content-Type': 'application/json' },
+                                  body: JSON.stringify({ reviewId: r.id, status: 'rejected' }),
+                                });
+                                if (res.ok) await fetchReviews();
+                              } catch (error) {
+                                console.error("Failed to reject review:", error);
+                              }
+                            }}
+                            className="text-xs font-medium text-red-600 px-3 py-1 bg-red-50 rounded-lg hover:bg-red-100"
+                          >
+                            Reject
+                          </button>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
               </div>
@@ -383,7 +440,6 @@ export default function ClinicReportsPage() {
       <Modal isOpen={!!selectedReport} onClose={() => setSelectedReport(null)} title="Report Details">
         {selectedReport && (
           <div className="space-y-6 max-h-[70vh] overflow-y-auto">
-            {/* Patient Info - Centered */}
             <div className="flex flex-col items-center text-center">
               <div className="w-16 h-16 bg-teal-50 rounded-full flex items-center justify-center text-2xl font-bold text-teal-600 mb-3">
                 {selectedReport.reporterName?.[0]?.toUpperCase() || 'U'}
@@ -396,7 +452,6 @@ export default function ClinicReportsPage() {
               )}
             </div>
 
-            {/* Subject - Centered */}
             <div className="space-y-2">
               <div className="flex items-center justify-center gap-2 text-xs font-bold text-slate-400 uppercase tracking-widest">
                 <AlertTriangle size={14} className="text-amber-500" /> Subject
@@ -406,7 +461,6 @@ export default function ClinicReportsPage() {
               </div>
             </div>
 
-            {/* Report Details - Centered */}
             <div className="space-y-2">
               <div className="flex items-center justify-center gap-2 text-xs font-bold text-slate-400 uppercase tracking-widest">
                 <Flag size={14} className="text-red-500" /> Report Details
@@ -416,7 +470,6 @@ export default function ClinicReportsPage() {
               </div>
             </div>
 
-            {/* Doctor Information - Centered */}
             {selectedReport.doctorName && (
               <div className="space-y-2">
                 <div className="flex items-center justify-center gap-2 text-xs font-bold text-slate-400 uppercase tracking-widest">
@@ -428,7 +481,6 @@ export default function ClinicReportsPage() {
               </div>
             )}
 
-            {/* Appointment Details - Centered */}
             {(selectedReport.appointmentType || selectedReport.preferredDate || selectedReport.preferredTime) && (
               <div className="space-y-2">
                 <div className="flex items-center justify-center gap-2 text-xs font-bold text-slate-400 uppercase tracking-widest">
@@ -459,7 +511,6 @@ export default function ClinicReportsPage() {
               </div>
             )}
 
-            {/* Metadata - Centered */}
             <div className="grid grid-cols-2 gap-y-4 pt-4 border-t border-slate-100">
               <div className="text-center">
                 <p className="text-[10px] text-slate-400 uppercase font-bold">Reported On</p>
@@ -478,7 +529,6 @@ export default function ClinicReportsPage() {
               </div>
             </div>
 
-            {/* Action Buttons - Centered */}
             <div className="flex gap-3">
               <button 
                 onClick={() => setSelectedReport(null)}
@@ -486,12 +536,21 @@ export default function ClinicReportsPage() {
               >
                 Close
               </button>
+              <button 
+                onClick={() => {
+                  setSelectedReport(null);
+                  openChatModal(selectedReport);
+                }}
+                className="flex-1 bg-teal-600 hover:bg-teal-700 text-white py-3 rounded-xl font-bold text-sm transition-all shadow-lg shadow-teal-500/20"
+              >
+                Chat & Respond
+              </button>
               {selectedReport.status !== 'resolved' && (
                 <button 
                   onClick={() => handleResolveReport(selectedReport)}
-                  className="flex-1 bg-teal-600 hover:bg-teal-700 text-white py-3 rounded-xl font-bold text-sm transition-all shadow-lg shadow-teal-500/20"
+                  className="flex-1 bg-green-600 hover:bg-green-700 text-white py-3 rounded-xl font-bold text-sm transition-all shadow-lg shadow-green-500/20"
                 >
-                  Mark as Resolved
+                  Resolve
                 </button>
               )}
             </div>
@@ -499,90 +558,106 @@ export default function ClinicReportsPage() {
         )}
       </Modal>
 
-      {/* Response Modal */}
-      <Modal isOpen={!!respondingTo} onClose={() => setRespondingTo(null)} title="Respond to Patient">
-        {respondingTo && (
-          <div className="space-y-5">
-            <div className="bg-slate-50 p-4 rounded-xl">
-              <p className="text-xs text-slate-500 mb-1">Original Report:</p>
-              <p className="text-sm text-slate-700 font-medium">{respondingTo.subject}</p>
-              <p className="text-sm text-slate-600 mt-2">{respondingTo.message}</p>
-              {respondingTo.doctorName && (
-                <p className="text-xs text-slate-500 mt-2 flex items-center gap-1">
-                  <Stethoscope size={12} /> Doctor: Dr. {respondingTo.doctorName}
+      {/* Unified Chat Modal (merged Chat + Respond) */}
+      <Modal isOpen={showChat} onClose={() => {
+        setShowChat(false);
+        setActiveReport(null);
+        setMessages([]);
+        setReplyText("");
+        fetchReports();
+      }} title={`Conversation with ${activeReport?.reporterName || 'Patient'}`}>
+        {activeReport && (
+          <div className="flex flex-col h-[450px]">
+            {/* Report Summary */}
+            <div className="bg-slate-50 rounded-xl p-3 border border-slate-100 mb-3 shrink-0">
+              <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-500">Original Report</p>
+              <p className="text-sm font-medium text-slate-700 mt-0.5">{activeReport.subject}</p>
+              <p className="text-xs text-slate-600 mt-1 line-clamp-2">{activeReport.message}</p>
+              {activeReport.doctorName && (
+                <p className="text-[10px] text-slate-500 mt-1 flex items-center gap-1">
+                  <Stethoscope size={10} /> Doctor: Dr. {activeReport.doctorName}
                 </p>
               )}
-              {respondingTo.preferredDate && (
-                <p className="text-xs text-slate-500 flex items-center gap-1">
-                  <Calendar size={12} /> Preferred: {respondingTo.preferredDate} {respondingTo.preferredTime && `at ${respondingTo.preferredTime}`}
+              {activeReport.preferredDate && (
+                <p className="text-[10px] text-slate-500 flex items-center gap-1">
+                  <Calendar size={10} /> Preferred: {activeReport.preferredDate} {activeReport.preferredTime && `at ${activeReport.preferredTime}`}
                 </p>
               )}
             </div>
-            
-            <div>
-              <label className="block text-xs font-semibold text-slate-500 mb-2">Your Response</label>
-              <textarea
-                value={responseText}
-                onChange={(e) => setResponseText(e.target.value)}
-                rows={5}
-                placeholder="Write your response to the patient..."
-                className="w-full border border-slate-200 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-teal-200 outline-none resize-none"
-              />
-            </div>
 
-            <div className="flex gap-3">
-              <button 
-                onClick={() => setRespondingTo(null)}
-                className="flex-1 py-3 border border-slate-200 rounded-xl text-sm font-medium text-slate-600"
-              >
-                Cancel
-              </button>
-              <button 
-                onClick={handleSendResponse}
-                disabled={!responseText.trim() || sendingResponse}
-                className="flex-1 bg-teal-600 hover:bg-teal-700 text-white py-3 rounded-xl text-sm font-bold disabled:opacity-50"
-              >
-                {sendingResponse ? 'Sending...' : 'Send Response'}
-              </button>
-            </div>
-          </div>
-        )}
-      </Modal>
-
-      {/* Inquiry Chat Modal */}
-      <Modal isOpen={showInquiry} onClose={() => setShowInquiry(false)} title="Patient Conversation">
-        {showInquiry && (
-          <div className="space-y-4 h-[500px] flex flex-col">
-            <div className="flex-1 overflow-y-auto space-y-3">
-              {inquiryMessages.length > 0 ? inquiryMessages.map((msg) => (
+            {/* Messages */}
+            <div className="flex-1 overflow-y-auto mb-3 space-y-2 pr-2 min-h-[150px]">
+              {messages.length > 0 ? messages.map((msg) => (
                 <div key={msg.id} className={`flex ${msg.sender === 'clinic' ? 'justify-end' : 'justify-start'}`}>
-                  <div className={`max-w-[80%] p-3 rounded-2xl ${
+                  <div className={`max-w-[85%] p-2.5 rounded-2xl ${
                     msg.sender === 'clinic' 
                       ? 'bg-teal-600 text-white rounded-tr-sm' 
                       : 'bg-slate-100 text-slate-700 rounded-tl-sm'
                   }`}>
-                    <p className="text-xs font-medium mb-1">
+                    <p className="text-[10px] font-medium mb-0.5">
                       {msg.sender === 'clinic' ? 'You (Clinic)' : msg.senderName || 'Patient'}
                     </p>
-                    <p className="text-sm whitespace-pre-wrap">{msg.text}</p>
-                    <p className="text-[10px] opacity-70 mt-1">
+                    <p className="text-xs whitespace-pre-wrap break-words leading-relaxed">
+                      {msg.text}
+                    </p>
+                    <p className="text-[9px] opacity-70 mt-1 text-right">
                       {msg.createdAt?.toDate ? new Date(msg.createdAt.toDate()).toLocaleTimeString() : ''}
                     </p>
                   </div>
                 </div>
               )) : (
-                <div className="text-center text-slate-400 py-8">
-                  No messages yet. Start the conversation by responding to the report.
+                <div className="flex items-center justify-center h-full">
+                  <div className="text-center text-slate-400">
+                    <MessageCircle size={28} className="mx-auto mb-2 opacity-30" />
+                    <p className="text-xs">No messages yet</p>
+                    <p className="text-[10px]">Type your response below</p>
+                  </div>
                 </div>
               )}
             </div>
-            <div className="border-t pt-4">
-              <button 
-                onClick={() => setShowInquiry(false)}
-                className="w-full py-3 bg-slate-100 rounded-xl text-sm font-medium text-slate-600"
-              >
-                Close
-              </button>
+
+            {/* Input Area */}
+            <div className="border-t pt-3 space-y-2 shrink-0">
+              <textarea
+                value={replyText}
+                onChange={(e) => setReplyText(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    sendReply();
+                  }
+                }}
+                placeholder="Type your response..."
+                rows={2}
+                className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-teal-200 outline-none resize-none"
+              />
+              <div className="flex gap-2">
+                <button 
+                  onClick={() => {
+                    setShowChat(false);
+                    setActiveReport(null);
+                    setMessages([]);
+                    setReplyText("");
+                    fetchReports();
+                  }}
+                  className="flex-1 py-1.5 border border-slate-200 rounded-xl text-sm font-medium text-slate-600 hover:bg-slate-50 transition"
+                >
+                  Close
+                </button>
+                <button 
+                  onClick={sendReply}
+                  disabled={!replyText.trim() || sendingReply}
+                  className="flex-1 bg-teal-600 hover:bg-teal-700 text-white py-1.5 rounded-xl text-sm font-bold disabled:opacity-50 transition-all shadow-lg shadow-teal-500/20 flex items-center justify-center gap-2"
+                >
+                  {sendingReply ? (
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  ) : (
+                    <>
+                      <Send size={14} /> Send Response
+                    </>
+                  )}
+                </button>
+              </div>
             </div>
           </div>
         )}

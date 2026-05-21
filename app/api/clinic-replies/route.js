@@ -2,9 +2,32 @@ import { NextResponse } from "next/server";
 import { db } from "@/lib/firebase";
 import {
   collection, query, where, getDocs,
-  doc, addDoc, updateDoc,
-  orderBy, serverTimestamp, limit
+  doc, addDoc, updateDoc, getDoc,
+  orderBy, serverTimestamp, limit, setDoc
 } from "firebase/firestore";
+
+// Helper function to create notification (inside the same file)
+async function createNotification({ recipientID, type, title, body, linkTo, meta = {} }) {
+  if (!recipientID) return;
+  
+  try {
+    const notificationId = `${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    const notificationRef = doc(db, "notifications", recipientID, "items", notificationId);
+    
+    await setDoc(notificationRef, {
+      id: notificationId,
+      type,
+      title,
+      body,
+      linkTo: linkTo || "/",
+      read: false,
+      createdAt: serverTimestamp(),
+      ...meta,
+    });
+  } catch (error) {
+    console.error("Error creating notification:", error);
+  }
+}
 
 // GET - Fetch reply thread messages
 export async function GET(req) {
@@ -15,7 +38,6 @@ export async function GET(req) {
     const clinicID = searchParams.get("clinicID");
     const patientID = searchParams.get("patientID");
 
-    // Get messages for a specific reply thread
     if (replyId) {
       const messagesRef = collection(db, "clinicReplies", replyId, "messages");
       const q = query(messagesRef, orderBy("createdAt", "asc"));
@@ -24,7 +46,6 @@ export async function GET(req) {
       return NextResponse.json({ success: true, messages });
     }
 
-    // Get reply thread by report ID
     if (reportId) {
       const q = query(
         collection(db, "clinicReplies"),
@@ -39,7 +60,6 @@ export async function GET(req) {
       return NextResponse.json({ success: true, reply });
     }
 
-    // Get reply thread between patient and clinic
     if (patientID && clinicID) {
       const q = query(
         collection(db, "clinicReplies"),
@@ -81,6 +101,7 @@ export async function POST(req) {
         );
       }
 
+      // Add message to subcollection
       await addDoc(collection(db, "clinicReplies", replyId, "messages"), {
         text,
         sender,
@@ -89,13 +110,54 @@ export async function POST(req) {
         createdAt: serverTimestamp(),
       });
 
-      // Update reply thread
-      await updateDoc(doc(db, "clinicReplies", replyId), {
+      // Get the reply thread to know who to notify
+      const replyDoc = await getDoc(doc(db, "clinicReplies", replyId));
+      const replyThread = replyDoc.data();
+
+      // Update unread status based on sender
+      const updateData = {
         lastMessage: text,
         updatedAt: serverTimestamp(),
-        unreadByClinic: sender === "patient",
-        unreadByPatient: sender === "clinic", // Mark as unread for patient when clinic responds
-      });
+      };
+      
+      if (sender === "clinic") {
+        updateData.unreadByClinic = false;
+        updateData.unreadByPatient = true;
+      } else if (sender === "patient") {
+        updateData.unreadByClinic = true;
+        updateData.unreadByPatient = false;
+      }
+
+      await updateDoc(doc(db, "clinicReplies", replyId), updateData);
+
+      // ── SEND NOTIFICATION ──
+      if (sender === "patient" && replyThread && replyThread.clinicID) {
+        await createNotification({
+          recipientID: replyThread.clinicID,
+          type: "new_patient_response",
+          title: "New Patient Response",
+          body: `${replyThread.patientName || "A patient"} responded to their report: "${text.substring(0, 80)}${text.length > 80 ? '...' : ''}"`,
+          linkTo: "/clinic/reports-reviews",
+          meta: {
+            reportId: replyThread.reportId,
+            replyId: replyId,
+          },
+        });
+      }
+
+      if (sender === "clinic" && replyThread && replyThread.patientID) {
+        await createNotification({
+          recipientID: replyThread.patientID,
+          type: "clinic_response",
+          title: "Clinic Responded to Your Report",
+          body: `${replyThread.clinicName || "The clinic"} responded to your report: "${text.substring(0, 80)}${text.length > 80 ? '...' : ''}"`,
+          linkTo: "/patient/reports-responses",
+          meta: {
+            reportId: replyThread.reportId,
+            replyId: replyId,
+          },
+        });
+      }
 
       return NextResponse.json({ success: true, message: "Message sent successfully" });
     }
@@ -134,6 +196,19 @@ export async function POST(req) {
         createdAt: serverTimestamp(),
       });
 
+      // ── SEND NOTIFICATION TO CLINIC FOR NEW REPORT ──
+      await createNotification({
+        recipientID: clinicID,
+        type: "new_report",
+        title: "New Patient Report",
+        body: `${patientName || "A patient"} submitted a new report: "${firstMessage.substring(0, 80)}${firstMessage.length > 80 ? '...' : ''}"`,
+        linkTo: "/clinic/reports-reviews",
+        meta: {
+          reportId: reportId,
+          replyId: replyRef.id,
+        },
+      });
+
       return NextResponse.json({
         success: true,
         replyId: replyRef.id,
@@ -148,7 +223,7 @@ export async function POST(req) {
   }
 }
 
-// PUT - Mark messages as read when patient opens chat
+// PUT - Mark messages as read
 export async function PUT(req) {
   try {
     const body = await req.json();
@@ -160,6 +235,7 @@ export async function PUT(req) {
 
     await updateDoc(doc(db, "clinicReplies", replyId), {
       unreadByPatient: false,
+      unreadByClinic: false,
     });
 
     return NextResponse.json({ success: true });

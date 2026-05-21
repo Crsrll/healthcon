@@ -2,9 +2,32 @@ import { NextResponse } from "next/server";
 import { db } from "@/lib/firebase";
 import {
   collection, query, where, getDocs,
-  doc, addDoc, updateDoc, deleteDoc,
-  orderBy, serverTimestamp
+  doc, addDoc, updateDoc, deleteDoc, getDoc,
+  orderBy, serverTimestamp, setDoc
 } from "firebase/firestore";
+
+// Helper function to create notification
+async function createNotification({ recipientID, type, title, body, linkTo, meta = {} }) {
+  if (!recipientID) return;
+  
+  try {
+    const notificationId = `${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    const notificationRef = doc(db, "notifications", recipientID, "items", notificationId);
+    
+    await setDoc(notificationRef, {
+      id: notificationId,
+      type,
+      title,
+      body,
+      linkTo: linkTo || "/",
+      read: false,
+      createdAt: serverTimestamp(),
+      ...meta,
+    });
+  } catch (error) {
+    console.error("Error creating notification:", error);
+  }
+}
 
 // POST - Submit a new review
 export async function POST(req) {
@@ -58,6 +81,20 @@ export async function POST(req) {
 
     const docRef = await addDoc(collection(db, "reviews"), reviewData);
 
+    // ── SEND NOTIFICATION TO CLINIC FOR NEW REVIEW ──
+    const starRating = "⭐".repeat(rating) + "☆".repeat(5 - rating);
+    await createNotification({
+      recipientID: clinicID,
+      type: "new_review",
+      title: "New Patient Review",
+      body: `${patientName || "A patient"} left a ${rating}-star review: "${review.substring(0, 80)}${review.length > 80 ? '...' : ''}"`,
+      linkTo: "/clinic/reports-reviews",
+      meta: {
+        reviewId: docRef.id,
+        rating: rating,
+      },
+    });
+
     return NextResponse.json({
       success: true,
       reviewId: docRef.id,
@@ -76,7 +113,7 @@ export async function GET(req) {
     const clinicID = searchParams.get("clinicID");
     const patientID = searchParams.get("patientID");
     const reviewId = searchParams.get("reviewId");
-    const status = searchParams.get("status"); // pending, approved, rejected
+    const status = searchParams.get("status");
 
     // Get single review by ID
     if (reviewId) {
@@ -102,9 +139,14 @@ export async function GET(req) {
         constraints.push(where("status", "==", "approved"));
       }
       
-      const q = query(collection(db, "reviews"), ...constraints, orderBy("createdAt", "desc"));
+      const q = query(collection(db, "reviews"), ...constraints);
       const snap = await getDocs(q);
-      const reviews = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      let reviews = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      reviews = reviews.sort((a, b) => {
+        const dateA = a.createdAt?.toDate?.() || new Date(0);
+        const dateB = b.createdAt?.toDate?.() || new Date(0);
+        return dateB - dateA;
+      });
 
       // Calculate average rating (only for approved reviews)
       const approvedReviews = reviews.filter(r => r.status === "approved");
@@ -125,11 +167,15 @@ export async function GET(req) {
     if (patientID) {
       const q = query(
         collection(db, "reviews"),
-        where("patientID", "==", patientID),
-        orderBy("createdAt", "desc")
+        where("patientID", "==", patientID)
       );
       const snap = await getDocs(q);
-      const reviews = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      let reviews = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      reviews = reviews.sort((a, b) => {
+        const dateA = a.createdAt?.toDate?.() || new Date(0);
+        const dateB = b.createdAt?.toDate?.() || new Date(0);
+        return dateB - dateA;
+      });
       return NextResponse.json({ success: true, reviews });
     }
 
