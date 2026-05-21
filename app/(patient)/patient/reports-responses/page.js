@@ -19,6 +19,7 @@ export default function PatientReportsPage() {
   const [messages, setMessages] = useState([]);
   const [showChat, setShowChat] = useState(false);
   const [selectedReplyId, setSelectedReplyId] = useState(null);
+  const [hasMarkedAsRead, setHasMarkedAsRead] = useState(false);
   const messagesEndRef = useRef(null);
   
   // Same hook used by navbar
@@ -58,15 +59,16 @@ export default function PatientReportsPage() {
   };
 
   const markAsRead = async (replyId, reportId) => {
+    if (hasMarkedAsRead) return; // Prevent marking multiple times
+    
     try {
+      setHasMarkedAsRead(true);
       await fetch(`/api/clinic-replies`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ replyId }),
       });
-      
-      // The real-time listener will automatically update unreadReportIds
-      // No need to manually update state
+      console.log(`Marked report ${reportId} as read`);
     } catch (error) {
       console.error("Failed to mark as read:", error);
     }
@@ -79,8 +81,9 @@ export default function PatientReportsPage() {
       if (data.success && data.reply) {
         setSelectedReplyId(data.reply.id);
         await fetchChatMessages(data.reply.id);
-        await markAsRead(data.reply.id, reportId);
         setShowChat(true);
+        // Only mark as read AFTER the modal is open and messages are loaded
+        await markAsRead(data.reply.id, reportId);
       } else {
         setMessages([]);
         setShowChat(true);
@@ -144,6 +147,8 @@ export default function PatientReportsPage() {
   };
 
   const openReport = async (report) => {
+    // Reset the mark as read flag when opening a new report
+    setHasMarkedAsRead(false);
     setSelectedReport(report);
     await getReplyThread(report.id);
   };
@@ -294,13 +299,13 @@ export default function PatientReportsPage() {
           setMessages([]);
           setSelectedReplyId(null);
           setReplyText("");
+          setHasMarkedAsRead(false);
           fetchReports();
         }} 
         title={`Conversation with ${selectedReport?.clinicName || 'Clinic'}`}
       >
         {selectedReport && (
           <div className="flex flex-col h-[400px]">
-            {/* Report Summary - Compact but readable */}
             <div className="bg-slate-50 rounded-xl p-3 border border-slate-100 mb-3 shrink-0">
               <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-500">Your Report</p>
               <p className="text-sm font-medium text-slate-700 break-words mt-0.5">{selectedReport.subject}</p>
@@ -323,7 +328,6 @@ export default function PatientReportsPage() {
               )}
             </div>
 
-            {/* Messages - Scrollable area with more space */}
             <div className="flex-1 overflow-y-auto mb-3 space-y-2 pr-2 min-h-[150px]">
               {messages.length > 0 ? messages.map((msg) => (
                 <div key={msg.id} className={`flex ${msg.sender === 'patient' ? 'justify-end' : 'justify-start'}`}>
@@ -357,7 +361,6 @@ export default function PatientReportsPage() {
               <div ref={messagesEndRef} />
             </div>
 
-            {/* Input Area - Compact but functional */}
             <div className="border-t pt-3 space-y-2 shrink-0">
               <textarea
                 value={replyText}
@@ -379,6 +382,7 @@ export default function PatientReportsPage() {
                     setSelectedReport(null);
                     setMessages([]);
                     setReplyText("");
+                    setHasMarkedAsRead(false);
                     fetchReports();
                   }}
                   className="flex-1 py-1.5 border border-slate-200 rounded-xl text-sm font-medium text-slate-600 hover:bg-slate-50 transition"
