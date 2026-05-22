@@ -39,21 +39,24 @@ export async function GET(req) {
 export async function POST(req) {
   try {
     const body = await req.json();
-    const { id, name, specialty, availability, clinicID, available } = body;
+    // ✅ ADD image to destructuring
+    const { id, name, specialty, availability, clinicID, available, image } = body;
 
     if (id) {
       // --- UPDATE EXISTING DOCTOR ---
       const docRef = doc(db, 'doctors', id);
+      // ✅ ADD image to update
       await updateDoc(docRef, {
         name,
         specialty,
-        availability, // Nested: { days: [], startTime: "", endTime: "" }
+        availability,
         available,
+        image: image || "",  // ✅ Add this line
         updatedAt: new Date().toISOString()
       });
       return NextResponse.json({ success: true, id });
     } else {
-      // --- CREATE NEW DOCTOR (Custom ID logic: doc1, doc2...) ---
+      // --- CREATE NEW DOCTOR ---
       const snapshot = await getDocs(collection(db, 'doctors'));
       const nextNum = snapshot.size + 1;
       const customId = `doc${nextNum}`;
@@ -63,7 +66,8 @@ export async function POST(req) {
         specialty,
         availability,
         clinicID,
-        available: true,
+        available: available !== undefined ? available : true,
+        image: image || "",  // ✅ Add this line
         createdAt: new Date().toISOString()
       };
 
@@ -75,35 +79,3 @@ export async function POST(req) {
     return NextResponse.json({ error: 'Failed to save doctor' }, { status: 500 });
   }
 }
-
-
-
-// import { NextResponse } from "next/server";
-// import { collection, getDocs, query, where } from "firebase/firestore";
-// import { db } from "@/lib/firebase";
-
-// export async function GET(req) {
-//   try {
-//   const { searchParams } = new URL(req.url);
-//   const clinicID = searchParams.get("clinicID");
-
-//   const q = query(
-//     collection(db, "doctors"),
-//     where("clinicID", "==", clinicID)
-//   );
-
-//   const snapshot = await getDocs(q);
-
-//   const doctors = snapshot.docs.map(doc => ({
-//     id: doc.id,
-//     ...doc.data(),
-//   }));
-
-//   return NextResponse.json({ success: true, data: doctors });
-  
-//     } catch (err) {
-//       console.error("getDoctors error:", err);
-//       return NextResponse.json({ error: "Failed to fetch doctors." }, { status: 500 });
-//     }
-// }
-

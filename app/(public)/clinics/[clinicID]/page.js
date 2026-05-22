@@ -53,7 +53,7 @@ function formatDate(isoDate) {
 
 function InfoChip({ icon, text }) {
   return (
-    <div className="flex items-center gap-2 text-sm text-gray-600 bg-gray-50/80 backdrop-blur-sm px-3 py-1.5 rounded-full">
+    <div className="flex items-center gap-2 text-sm text-gray-600 bg-white px-3 py-1.5 rounded-full border border-gray-100 shadow-sm">
       <span className="text-[#3182ce]">{icon}</span>
       <span>{text}</span>
     </div>
@@ -1020,15 +1020,27 @@ function BookingModal({ doctor, services, clinicID, patientID, onClose, onCreate
               {validSlots.map(slot => {
                 const isBooked = bookedSlots.includes(slot);
                 return (
-                  <button key={slot} type="button" disabled={isBooked || slotsLoading}
+                  <button
+                    key={slot}
+                    type="button"
+                    disabled={isBooked || slotsLoading}
                     onClick={() => setSelectedTime(slot)}
-                    className={`py-2 rounded-xl text-xs font-medium border transition-all
-                      ${selectedTime === slot ? 'bg-[#1a355d] text-white' : 'border-gray-200 text-gray-600'}`}>
+                    className={`py-2 rounded-xl text-xs font-medium border transition-all duration-150 ${
+                      selectedTime === slot
+                        ? 'bg-[#1a355d] text-white border-[#1a355d]'
+                        : isBooked
+                          ? 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed line-through'
+                          : 'bg-white text-gray-700 border-gray-200 hover:border-[#1a355d] hover:text-[#1a355d] cursor-pointer'
+                    }`}
+                  >
                     {slot}
                   </button>
                 );
               })}
             </div>
+            {slotsLoading && (
+              <p className="text-xs text-gray-400 text-center mt-2">Loading availability...</p>
+            )}
           </div>
 
           {error && (
@@ -1123,7 +1135,7 @@ function ClinicProfilePageInner() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 flex items-center justify-center">
+      <div className="min-h-screen bg-white flex items-center justify-center">
         <div className="text-center">
           <Loader2 size={32} className="animate-spin text-[#1a355d] mx-auto mb-3" />
           <p className="text-sm text-gray-400">Loading clinic profile...</p>
@@ -1134,7 +1146,7 @@ function ClinicProfilePageInner() {
 
   if (!clinic) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 flex items-center justify-center">
+      <div className="min-h-screen bg-white flex items-center justify-center">
         <div className="text-center">
           <p className="font-semibold text-[#1a355d] mb-4">Clinic not found</p>
           <button onClick={() => router.push('/clinics')}
@@ -1147,7 +1159,7 @@ function ClinicProfilePageInner() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50/30 pb-20">
+    <div className="min-h-screen bg-white pb-20">
 
       {/* Booking Modal */}
       {bookingDoctor && (
@@ -1321,7 +1333,7 @@ function ClinicProfilePageInner() {
       </div>
 
       {/* QUICK INFO */}
-      <div className="bg-white/80 backdrop-blur-sm border-b border-gray-200 sticky top-0 z-10 shadow-sm">
+      <div className="bg-white border-b border-gray-200 sticky top-0 z-10 shadow-sm">
         <div className="max-w-6xl mx-auto px-4 sm:px-8 py-3 flex flex-wrap gap-x-4 sm:gap-x-8 gap-y-2">
           <InfoChip icon={<Clock size={14} />} text={todayHours ? `${todayHours.open} to ${todayHours.close}` : 'No schedule'} />
           <InfoChip icon={<Phone size={14} />} text={clinic.phone} />

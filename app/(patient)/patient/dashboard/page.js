@@ -146,7 +146,7 @@ export default function PatientDashboard() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
       {/* Hero Section - Full Width */}
-      <div className="relative bg-[#1a355d] overflow-hidden">
+      <div className="relative bg-[#1a365d] overflow-hidden">
         <div
           className="absolute inset-0 opacity-10"
           style={{
