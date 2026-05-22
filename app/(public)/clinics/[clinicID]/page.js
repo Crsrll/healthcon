@@ -4,8 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useParams, useSearchParams, useRouter } from 'next/navigation';
 import { useClinic } from '@/hooks/useClinic';
 import { useDoctors } from '@/hooks/useDoctors';
-import { useAuth as useAuthHook } from '@/hooks/useAuth';
-import { useAuth } from '@/context/authContext';
+import { useAuth } from '@/hooks/useAuth';
 import { useBookedSlots } from '@/hooks/useBookedSlots';
 import { useClinicActions } from '@/hooks/useClinicActions';
 import { generateTimeSlots } from '@/lib/generateTimeSlots';
@@ -896,7 +895,7 @@ function ReviewsSection({ clinicID, clinicName, onFetchReviews }) {
 
 // ── Booking Modal ────────────────────────────────────────────────
 function BookingModal({ doctor, services, clinicID, patientID, onClose, onCreateBooking }) {
-  const { userData, loading: authLoading } = useAuthHook();
+  const { userData, loading: authLoading } = useAuth();
 
   const firstName = userData?.firstName || "";
   const lastName = userData?.lastName || "";
