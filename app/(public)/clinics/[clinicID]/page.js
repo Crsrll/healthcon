@@ -970,8 +970,12 @@ function BookingModal({ doctor, services, clinicID, patientID, onClose, onCreate
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 px-0 sm:px-4">
       <div className="bg-white w-full sm:max-w-md rounded-t-2xl sm:rounded-2xl border border-gray-200 overflow-hidden shadow-xl">
         <div className="bg-gradient-to-r from-[#1a355d] to-[#22447a] px-6 py-5 flex items-start gap-4">
-          <div className="w-12 h-12 rounded-full bg-[#2a4f8a] border-2 border-white/20 flex items-center justify-center text-white font-bold text-lg">
-            {doctor.name?.[0]}
+          <div className="w-12 h-12 rounded-full bg-[#2a4f8a] border-2 border-white/20 flex items-center justify-center text-white font-bold text-lg overflow-hidden">
+            {doctor.image ? (
+              <img src={doctor.image} alt={doctor.name} className="w-full h-full object-cover" />
+            ) : (
+              doctor.name?.[0]?.toUpperCase() || 'D'
+            )}
           </div>
           <div className="flex-1">
             <p className="text-white font-bold">Dr. {doctor.name}</p>
@@ -1363,7 +1367,7 @@ function ClinicProfilePageInner() {
             </div>
           </section>
 
-          {/* Doctors Section */}
+          {/* Doctors Section - FIXED IMAGE DISPLAY */}
           <section>
             <SectionHeader title="Medical Staff" count={`${doctors.length} Providers`} />
             <div className="flex flex-col gap-4">
@@ -1377,8 +1381,18 @@ function ClinicProfilePageInner() {
                       ? 'border-blue-500 ring-4 ring-blue-50 bg-blue-50/20 scale-[1.01]'
                       : 'border-gray-100 hover:border-blue-200'}`}
                 >
-                  <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-full bg-gradient-to-br from-blue-100 to-blue-200 text-blue-700 flex items-center justify-center text-xl font-bold shrink-0">
-                    {doctor.image}
+                  <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-full bg-gradient-to-br from-blue-100 to-blue-200 text-blue-700 flex items-center justify-center text-xl font-bold shrink-0 overflow-hidden">
+                    {doctor.image ? (
+                      <img 
+                        src={doctor.image} 
+                        alt={doctor.name} 
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <span className="uppercase">
+                        {doctor.name?.charAt(0) || 'D'}
+                      </span>
+                    )}
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="font-bold text-gray-900 text-base sm:text-lg">Dr. {doctor.name}</p>
@@ -1448,13 +1462,23 @@ function ClinicProfilePageInner() {
         </div>
       </div>
 
-      {/* Doctor Info Modal */}
+      {/* Doctor Info Modal - FIXED IMAGE DISPLAY */}
       {selectedDoctor && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4" onClick={() => setSelectedDoctor(null)}>
           <div className="bg-white rounded-2xl border border-gray-200 w-full max-w-sm shadow-xl overflow-hidden" onClick={e => e.stopPropagation()}>
             <div className="bg-gradient-to-r from-[#1a355d] to-[#22447a] px-6 py-5 flex items-center gap-4">
-              <div className="w-14 h-14 rounded-full bg-white/20 border-2 border-white/30 flex items-center justify-center text-white font-bold text-2xl">
-                {selectedDoctor.image}
+              <div className="w-14 h-14 rounded-full bg-white/20 border-2 border-white/30 flex items-center justify-center text-white font-bold text-2xl overflow-hidden">
+                {selectedDoctor.image ? (
+                  <img 
+                    src={selectedDoctor.image} 
+                    alt={selectedDoctor.name} 
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <span className="uppercase">
+                    {selectedDoctor.name?.charAt(0) || 'D'}
+                  </span>
+                )}
               </div>
               <div className="flex-1">
                 <p className="text-white font-bold text-lg leading-tight">Dr. {selectedDoctor.name}</p>
@@ -1512,6 +1536,7 @@ function ClinicProfilePageInner() {
     </div>
   );
 }
+
 export default function ClinicProfilePage() {
   return (
     <Suspense fallback={<div>Loading...</div>}>

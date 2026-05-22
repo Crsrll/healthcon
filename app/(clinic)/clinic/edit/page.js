@@ -4,7 +4,7 @@ import { useUser } from '@/hooks/useUpdate';
 import { useClinic } from '@/hooks/useClinic';
 import { useAuth } from '@/context/authContext';
 import { uploadImage } from '@/lib/uploadImage';
-import { Camera, Loader2 } from 'lucide-react';
+import { Camera, Loader2, Plus, X } from 'lucide-react';
 
 export default function EditPage() {
 	const { updateUser, saving } = useUser();
@@ -20,6 +20,8 @@ export default function EditPage() {
 	const [specInput, setSpecInput] = useState("");
 	const [services, setServices] = useState([]);
 	const [serviceInput, setServiceInput] = useState("");
+	const [amenities, setAmenities] = useState([]); // ✅ ADD AMENITIES
+	const [amenitiesInput, setAmenitiesInput] = useState(""); // ✅ ADD AMENITIES INPUT
 	const [isClinicOpen, setIsClinicOpen] = useState(true);
 	const [phone, setPhone] = useState("");
 	const [image, setImage] = useState("");
@@ -52,6 +54,7 @@ export default function EditPage() {
 		  setAbout(clinic.about || "");
 		  setSpecialty(clinic.specialty || []);
 		  setServices(clinic.services || []);
+		  setAmenities(clinic.amenities || []); // ✅ LOAD AMENITIES
 		  setIsClinicOpen(clinic.isClinicOpen ?? true);
 		  setPhone(clinic.phone || "");
 		  setImage(clinic.image || "");
@@ -82,12 +85,13 @@ export default function EditPage() {
 		about,
 		specialty,
 		services,
+		amenities, // ✅ SAVE AMENITIES
 		isClinicOpen,
 		hours,
 		image,
 	  });
 	  
-	  {saving && alert("saved!");}
+	  alert("Clinic information saved!");
 	};
 
   // --- Logic: Add Specialization ---
@@ -97,13 +101,14 @@ export default function EditPage() {
     if (!specialty.includes(specInput)) {
       setSpecialty([...specialty, specInput.trim()]);
     }
-    setSpecInput(""); // Clear input
+    setSpecInput("");
   };
 
   const removeSpec = (targetSpec) => {
     setSpecialty(specialty.filter(s => s !== targetSpec));
   };
 
+  // --- Logic: Add Service ---
   const addService = (e) => {
     e.preventDefault();
     if (!serviceInput.trim()) return;
@@ -115,20 +120,47 @@ export default function EditPage() {
     setServices(services.filter(s => s !== targetService));
   };
 
+  // --- Logic: Add Amenity ---
+  const addAmenity = (e) => {
+    e.preventDefault();
+    if (!amenitiesInput.trim()) return;
+    if (!amenities.includes(amenitiesInput)) {
+      setAmenities([...amenities, amenitiesInput.trim()]);
+    }
+    setAmenitiesInput("");
+  };
+
+  const removeAmenity = (targetAmenity) => {
+    setAmenities(amenities.filter(a => a !== targetAmenity));
+  };
+
+  // Pre-defined amenity suggestions
+  const suggestedAmenities = [
+    "Parking", "Wheelchair Accessible", "Wi-Fi", "Pharmacy", 
+    "Laboratory", "X-Ray", "Ultrasound", "Emergency Care",
+    "24/7 Service", "Air Conditioning", "Private Rooms", "Senior Friendly"
+  ];
+
   return (
-    <main className="max-w-7xl mx-auto px-6 py-8 space-y-6">
-      <div className="flex items-center justify-between">
+    <main className="max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-8 space-y-6">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h2 className="text-lg font-bold text-slate-800">Clinic Information</h2>
+          <h2 className="text-xl sm:text-2xl font-bold text-slate-800">Clinic Information</h2>
           <p className="text-xs text-slate-400 mt-0.5">Update your clinic's public profile</p>
         </div>
-        <button className="bg-healthcon-blue hover:bg-blue-800 text-white text-sm font-semibold px-5 py-2.5 rounded-xl transition-colors" onClick={handleSave}>
+        <button 
+          className="bg-[#1a365d] hover:bg-blue-800 text-white text-sm font-semibold px-5 py-2.5 rounded-xl transition-colors disabled:opacity-50" 
+          onClick={handleSave}
+          disabled={saving}
+        >
+          {saving ? <Loader2 size={16} className="animate-spin inline mr-2" /> : null}
           Save Changes
         </button>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 space-y-4">
+          {/* Basic Information */}
           <section className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 space-y-5">
             <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Basic Information</h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -137,40 +169,49 @@ export default function EditPage() {
 					<label className="text-xs font-semibold text-slate-600 mb-1.5 block">
 					  {label}
 					</label>
-
 					<input
 					  value={value}
 					  onChange={(e) => setter(e.target.value)}
-					  className="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm"
+					  className="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 transition-all"
 					/>
 				  </div>
 				))}
             </div>
             <div>
               <label className="text-xs font-semibold text-slate-600 mb-1.5 block">Full Address</label>
-              <input value={address} onChange={(e) => setAddress(e.target.value)} className="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm text-slate-800 outline-none focus:border-teal-400 transition-colors" />
+              <input 
+                value={address} 
+                onChange={(e) => setAddress(e.target.value)} 
+                className="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 transition-all" 
+              />
             </div>
             <div>
               <label className="text-xs font-semibold text-slate-600 mb-1.5 block">About / Description</label>
-              <textarea rows={4} value={about} onChange={(e) => setAbout(e.target.value)} className="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm text-slate-800 outline-none focus:border-teal-400 transition-colors resize-none" />
+              <textarea 
+                rows={4} 
+                value={about} 
+                onChange={(e) => setAbout(e.target.value)} 
+                className="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 transition-all resize-none" 
+              />
             </div>
           </section>
 
+          {/* Operating Hours */}
           <section className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 space-y-4">
             <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Operating Hours</h3>
             {['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'].map(day => (
-			  <div key={day} className="flex items-center gap-4">
+			  <div key={day} className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
 				<span className="text-sm font-medium text-slate-700 w-24 shrink-0">{day}</span>
 				<input
 				  value={hours[day].open || ""}
 				  onChange={(e) => setHours(prev => ({ ...prev, [day]: { ...prev[day], open: e.target.value } }))}
-				  className="flex-1 border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-800 outline-none focus:border-teal-400 transition-colors"
+				  className="flex-1 border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 transition-all"
 				/>
-				<span className="text-slate-400 text-sm shrink-0">to</span>
+				<span className="text-slate-400 text-sm shrink-0 hidden sm:inline">to</span>
 				<input
 				  value={hours[day].close || ""}
 				  onChange={(e) => setHours(prev => ({ ...prev, [day]: { ...prev[day], close: e.target.value } }))}
-				  className="flex-1 border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-800 outline-none focus:border-teal-400 transition-colors"
+				  className="flex-1 border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 transition-all"
 				/>
 			  </div>
 			))}
@@ -178,6 +219,7 @@ export default function EditPage() {
         </div>
 
         <div className="space-y-4">
+          {/* Clinic Photo */}
           <section className="bg-white rounded-2xl border border-slate-200 shadow-sm p-5">
             <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-4">Clinic Photo</h3>
             <input type="file" ref={imageInputRef} onChange={handleImageChange} accept="image/*" className="hidden" />
@@ -208,48 +250,110 @@ export default function EditPage() {
             </div>
           </section>
 
+          {/* Specializations */}
           <section className="bg-white rounded-2xl border border-slate-200 shadow-sm p-5">
             <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-4">Specializations</h3>
             <div className="flex flex-wrap gap-2 mb-3">
               {specialty.map(s => (
                 <span key={s} className="flex items-center gap-1.5 bg-teal-50 text-teal-700 text-xs font-semibold rounded-full px-3 py-1.5">
                   {s}
-                  <button onClick={() => removeSpec(s)} className="text-teal-400 hover:text-red-400 transition-colors">✕</button>
+                  <button onClick={() => removeSpec(s)} className="text-teal-400 hover:text-red-400 transition-colors">
+                    <X size={12} />
+                  </button>
                 </span>
               ))}
             </div>
             <form onSubmit={addSpec} className="flex gap-2">
               <input 
                 placeholder="Add specialization..." 
-                className="flex-1 border border-slate-200 rounded-lg px-3 py-2 text-sm outline-none focus:border-teal-400 transition-colors" 
+                className="flex-1 border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 transition-all" 
                 value={specInput} 
                 onChange={e => setSpecInput(e.target.value)} 
               />
-              <button type="submit" className="bg-teal-500 hover:bg-teal-400 text-white text-sm font-bold px-3 py-2 rounded-lg transition-colors">+</button>
+              <button type="submit" className="bg-teal-500 hover:bg-teal-400 text-white text-sm font-bold px-3 py-2 rounded-lg transition-colors">
+                <Plus size={16} />
+              </button>
             </form>
           </section>
 
+          {/* Services Offered */}
           <section className="bg-white rounded-2xl border border-slate-200 shadow-sm p-5">
             <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-4">Services Offered</h3>
-            <div className="space-y-2 mb-3">
+            <div className="space-y-2 mb-3 max-h-48 overflow-y-auto">
               {services.map(s => (
                 <div key={s} className="flex items-center justify-between text-sm py-1.5 border-b border-slate-50 last:border-0">
                   <span className="text-slate-700">{s}</span>
-                  <button onClick={() => removeService(s)} className="text-slate-300 hover:text-red-400 transition-colors text-xs">Remove</button>
+                  <button onClick={() => removeService(s)} className="text-slate-300 hover:text-red-400 transition-colors text-xs">
+                    Remove
+                  </button>
                 </div>
               ))}
             </div>
             <form onSubmit={addService} className="flex gap-2">
               <input 
                 placeholder="Add service..." 
-                className="flex-1 border border-slate-200 rounded-lg px-3 py-2 text-sm outline-none focus:border-teal-400 transition-colors" 
+                className="flex-1 border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 transition-all" 
                 value={serviceInput}
                 onChange={e => setServiceInput(e.target.value)}
               />
-              <button type="submit" className="bg-teal-500 hover:bg-teal-400 text-white text-sm font-bold px-3 py-2 rounded-lg transition-colors">+</button>
+              <button type="submit" className="bg-teal-500 hover:bg-teal-400 text-white text-sm font-bold px-3 py-2 rounded-lg transition-colors">
+                <Plus size={16} />
+              </button>
             </form>
           </section>
 
+          {/* ✅ AMENITIES SECTION - NEW */}
+          <section className="bg-white rounded-2xl border border-slate-200 shadow-sm p-5">
+            <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-4">Amenities & Facilities</h3>
+            
+            {/* Display existing amenities */}
+            <div className="flex flex-wrap gap-2 mb-3">
+              {amenities.map(a => (
+                <span key={a} className="flex items-center gap-1.5 bg-blue-50 text-blue-700 text-xs font-semibold rounded-full px-3 py-1.5">
+                  {a}
+                  <button onClick={() => removeAmenity(a)} className="text-blue-400 hover:text-red-400 transition-colors">
+                    <X size={12} />
+                  </button>
+                </span>
+              ))}
+              {amenities.length === 0 && (
+                <p className="text-xs text-slate-400 italic">No amenities added yet</p>
+              )}
+            </div>
+
+            {/* Add new amenity */}
+            <form onSubmit={addAmenity} className="flex gap-2 mb-4">
+              <input 
+                placeholder="Add amenity (e.g., Parking, Wi-Fi)..." 
+                className="flex-1 border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 transition-all" 
+                value={amenitiesInput}
+                onChange={e => setAmenitiesInput(e.target.value)}
+              />
+              <button type="submit" className="bg-teal-500 hover:bg-teal-400 text-white text-sm font-bold px-3 py-2 rounded-lg transition-colors">
+                <Plus size={16} />
+              </button>
+            </form>
+
+            {/* Suggested amenities */}
+            <div>
+              <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-2">Suggested Amenities</p>
+              <div className="flex flex-wrap gap-2">
+                {suggestedAmenities.filter(sug => !amenities.includes(sug)).map(sug => (
+                  <button
+                    key={sug}
+                    onClick={() => {
+                      setAmenities([...amenities, sug]);
+                    }}
+                    className="text-xs bg-slate-50 hover:bg-slate-100 text-slate-600 px-3 py-1.5 rounded-full transition-colors"
+                  >
+                    + {sug}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </section>
+
+          {/* Clinic Status */}
           <section className="bg-white rounded-2xl border border-slate-200 shadow-sm p-5">
             <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-4">Clinic Status</h3>
             <div className="flex items-center justify-between">
