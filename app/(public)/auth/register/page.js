@@ -274,7 +274,7 @@ export default function RegisterPage() {
                 
                 <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 mb-6 text-left">
                   <p className="text-amber-800 text-sm font-medium mb-2">
-                    📧 Check your inbox
+                    Check your inbox
                   </p>
                   <p className="text-amber-700 text-xs">
                     Click the link in the email to verify your account. If you don't see it, check your spam or junk folder.
