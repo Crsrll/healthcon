@@ -98,10 +98,13 @@ export default function Navbar({ style }) {
             >
               {mobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
             </button>
-            {/* Logo hidden on mobile when menu open to save space, always on md+ */}
+            {/* Logo - shows "HealthCon" text on mobile instead of logo image */}
             <div className="flex items-center gap-1.5 font-bold text-[18px] cursor-pointer" onClick={() => router.push("/")}>
-              <img src="/logo.png" alt="HealthCon" className="h-8 object-contain" />
-              <span className="hidden sm:inline">Health<span className="text-cyan-300">con</span></span>
+              {/* Hide logo image on mobile, show text only */}
+              <img src="/logo.png" alt="HealthCon" className="h-8 object-contain hidden sm:block" />
+              <span className="text-white">
+                Health<span className="text-cyan-300">con</span>
+              </span>
             </div>
           </div>
 
@@ -134,7 +137,7 @@ export default function Navbar({ style }) {
             {/* Avatar / profile dropdown */}
             <div className="relative" ref={dropdownRef}>
               <button onClick={() => setIsProfileOpen(v => !v)}
-                className="w-8 h-8 bg-teal-500 rounded-full border border-slate-300 cursor-pointer hover:ring-2 ring-teal-300 transition-all flex items-center justify-center text-white font-bold text-xs">
+                className="w-8 h-8 bg-teal-500 rounded-full border border-slate-300 cursor-pointer hover:ring-2 ring-teal-300 transition-all flex items-center justify-center text-white font-bold text-xs overflow-hidden">
                 <Avatar user={user} />
               </button>
               {isProfileOpen && (
@@ -187,7 +190,8 @@ export default function Navbar({ style }) {
       <nav className={`${style} transition-all duration-300 ${scrolled ? "py-2 shadow-[0_4px_20px_rgba(0,0,0,0.3)]" : "py-3"}`}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-12 flex items-center justify-between text-white">
           <div className="flex items-center gap-1.5 font-bold text-[20px] cursor-pointer" onClick={() => router.push("/")}>
-            <img src="/logo.png" alt="HealthCon" className="h-9 object-contain" />
+            {/* Hide logo on mobile for public view too */}
+            <img src="/logo.png" alt="HealthCon" className="h-9 object-contain hidden sm:block" />
             <span>Health<span className="text-cyan-300">con</span></span>
           </div>
 
@@ -225,8 +229,9 @@ export default function Navbar({ style }) {
     <nav className={`${style} transition-all duration-300 ${scrolled ? "py-2 shadow-[0_4px_20px_rgba(0,0,0,0.3)]" : "py-3"}`}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-12 flex items-center justify-between text-white">
         <div className="flex items-center gap-1.5 font-bold text-[20px] cursor-pointer" onClick={() => router.push("/")}>
-          <img src="/logo.png" alt="HealthCon" className="h-9 object-contain" />
-          <span className="hidden sm:inline">Health<span className="text-cyan-300">con</span></span>
+          {/* Hide logo on mobile for admin/clinic too */}
+          <img src="/logo.png" alt="HealthCon" className="h-9 object-contain hidden sm:block" />
+          <span>Health<span className="text-cyan-300">con</span></span>
         </div>
 
         <div className="flex items-center gap-3">
@@ -246,7 +251,7 @@ export default function Navbar({ style }) {
 
           <div className="relative" ref={dropdownRef}>
             <button onClick={() => setIsProfileOpen(v => !v)}
-              className="w-8 h-8 bg-teal-500 rounded-full border border-slate-300 cursor-pointer hover:ring-2 ring-teal-300 transition-all flex items-center justify-center text-white font-bold text-xs">
+              className="w-8 h-8 bg-teal-500 rounded-full border border-slate-300 cursor-pointer hover:ring-2 ring-teal-300 transition-all flex items-center justify-center text-white font-bold text-xs overflow-hidden">
               <Avatar user={user} />
             </button>
             {isProfileOpen && (
