@@ -63,7 +63,6 @@ export default function AdminLayout({ children }) {
           </div>
 
           <div className="flex items-center gap-2 sm:gap-4">
-            <AdminNotificationBell adminId={user?.id} />
             <form onSubmit={handleSearch} className="hidden sm:flex gap-2">
               <input
                 type="text"
