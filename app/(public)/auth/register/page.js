@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useRegisterPatient } from "@/hooks/useRegisterPatient";
+import { Mail, CheckCircle, X } from "lucide-react";
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -10,6 +11,7 @@ export default function RegisterPage() {
 
   const [showPass, setShowPass] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
 
   const [form, setForm] = useState({
     firstName: "",
@@ -36,7 +38,14 @@ export default function RegisterPage() {
     if (!form.terms) return;
 
     const result = await registerPatient(form);
-    if (result.success) router.push("/auth/login");
+    if (result.success) {
+      setShowSuccessModal(true);
+    }
+  };
+
+  const handleModalClose = () => {
+    setShowSuccessModal(false);
+    router.push("/auth/login");
   };
 
   const inputStyle = {
@@ -237,6 +246,52 @@ export default function RegisterPage() {
 
         </div>
       </div>
+
+      {/* Success Modal */}
+      {showSuccessModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4">
+          <div className="bg-white rounded-2xl max-w-md w-full shadow-xl overflow-hidden">
+            <div className="relative">
+              <button
+                onClick={handleModalClose}
+                className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors"
+              >
+                <X size={20} />
+              </button>
+              
+              <div className="p-8 text-center">
+                <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-5">
+                  <Mail size={40} className="text-green-600" />
+                </div>
+                
+                <h3 className="text-2xl font-bold text-slate-900 mb-3">
+                  Verify Your Email
+                </h3>
+                
+                <p className="text-gray-600 mb-6 leading-relaxed">
+                  We've sent a verification link to <strong className="text-blue-600">{form.email}</strong>
+                </p>
+                
+                <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 mb-6 text-left">
+                  <p className="text-amber-800 text-sm font-medium mb-2">
+                    📧 Check your inbox
+                  </p>
+                  <p className="text-amber-700 text-xs">
+                    Click the link in the email to verify your account. If you don't see it, check your spam or junk folder.
+                  </p>
+                </div>
+                
+                <button
+                  onClick={handleModalClose}
+                  className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-xl transition-all"
+                >
+                  Go to Login
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
