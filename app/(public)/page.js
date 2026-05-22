@@ -16,22 +16,22 @@ export default function LandingPage() {
       <Navibar style={`fixed top-0 left-0 right-0 z-50 bg-navy-dark`}/>
 
       {/* HERO */}
-      <section className="bg-navy-dark text-white pt-32.5 pb-22.5">
-        <div className="max-w-7xl mx-auto px-12 grid grid-cols-1 lg:grid-cols-2 gap-10 items-center">
+      <section className="bg-navy-dark text-white pt-24 sm:pt-32 pb-14 sm:pb-20">
+        <div className="max-w-7xl mx-auto px-5 sm:px-12 grid grid-cols-1 lg:grid-cols-2 gap-10 items-center">
 
-          <div className="flex flex-col gap-6">
+          <div className="flex flex-col gap-5 sm:gap-6">
 
             <div className="animate-fadeSlideUp delay-100 inline-block bg-white/10 px-3 py-1 rounded-full font-bold text-blue-300 uppercase tracking-widest w-fit text-[11px]">
               Now available 24/7
             </div>
 
-            <h1 className="animate-fadeSlideUp delay-250 font-bold leading-tight text-[52px]">
+            <h1 className="animate-fadeSlideUp delay-250 font-bold leading-tight text-[34px] sm:text-[44px] lg:text-[52px]">
               Connect with Doctors<br />
               <span className="text-accent">ANYWHERE,</span><br />
               ANYTIME.
             </h1>
 
-            <p className="animate-[fadeSlideUp_0.7s_ease_both] delay-400 text-blue-100/70 leading-relaxed text-[17px] max-w-110">
+            <p className="animate-[fadeSlideUp_0.7s_ease_both] delay-400 text-blue-100/70 leading-relaxed text-[15px] sm:text-[17px] max-w-[440px]">
               HealthCon is your smart clinic queue platform — skip the waiting room and get real medical care from licensed doctors, wherever you are.
             </p>
 
@@ -39,7 +39,7 @@ export default function LandingPage() {
 
               <button
                 onClick={() => router.push("/auth/register")}
-                className="bg-[#2f80d0] text-white px-7 py-3.5 rounded-[10px] font-bold text-[15px]
+                className="bg-[#2f80d0] text-white px-6 py-3 sm:px-7 sm:py-3.5 rounded-[10px] font-bold text-[14px] sm:text-[15px]
                            shadow-[0_4px_14px_rgba(47,128,208,0.35)]
                            transition-all duration-200
                            hover:-translate-y-0.75 hover:scale-[1.03]
@@ -51,7 +51,7 @@ export default function LandingPage() {
 
               <button
                 onClick={handleLearnMoreClick}
-                className="border border-white/25 text-white px-7 py-3.5 rounded-[10px] font-bold text-[15px]
+                className="border border-white/25 text-white px-6 py-3 sm:px-7 sm:py-3.5 rounded-[10px] font-bold text-[14px] sm:text-[15px]
                            transition-all duration-200
                            hover:-translate-y-0.75 hover:bg-white/10 hover:border-white/50"
               >
@@ -73,8 +73,8 @@ export default function LandingPage() {
       </section>
 
       {/* STATS */}
-      <section className="bg-white border-b border-slate-100 py-15">
-        <div className="max-w-7xl mx-auto px-12 grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
+      <section className="bg-white border-b border-slate-100 py-10 sm:py-14">
+        <div className="max-w-7xl mx-auto px-5 sm:px-12 grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
 
           {[
             { value: "50K+", label: "Patients Served" },
@@ -94,8 +94,8 @@ export default function LandingPage() {
       </section>
 
       {/* WHY */}
-      <section id="about" className="bg-white py-22">
-        <div className="max-w-7xl mx-auto px-12 grid grid-cols-1 lg:grid-cols-3 gap-12">
+      <section id="about" className="bg-white py-14 sm:py-20">
+        <div className="max-w-7xl mx-auto px-5 sm:px-12 grid grid-cols-1 lg:grid-cols-3 gap-8 sm:gap-12">
 
           <div className="flex flex-col gap-4">
             <h5 className="font-bold text-blue-600 uppercase tracking-widest text-[11px]">
@@ -136,8 +136,8 @@ export default function LandingPage() {
       </section>
 
       {/* HOW IT WORKS */}
-      <section id="how-it-works" className="bg-navy-dark text-white py-22">
-        <div className="max-w-7xl mx-auto px-12">
+      <section id="how-it-works" className="bg-navy-dark text-white py-14 sm:py-20">
+        <div className="max-w-7xl mx-auto px-5 sm:px-12">
 
           <div className="mb-13">
             <h5 className="font-bold text-blue-400 uppercase tracking-widest text-[11px] mb-2">
@@ -173,8 +173,8 @@ export default function LandingPage() {
       </section>
 
       {/* CTA */}
-      <section className="bg-white text-center py-25 px-12">
-        <div className="max-w-165 mx-auto flex flex-col gap-5.5">
+      <section className="bg-white text-center py-16 sm:py-24 px-5 sm:px-12">
+        <div className="max-w-2xl mx-auto flex flex-col gap-5">
 
           <h5 className="font-bold text-blue-600 uppercase tracking-widest text-[11px]">
             Get Started Today

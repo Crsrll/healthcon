@@ -50,6 +50,8 @@ export async function POST(req) {
       );
     }
 
+    const { reviewId } = body;
+
     // Check if user already reviewed this clinic
     const existingQuery = query(
       collection(db, "reviews"),
@@ -57,6 +59,22 @@ export async function POST(req) {
       where("patientID", "==", patientID)
     );
     const existingSnap = await getDocs(existingQuery);
+
+    // If reviewId provided, update the existing review
+    if (reviewId) {
+      const reviewRef = doc(db, "reviews", reviewId);
+      await updateDoc(reviewRef, {
+        rating,
+        review: review.trim(),
+        status: "pending",
+        updatedAt: serverTimestamp(),
+      });
+      return NextResponse.json({
+        success: true,
+        reviewId,
+        message: "Review updated and pending re-approval",
+      });
+    }
 
     if (!existingSnap.empty) {
       return NextResponse.json(
@@ -132,7 +150,9 @@ export async function GET(req) {
       let constraints = [where("clinicID", "==", clinicID)];
       
       // Filter by status for clinic admin
-      if (status && ["pending", "approved", "rejected"].includes(status)) {
+      if (status === "all") {
+        // No status filter — return all reviews for this clinic
+      } else if (status && ["pending", "approved", "rejected"].includes(status)) {
         constraints.push(where("status", "==", status));
       } else if (!status) {
         // For public view, only show approved reviews

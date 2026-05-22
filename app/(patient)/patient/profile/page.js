@@ -1,48 +1,68 @@
 "use client";
 import { useState, useRef } from "react";
 import Link from "next/link";
-import { User, Mail, Phone, Calendar, MapPin, Droplets, AlertCircle, ShieldCheck, Camera, Edit3, Save, X,ChevronRight } from "lucide-react";
+import { User, Mail, Phone, Calendar, MapPin, Droplets, AlertCircle, ShieldCheck, Camera, Edit3, Save, X, ChevronRight, Loader2 } from "lucide-react";
+import { useAuth } from "@/context/authContext";
+import { useUser } from "@/hooks/useUpdate";
+import { uploadImage } from "@/lib/uploadImage";
 
 export default function PatientProfilePage() {
-  const [isEditing, setIsEditing] = useState(false);
+  const { user } = useAuth();
+  const { updateUser, saving } = useUser();
   const fileInputRef = useRef(null);
+  const [isEditing, setIsEditing] = useState(false);
+  const [uploading, setUploading] = useState(false);
 
   const [profile, setProfile] = useState({
-    firstName: "Melissa",
-    lastName: "Doe",
-    email: "melissa.doe@email.com",
-    phone: "+63 912 345 6789",
-    dob: "1995-06-12",
-    address: "Sunrise St., Dapitan City, Zamboanga del Norte",
-    bloodType: "O+",
-    allergies: "Penicillin, Peanuts",
-    emergencyContact: "John Doe (+63 911 222 3333)",
-    memberSince: "March 2024",
-    image: null
+    firstName:        user?.firstName || "",
+    lastName:         user?.lastName  || "",
+    email:            user?.email     || "",
+    phone:            user?.phone     || "",
+    dob:              user?.dob       || "",
+    address:          user?.address   || "",
+    bloodType:        user?.bloodType || "",
+    allergies:        user?.allergies || "",
+    emergencyContact: user?.emergencyContact || "",
+    image:            user?.image     || null,
   });
 
-  // Temporary state for the form while editing
   const [tempProfile, setTempProfile] = useState({ ...profile });
 
   const handleImageClick = () => {
-    if (isEditing) {
-      fileInputRef.current.click(); // Trigger the hidden file input
+    if (isEditing) fileInputRef.current.click();
+  };
+
+  const handleImageChange = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    // Show local preview immediately
+    setTempProfile(p => ({ ...p, image: URL.createObjectURL(file) }));
+    // Upload to Cloudinary in background
+    try {
+      setUploading(true);
+      const url = await uploadImage(file);
+      setTempProfile(p => ({ ...p, image: url }));
+    } catch (err) {
+      alert("Image upload failed: " + err.message);
+    } finally {
+      setUploading(false);
     }
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
+    await updateUser({
+      firstName:        tempProfile.firstName,
+      lastName:         tempProfile.lastName,
+      phone:            tempProfile.phone,
+      dob:              tempProfile.dob,
+      address:          tempProfile.address,
+      bloodType:        tempProfile.bloodType,
+      allergies:        tempProfile.allergies,
+      emergencyContact: tempProfile.emergencyContact,
+      image:            tempProfile.image,
+    });
     setProfile({ ...tempProfile });
     setIsEditing(false);
-    // In a real app, you'd send this to your database here
-  };
-
-  const handleImageChange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      // Create a temporary URL for the selected image
-      const imageUrl = URL.createObjectURL(file);
-      setTempProfile({ ...tempProfile, image: imageUrl });
-    }
   };
 
   const handleCancel = () => {
@@ -50,271 +70,157 @@ export default function PatientProfilePage() {
     setIsEditing(false);
   };
 
+  const isBusy = saving || uploading;
+
   return (
     <main className="min-h-screen bg-[#f8fafc] pb-20 font-sans">
-      
-      {/* ── HEADER ── */}
-      <div className="bg-[#1a365d] text-white pt-12 pb-16 px-8">
-        <div className="max-w-full mx-auto flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+
+      {/* HEADER */}
+      <div className="bg-[#1a365d] text-white pt-10 pb-14 px-4 sm:px-8">
+        <div className="max-w-5xl mx-auto flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
-            <nav className="flex items-center gap-2 text-teal-400 text-[10px] font-bold uppercase tracking-[0.2em] mb-4">
+            <nav className="flex items-center gap-2 text-teal-400 text-[10px] font-bold uppercase tracking-[0.2em] mb-3">
               <Link href="/patient/dashboard" className="hover:text-white transition-colors">Patient</Link>
               <ChevronRight size={10} />
               <span className="text-white/60">Profile</span>
             </nav>
-            <h1 className="text-3xl font-bold">My Account</h1>
-            <p className="text-blue-200/70 text-sm mt-2 font-medium">Manage your personal information and medical preferences.</p>
+            <h1 className="text-2xl sm:text-3xl font-bold">My Account</h1>
+            <p className="text-blue-200/70 text-sm mt-1">Manage your personal information and medical preferences.</p>
           </div>
-          
+
           {!isEditing ? (
-            <button 
-              onClick={() => setIsEditing(true)}
-              className="bg-teal-500 hover:bg-teal-400 text-white px-6 py-3 rounded-xl font-bold text-sm flex items-center gap-2 transition-all shadow-xl shadow-teal-900/40 active:scale-95"
-            >
-              <Edit3 size={18} /> Edit Profile
+            <button onClick={() => setIsEditing(true)}
+              className="bg-teal-500 hover:bg-teal-400 text-white px-5 py-2.5 rounded-xl font-bold text-sm flex items-center gap-2 transition-all shadow-lg active:scale-95">
+              <Edit3 size={16} /> Edit Profile
             </button>
           ) : (
-            <div className="flex gap-3">
-              <button 
-                onClick={handleSave}
-                className="bg-teal-500 hover:bg-teal-400 text-white px-6 py-3 rounded-xl font-bold text-sm flex items-center gap-2 transition-all shadow-xl shadow-teal-900/40 active:scale-95"
-              >
-                <Save size={18} /> Save Changes
+            <div className="flex gap-2">
+              <button onClick={handleSave} disabled={isBusy}
+                className="bg-teal-500 hover:bg-teal-400 disabled:opacity-60 text-white px-5 py-2.5 rounded-xl font-bold text-sm flex items-center gap-2 transition-all shadow-lg active:scale-95">
+                {isBusy ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />}
+                {uploading ? "Uploading..." : saving ? "Saving..." : "Save Changes"}
               </button>
-              <button 
-                onClick={handleCancel}
-                className="bg-white/10 hover:bg-white/20 text-white px-6 py-3 rounded-xl font-bold text-sm flex items-center gap-2 transition-all border border-white/10"
-              >
-                <X size={18} /> Cancel
+              <button onClick={handleCancel} disabled={isBusy}
+                className="bg-white/10 hover:bg-white/20 text-white px-5 py-2.5 rounded-xl font-bold text-sm flex items-center gap-2 transition-all border border-white/10">
+                <X size={16} /> Cancel
               </button>
             </div>
           )}
         </div>
       </div>
 
-      <div className="max-w-full mx-auto px-8 mt-12 grid grid-cols-1 lg:grid-cols-3 gap-8">
-        
-        {/* ── LEFT COLUMN: AVATAR CARD ── */}
-        <div className="space-y-6">
-          <section className="bg-white rounded-xl border border-teal-400 shadow-xl shadow-slate-200/50 p-8 text-center">
-            <div className="relative inline-block">
-              <input 
-                type="file" 
-                ref={fileInputRef} 
-                onChange={handleImageChange} 
-                accept="image/*" 
-                className="hidden" 
-              />
+      <div className="max-w-5xl mx-auto px-4 sm:px-8 -mt-8 grid grid-cols-1 lg:grid-cols-3 gap-6">
 
-               {/* Avatar Display */}
-              <div 
-                onClick={handleImageClick}
-                className={`w-30 h-30 rounded-full flex items-center justify-center border-4 border-white shadow-md overflow-hidden bg-teal-50 ${isEditing ? 'cursor-pointer hover:opacity-80 transition-opacity' : ''}`}
-              >
-                {tempProfile.image ? (
-                  <img src={tempProfile.image} alt="Profile" className="w-full h-full  object-cover" />
+        {/* LEFT: Avatar */}
+        <div className="space-y-4">
+          <section className="bg-white rounded-xl border border-teal-400 shadow-xl p-6 text-center">
+            <div className="relative inline-block">
+              <input type="file" ref={fileInputRef} onChange={handleImageChange} accept="image/*" className="hidden" />
+              <div onClick={handleImageClick}
+                className={`w-24 h-24 rounded-full mx-auto flex items-center justify-center border-4 border-white shadow-md overflow-hidden bg-teal-50
+                  ${isEditing ? "cursor-pointer hover:opacity-80 transition-opacity" : ""}`}>
+                {uploading ? (
+                  <Loader2 size={28} className="animate-spin text-teal-400" />
+                ) : tempProfile.image ? (
+                  <img src={tempProfile.image} alt="Profile" className="w-full h-full object-cover" />
                 ) : (
-                  <span className="text-4xl font-black text-teal-600">
-                    {tempProfile.firstName[0]}{tempProfile.lastName[0]}
+                  <span className="text-3xl font-black text-teal-600">
+                    {tempProfile.firstName?.[0]}{tempProfile.lastName?.[0]}
                   </span>
                 )}
               </div>
-
-              {/* Camera Overlay (Only shows in Edit Mode) */}
               {isEditing && (
-                <div 
-                  onClick={handleImageClick}
-                  className="absolute bottom-0 right-0 p-2.5 bg-[#1a365d] text-white rounded-2xl border-4 shadow-lg cursor-pointer hover:scale-110 transition-transform"
-                >
-                  <Camera size={14} />
+                <div onClick={handleImageClick}
+                  className="absolute bottom-0 right-0 p-2 bg-[#1a365d] text-white rounded-xl border-2 border-white shadow cursor-pointer hover:scale-110 transition-transform">
+                  <Camera size={12} />
                 </div>
               )}
             </div>
-            <h2 className="mt-4 text-xl font-black text-slate-900">{profile.firstName} {profile.lastName}</h2>
-            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1">Patient ID: #HC-9920</p>
-            
-            <div className="mt-6 pt-6 border-t border-slate-50 flex justify-center gap-4">
-              <div className="text-center">
-                <p className="text-xs font-black text-slate-800">12</p>
-                <p className="text-[8px] font-bold text-slate-400 uppercase">Visits</p>
-              </div>
-              <div className="w-px h-8 bg-slate-100" />
-              <div className="text-center">
-                <p className="text-xs font-black text-slate-800">{profile.memberSince}</p>
-                <p className="text-[8px] font-bold text-slate-400 uppercase">Joined</p>
-              </div>
-            </div>
+            <h2 className="mt-3 text-lg font-black text-slate-900">{profile.firstName} {profile.lastName}</h2>
+            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-0.5">Patient</p>
           </section>
 
-          {/* SECURITY BADGE */}
-          <div className="bg-teal-50 border border-teal-100 rounded-2xl p-5 flex items-center gap-4">
-            <ShieldCheck className="text-teal-600" size={24} />
+          <div className="bg-teal-50 border border-teal-100 rounded-2xl p-4 flex items-center gap-3">
+            <ShieldCheck className="text-teal-600 shrink-0" size={20} />
             <div>
               <p className="text-[10px] font-black text-teal-700 uppercase tracking-widest">Verified Account</p>
-              <p className="text-[11px] text-teal-600/80 font-medium">Your data is protected with AES-256 encryption.</p>
+              <p className="text-[11px] text-teal-600/80">Your data is protected.</p>
             </div>
           </div>
         </div>
 
-        {/* ── RIGHT COLUMN: INFORMATION ── */}
-        <div className="lg:col-span-2 space-y-6">
-          
-          {/* PERSONAL INFORMATION */}
-          <section className="bg-white rounded-xl border border-teal-400 shadow-sm p-8">
-            <h3 className="text-[10px] font-black text-slate-800 uppercase tracking-[0.2em] mb-8">Personal Information</h3>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
-              {/* First Name */}
-              <div className="space-y-1.5">
-                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
-                  <User size={12} /> First Name
-                </label>
-                {isEditing ? (
-                  <input 
-                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-teal-500/10 focus:border-teal-500 transition-all"
-                    value={tempProfile.firstName}
-                    onChange={(e) => setTempProfile({...tempProfile, firstName: e.target.value})}
-                  />
-                ) : (
-                  <p className="text-sm font-bold text-slate-700 px-1">{profile.firstName}</p>
-                )}
-              </div>
-
-              {/* Last Name */}
-              <div className="space-y-1.5">
-                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
-                  <User size={12} /> Last Name
-                </label>
-                {isEditing ? (
-                  <input 
-                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-teal-500/10 focus:border-teal-500 transition-all"
-                    value={tempProfile.lastName}
-                    onChange={(e) => setTempProfile({...tempProfile, lastName: e.target.value})}
-                  />
-                ) : (
-                  <p className="text-sm font-bold text-slate-700 px-1">{profile.lastName}</p>
-                )}
-              </div>
-
-              {/* Email */}
-              <div className="space-y-1.5">
-                <label className="text-[10px] font-black text-slate-600 uppercase tracking-widest flex items-center gap-2">
-                  <Mail size={12} /> Email Address
-                </label>
-                {isEditing ? (
-                  <input 
-                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-teal-500/10 focus:border-teal-500 transition-all"
-                    value={tempProfile.email}
-                    onChange={(e) => setTempProfile({...tempProfile, email: e.target.value})}
-                  />
-                ) : (
-                  <p className="text-sm font-bold text-slate-700 px-1">{profile.email}</p>
-                )}
-              </div>
-
-              {/* Phone */}
-              <div className="space-y-1.5">
-                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
-                  <Phone size={12} /> Phone Number
-                </label>
-                {isEditing ? (
-                  <input 
-                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-teal-500/10 focus:border-teal-500 transition-all"
-                    value={tempProfile.phone}
-                    onChange={(e) => setTempProfile({...tempProfile, phone: e.target.value})}
-                  />
-                ) : (
-                  <p className="text-sm font-bold text-slate-700 px-1">{profile.phone}</p>
-                )}
-              </div>
-
-              {/* Date of Birth */}
-              <div className="space-y-1.5">
-                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
-                  <Calendar size={12} /> Date of Birth
-                </label>
-                {isEditing ? (
-                  <input 
-                    type="date"
-                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-teal-500/10 focus:border-teal-500 transition-all"
-                    value={tempProfile.dob}
-                    onChange={(e) => setTempProfile({...tempProfile, dob: e.target.value})}
-                  />
-                ) : (
-                  <p className="text-sm font-bold text-slate-700 px-1">{profile.dob}</p>
-                )}
-              </div>
+        {/* RIGHT: Info */}
+        <div className="lg:col-span-2 space-y-5">
+          <section className="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
+            <h3 className="text-[10px] font-black text-slate-800 uppercase tracking-widest mb-6">Personal Information</h3>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {[
+                { label: "First Name",    icon: <User size={11}/>,     key: "firstName",  type: "text" },
+                { label: "Last Name",     icon: <User size={11}/>,     key: "lastName",   type: "text" },
+                { label: "Email Address", icon: <Mail size={11}/>,     key: "email",      type: "email", disabled: true },
+                { label: "Phone Number",  icon: <Phone size={11}/>,    key: "phone",      type: "text" },
+                { label: "Date of Birth", icon: <Calendar size={11}/>, key: "dob",        type: "date" },
+              ].map(f => (
+                <div key={f.key} className="space-y-1">
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-1.5">{f.icon} {f.label}</label>
+                  {isEditing && !f.disabled ? (
+                    <input type={f.type}
+                      className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm outline-none focus:border-teal-500 transition-all"
+                      value={tempProfile[f.key] || ""}
+                      onChange={e => setTempProfile(p => ({ ...p, [f.key]: e.target.value }))} />
+                  ) : (
+                    <p className="text-sm font-semibold text-slate-700 px-1">{profile[f.key] || "—"}</p>
+                  )}
+                </div>
+              ))}
             </div>
-
-            {/* Address */}
-            <div className="mt-6 space-y-1.5">
-              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
-                <MapPin size={12} /> Residential Address
-              </label>
+            <div className="mt-4 space-y-1">
+              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-1.5"><MapPin size={11}/> Address</label>
               {isEditing ? (
-                <textarea 
-                  rows={2}
-                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-teal-500/10 focus:border-teal-500 transition-all resize-none"
-                  value={tempProfile.address}
-                  onChange={(e) => setTempProfile({...tempProfile, address: e.target.value})}
-                />
+                <textarea rows={2} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm outline-none focus:border-teal-500 resize-none"
+                  value={tempProfile.address || ""}
+                  onChange={e => setTempProfile(p => ({ ...p, address: e.target.value }))} />
               ) : (
-                <p className="text-sm font-bold text-slate-700 px-1">{profile.address}</p>
+                <p className="text-sm font-semibold text-slate-700 px-1">{profile.address || "—"}</p>
               )}
             </div>
           </section>
 
-          {/* MEDICAL INFORMATION */}
-          <section className="bg-white rounded-xl border border-teal-400 shadow-sm p-8">
-            <h3 className="text-[10px] font-black text-slate-800 uppercase tracking-[0.2em] mb-8">Medical Preferences</h3>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
-              <div className="space-y-1.5">
-                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
-                  <Droplets size={12} className="text-red-500" /> Blood Type
-                </label>
+          <section className="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
+            <h3 className="text-[10px] font-black text-slate-800 uppercase tracking-widest mb-6">Medical Preferences</h3>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-1">
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-1.5"><Droplets size={11} className="text-red-500"/> Blood Type</label>
                 {isEditing ? (
-                  <select 
-                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-teal-500 transition-all"
-                    value={tempProfile.bloodType}
-                    onChange={(e) => setTempProfile({...tempProfile, bloodType: e.target.value})}
-                  >
-                    <option>A+</option><option>A-</option><option>B+</option><option>B-</option>
-                    <option>O+</option><option>O-</option><option>AB+</option><option>AB-</option>
+                  <select className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm outline-none focus:border-teal-500"
+                    value={tempProfile.bloodType || ""}
+                    onChange={e => setTempProfile(p => ({ ...p, bloodType: e.target.value }))}>
+                    <option value="">Select</option>
+                    {["A+","A-","B+","B-","O+","O-","AB+","AB-"].map(t => <option key={t}>{t}</option>)}
                   </select>
                 ) : (
-                  <p className="text-sm font-bold text-slate-700 px-1">{profile.bloodType}</p>
+                  <p className="text-sm font-semibold text-slate-700 px-1">{profile.bloodType || "—"}</p>
                 )}
               </div>
-
-              <div className="space-y-1.5">
-                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
-                  <AlertCircle size={12} className="text-amber-500" /> Known Allergies
-                </label>
+              <div className="space-y-1">
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-1.5"><AlertCircle size={11} className="text-amber-500"/> Known Allergies</label>
                 {isEditing ? (
-                  <input 
-                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-teal-500 transition-all"
-                    value={tempProfile.allergies}
-                    onChange={(e) => setTempProfile({...tempProfile, allergies: e.target.value})}
-                  />
+                  <input className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm outline-none focus:border-teal-500"
+                    value={tempProfile.allergies || ""}
+                    onChange={e => setTempProfile(p => ({ ...p, allergies: e.target.value }))} />
                 ) : (
-                  <p className="text-sm font-bold text-slate-700 px-1">{profile.allergies}</p>
+                  <p className="text-sm font-semibold text-slate-700 px-1">{profile.allergies || "—"}</p>
                 )}
               </div>
             </div>
-
-            <div className="mt-6 space-y-1.5">
-              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
-                Emergency Contact
-              </label>
+            <div className="mt-4 space-y-1">
+              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Emergency Contact</label>
               {isEditing ? (
-                <input 
-                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-teal-500 transition-all"
-                  value={tempProfile.emergencyContact}
-                  onChange={(e) => setTempProfile({...tempProfile, emergencyContact: e.target.value})}
-                />
+                <input className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm outline-none focus:border-teal-500"
+                  value={tempProfile.emergencyContact || ""}
+                  onChange={e => setTempProfile(p => ({ ...p, emergencyContact: e.target.value }))} />
               ) : (
-                <p className="text-sm font-bold text-slate-700 px-1">{profile.emergencyContact}</p>
+                <p className="text-sm font-semibold text-slate-700 px-1">{profile.emergencyContact || "—"}</p>
               )}
             </div>
           </section>

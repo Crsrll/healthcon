@@ -147,7 +147,58 @@ function ClinicsPageInner() {
         </div>
 
         <section className="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
-          <div className="overflow-x-auto">
+          {/* Mobile card view */}
+          <div className="sm:hidden divide-y divide-slate-100">
+            {filtered.length > 0 ? (
+              filtered.map((clinic) => {
+                const status = getStatus(clinic);
+                const name = clinic.clinicName || clinic.name || "Unnamed Clinic";
+                const phone = clinic.contact || clinic.phone || "No contact";
+                const email = clinic.email || "No email";
+                const city = clinic.city || "Not specified";
+                const hours = clinic.hours || null;
+                const services = clinic.services || clinic.specialization || [];
+                const image = clinic.image || null;
+                return (
+                  <div key={clinic.id} className="p-4 space-y-3">
+                    <div className="flex items-center justify-between gap-3">
+                      <div className="flex items-center gap-3 min-w-0">
+                        <div className="w-9 h-9 rounded-xl bg-slate-100 text-slate-500 font-black text-xs flex items-center justify-center shrink-0 uppercase">
+                          {name.substring(0, 2)}
+                        </div>
+                        <div className="min-w-0">
+                          <p className="font-bold text-sm text-slate-800 truncate">{name}</p>
+                          <p className="text-[10px] text-slate-400 font-bold uppercase">{city}</p>
+                        </div>
+                      </div>
+                      <span className={`text-[10px] font-black uppercase rounded-full px-2.5 py-1 border shrink-0 ${STATUS_STYLE[status]}`}>{status}</span>
+                    </div>
+                    <p className="text-xs text-slate-500">{phone}</p>
+                    <div className="flex gap-2">
+                      <button onClick={() => setSelectedClinic({ ...clinic, status, name, phone, email, city, hours, services, image })}
+                        className="flex-1 py-2 text-xs font-bold text-teal-600 bg-teal-50 rounded-lg hover:bg-teal-100 transition">View</button>
+                      {status === "approved" && (
+                        <button onClick={() => handleStatusUpdate(clinic.id, "suspend", name)} disabled={actionLoading === clinic.id}
+                          className="flex-1 py-2 text-xs font-bold text-red-600 bg-red-50 rounded-lg hover:bg-red-100 transition disabled:opacity-50">Suspend</button>
+                      )}
+                      {status === "suspended" && (
+                        <button onClick={() => handleStatusUpdate(clinic.id, "reinstate", name)} disabled={actionLoading === clinic.id}
+                          className="flex-1 py-2 text-xs font-bold text-teal-600 bg-teal-50 rounded-lg hover:bg-teal-100 transition disabled:opacity-50">Reinstate</button>
+                      )}
+                      {status === "pending" && (
+                        <button onClick={() => handleStatusUpdate(clinic.id, "approve", name)} disabled={actionLoading === clinic.id}
+                          className="flex-1 py-2 text-xs font-bold text-green-700 bg-green-50 rounded-lg hover:bg-green-100 transition disabled:opacity-50">Approve</button>
+                      )}
+                    </div>
+                  </div>
+                );
+              })
+            ) : (
+              <div className="py-16 text-center text-slate-400 text-sm italic">No clinics found</div>
+            )}
+          </div>
+          {/* Desktop table view */}
+          <div className="hidden sm:block overflow-x-auto">
             <table className="w-full text-left">
               <thead className="bg-slate-50/50 border-b border-slate-100">
                 <tr className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">

@@ -20,7 +20,8 @@ export function useClinicReports(clinicID) {
   const fetchReviews = useCallback(async () => {
     if (!clinicID) return;
     try {
-      const res = await fetch(`/api/reviews?clinicID=${clinicID}&status=pending`);
+      // Fetch all reviews for the clinic (pending + approved + rejected)
+      const res = await fetch(`/api/reviews?clinicID=${clinicID}&status=all`);
       const data = await res.json();
       if (data.success) setReviews(data.reviews || []);
     } catch (err) {
@@ -85,23 +86,33 @@ export function useClinicReports(clinicID) {
         const res = await fetch("/api/clinic-replies", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ reportId, replyId, text, sender, senderName }),
+          body: JSON.stringify({
+            action: replyId ? "message" : "create",
+            replyId: replyId || undefined,
+            reportId: reportId || undefined,
+            text,
+            sender,
+            senderName,
+            // For new thread creation, include clinicID from the report
+            clinicID: replyId ? undefined : clinicID,
+            firstMessage: replyId ? undefined : text,
+          }),
         });
         return { success: res.ok };
       } catch (err) {
         return { success: false, error: err.message };
       }
     },
-    []
+    [clinicID]
   );
 
   const moderateReview = useCallback(
-    async (reviewId, action) => {
+    async (reviewId, status) => {
       try {
         const res = await fetch("/api/reviews", {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ reviewId, action }),
+          body: JSON.stringify({ reviewId, status }),
         });
         const data = await res.json();
         if (data.success) await fetchReviews();

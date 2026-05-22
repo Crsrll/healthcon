@@ -146,7 +146,7 @@ export default function PatientDashboard() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
       {/* Hero Section - Full Width */}
-      <div className="relative bg-gradient-to-r from-teal-700 via-teal-600 to-blue-700 overflow-hidden">
+      <div className="relative bg-[#1a355d] overflow-hidden">
         <div
           className="absolute inset-0 opacity-10"
           style={{
@@ -155,29 +155,27 @@ export default function PatientDashboard() {
             backgroundSize: "40px 40px",
           }}
         />
-        <div className="absolute -top-24 -right-24 w-96 h-96 bg-teal-400/20 rounded-full blur-3xl" />
-        <div className="absolute -bottom-24 -left-24 w-96 h-96 bg-blue-400/20 rounded-full blur-3xl" />
+        <div className="absolute -top-24 -right-24 w-96 h-96 bg-blue-400/20 rounded-full blur-3xl" />
+        <div className="absolute -bottom-24 -left-24 w-96 h-96 bg-blue-600/20 rounded-full blur-3xl" />
 
-        <div className="relative max-w-7xl mx-auto px-6 py-8 sm:py-10">
-          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+        <div className="relative max-w-7xl mx-auto px-5 sm:px-6 py-6 sm:py-8">
+          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
             <div>
-              <div className="flex items-center gap-2 mb-3">
-                <div className="w-12 h-12 bg-white/20 rounded-2xl flex items-center justify-center backdrop-blur-sm">
-                  <Heart className="w-6 h-6 text-white" />
+              <div className="flex items-center gap-2 mb-2 sm:mb-3">
+                <div className="w-10 h-10 sm:w-12 sm:h-12 bg-white/20 rounded-2xl flex items-center justify-center backdrop-blur-sm">
+                  <Heart className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
                 </div>
-                <span className="text-teal-200 text-xs font-bold uppercase tracking-wider">
+                <span className="text-blue-200 text-xs font-bold uppercase tracking-wider">
                   Patient Portal
                 </span>
               </div>
-              <h1 className="text-3xl lg:text-4xl font-bold text-white">
+              <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white">
                 Welcome back, {userData?.firstName || "Patient"}!
               </h1>
-              <p className="text-teal-100 mt-2 text-lg">
+              <p className="text-blue-100/80 mt-1 sm:mt-2 text-base sm:text-lg">
                 Your health journey continues here.
               </p>
             </div>
-
-
           </div>
         </div>
       </div>
@@ -196,8 +194,8 @@ export default function PatientDashboard() {
                   {stats.totalBookings}
                 </p>
               </div>
-              <div className="w-12 h-12 rounded-xl bg-teal-50 flex items-center justify-center">
-                <Calendar size={22} className="text-teal-600" />
+              <div className="w-12 h-12 rounded-xl bg-blue-50 flex items-center justify-center">
+                <Calendar size={22} className="text-blue-600" />
               </div>
             </div>
           </div>
@@ -233,7 +231,7 @@ export default function PatientDashboard() {
                 </div>
                 <Link
                   href="/patient/appointments"
-                  className="text-xs font-bold text-teal-600 hover:text-teal-700 flex items-center gap-1"
+                  className="text-xs font-bold text-blue-600 hover:text-blue-700 flex items-center gap-1"
                 >
                   View All <ChevronRight size={14} />
                 </Link>
@@ -384,7 +382,7 @@ export default function PatientDashboard() {
                 </div>
                 <Link
                   href="/patient/notifications"
-                  className="text-[10px] font-bold text-teal-600 hover:text-teal-700"
+                  className="text-[10px] font-bold text-blue-600 hover:text-blue-700"
                 >
                   View All
                 </Link>

@@ -1,91 +1,37 @@
-"use client";
+'use client';
 
-import { useState, useEffect, useRef, Suspense } from "react";
-import { useParams, useSearchParams, useRouter } from "next/navigation";
-import { useClinic } from "@/hooks/useClinic";
-import { useDoctors } from "@/hooks/useDoctors";
-import { useAuth } from "@/hooks/useAuth";
-import { useBookedSlots } from "@/hooks/useBookedSlots";
-import { useClinicActions } from "@/hooks/useClinicActions";
-import { generateTimeSlots } from "@/lib/generateTimeSlots";
-import {
-  MessageCircle,
-  Send,
-  X,
-  ChevronDown,
-  Flag,
-  Star,
-  AlertTriangle,
-  Shield,
-  FileText,
-  Stethoscope,
-  Calendar,
-  Clock,
-  User,
-  Phone,
-  Mail,
-  MapPin,
-  Building2,
-  Award,
-  CheckCircle,
-  Loader2,
-} from "lucide-react";
+import { useState, useEffect, useRef, Suspense } from 'react';
+import { useParams, useSearchParams, useRouter } from 'next/navigation';
+import { useClinic } from '@/hooks/useClinic';
+import { useDoctors } from '@/hooks/useDoctors';
+import { useAuth } from '@/hooks/useAuth';
+import { useBookedSlots } from '@/hooks/useBookedSlots';
+import { useClinicActions } from '@/hooks/useClinicActions';
+import { generateTimeSlots } from '@/lib/generateTimeSlots';
+import { 
+  MessageCircle, Send, X, ChevronDown, Flag, Star, AlertTriangle, 
+  Shield, FileText, Stethoscope, Calendar, Clock, User, Phone, 
+  Mail, MapPin, Building2, Award, CheckCircle, Loader2
+} from 'lucide-react';
 
 // ── Admin Report Reasons (for reporting clinic TO super admin) ──────────
 const ADMIN_REPORT_REASONS = [
-  {
-    value: "fraudulent_services",
-    label: "Fraudulent Services",
-    desc: "Billing for services not rendered or fake treatments",
-  },
-  {
-    value: "unlicensed_practice",
-    label: "Unlicensed Practice",
-    desc: "Operating without proper medical licenses",
-  },
-  {
-    value: "patient_safety",
-    label: "Patient Safety Risk",
-    desc: "Unsafe conditions or dangerous medical practices",
-  },
-  {
-    value: "data_privacy",
-    label: "Data Privacy Breach",
-    desc: "Unauthorized use or sharing of patient information",
-  },
-  {
-    value: "harassment",
-    label: "Harassment or Abuse",
-    desc: "Staff harassment, discrimination, or patient abuse",
-  },
-  {
-    value: "false_advertising",
-    label: "False Advertising",
-    desc: "Misleading claims about services, doctors, or credentials",
-  },
-  {
-    value: "overcharging",
-    label: "Illegal Overcharging",
-    desc: "Excessive billing beyond agreed or standard rates",
-  },
-  {
-    value: "other",
-    label: "Other Violation",
-    desc: "Other serious violation not listed above",
-  },
+  { value: "fraudulent_services",   label: "Fraudulent Services",    desc: "Billing for services not rendered or fake treatments" },
+  { value: "unlicensed_practice",   label: "Unlicensed Practice",    desc: "Operating without proper medical licenses" },
+  { value: "patient_safety",        label: "Patient Safety Risk",    desc: "Unsafe conditions or dangerous medical practices" },
+  { value: "data_privacy",          label: "Data Privacy Breach",    desc: "Unauthorized use or sharing of patient information" },
+  { value: "harassment",            label: "Harassment or Abuse",    desc: "Staff harassment, discrimination, or patient abuse" },
+  { value: "false_advertising",     label: "False Advertising",      desc: "Misleading claims about services, doctors, or credentials" },
+  { value: "overcharging",          label: "Illegal Overcharging",   desc: "Excessive billing beyond agreed or standard rates" },
+  { value: "other",                 label: "Other Violation",        desc: "Other serious violation not listed above" },
 ];
 
 // ── Helpers ─────────────────────────────────────────────────────
-const ALL_DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+const ALL_DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
 const DAY_NAME_MAP = {
-  Mon: "Monday",
-  Tue: "Tuesday",
-  Wed: "Wednesday",
-  Thu: "Thursday",
-  Fri: "Friday",
-  Sat: "Saturday",
-  Sun: "Sunday",
+  Mon: "Monday", Tue: "Tuesday", Wed: "Wednesday",
+  Thu: "Thursday", Fri: "Friday", Sat: "Saturday", Sun: "Sunday",
 };
 
 function getNextDateForDay(dayName) {
@@ -95,16 +41,13 @@ function getNextDateForDay(dayName) {
   const diff = (target - today.getDay() + 7) % 7 || 7;
   const next = new Date(today);
   next.setDate(today.getDate() + diff);
-  return next.toISOString().split("T")[0];
+  return next.toISOString().split('T')[0];
 }
 
 function formatDate(isoDate) {
-  if (!isoDate) return "";
-  return new Date(isoDate).toLocaleDateString("en-PH", {
-    weekday: "long",
-    year: "numeric",
-    month: "long",
-    day: "numeric",
+  if (!isoDate) return '';
+  return new Date(isoDate).toLocaleDateString('en-PH', {
+    weekday: 'long', year: 'numeric', month: 'long', day: 'numeric',
   });
 }
 
@@ -120,9 +63,7 @@ function InfoChip({ icon, text }) {
 function SectionHeader({ title, count }) {
   return (
     <div className="flex items-center justify-between mb-6">
-      <h2 className="text-xl font-bold text-[#1a355d] tracking-tight">
-        {title}
-      </h2>
+      <h2 className="text-xl font-bold text-[#1a355d] tracking-tight">{title}</h2>
       {count !== undefined && (
         <span className="text-xs font-medium text-gray-500 bg-gray-100 rounded-full px-2.5 py-1">
           {count}
@@ -133,16 +74,11 @@ function SectionHeader({ title, count }) {
 }
 
 // ── Star Rating Component ──────────────────────────────────────────
-function StarRating({
-  rating,
-  onRatingChange,
-  interactive = false,
-  size = "md",
-}) {
+function StarRating({ rating, onRatingChange, interactive = false, size = "md" }) {
   const [hoverRating, setHoverRating] = useState(0);
   const starSizes = { sm: 16, md: 20, lg: 28 };
   const starSize = starSizes[size];
-
+  
   return (
     <div className="flex gap-1">
       {[1, 2, 3, 4, 5].map((star) => (
@@ -152,11 +88,7 @@ function StarRating({
           onClick={() => interactive && onRatingChange?.(star)}
           onMouseEnter={() => interactive && setHoverRating(star)}
           onMouseLeave={() => interactive && setHoverRating(0)}
-          className={
-            interactive
-              ? "cursor-pointer transition-transform hover:scale-110"
-              : "cursor-default"
-          }
+          className={interactive ? "cursor-pointer transition-transform hover:scale-110" : "cursor-default"}
           disabled={!interactive}
         >
           <Star
@@ -174,17 +106,9 @@ function StarRating({
 }
 
 // ── Inquiry Chat Drawer ──────────────────────────────────────────
-function InquiryDrawer({
-  clinicID,
-  clinicName,
-  user,
-  onClose,
-  onFetchInquiry,
-  onFetchMessages,
-  onSendInquiry,
-}) {
+function InquiryDrawer({ clinicID, clinicName, user, onClose, onFetchInquiry, onFetchMessages, onSendInquiry }) {
   const [messages, setMessages] = useState([]);
-  const [inputText, setInputText] = useState("");
+  const [inputText, setInputText] = useState('');
   const [sending, setSending] = useState(false);
   const [loading, setLoading] = useState(true);
   const [inquiryId, setInquiryId] = useState(null);
@@ -192,16 +116,14 @@ function InquiryDrawer({
   const inquiryIdRef = useRef(null);
 
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
   const fetchMessages = async (id) => {
     try {
       const msgJson = await onFetchMessages(id);
       if (msgJson.success) setMessages(msgJson.data);
-    } catch (e) {
-      console.error(e);
-    }
+    } catch (e) { console.error(e); }
   };
 
   useEffect(() => {
@@ -214,9 +136,7 @@ function InquiryDrawer({
           inquiryIdRef.current = json.inquiry.id;
           await fetchMessages(json.inquiry.id);
         }
-      } catch (e) {
-        console.error(e);
-      }
+      } catch (e) { console.error(e); }
       setLoading(false);
     };
     load();
@@ -234,24 +154,18 @@ function InquiryDrawer({
   const handleSend = async () => {
     if (!inputText.trim() || sending) return;
     const text = inputText.trim();
-    setInputText("");
+    setInputText('');
     setSending(true);
 
-    const tempMsg = {
-      id: Date.now(),
-      text,
-      sender: "patient",
-      seen: false,
-      createdAt: new Date(),
-    };
-    setMessages((prev) => [...prev, tempMsg]);
+    const tempMsg = { id: Date.now(), text, sender: 'patient', seen: false, createdAt: new Date() };
+    setMessages(prev => [...prev, tempMsg]);
 
     try {
       let currentInquiryId = inquiryId;
 
       if (!currentInquiryId) {
         const createJson = await onSendInquiry({
-          action: "create",
+          action: 'create',
           clinicID,
           clinicName,
           patientID: user.uid,
@@ -263,51 +177,40 @@ function InquiryDrawer({
         inquiryIdRef.current = currentInquiryId;
       } else {
         await onSendInquiry({
-          action: "message",
+          action: 'message',
           inquiryId: currentInquiryId,
           text,
-          sender: "patient",
+          sender: 'patient',
         });
       }
 
       await fetchMessages(currentInquiryId);
     } catch (e) {
       console.error(e);
-      setMessages((prev) => prev.filter((m) => m.id !== tempMsg.id));
+      setMessages(prev => prev.filter(m => m.id !== tempMsg.id));
     } finally {
       setSending(false);
     }
   };
 
   return (
-    <div
-      className="fixed bottom-6 right-6 z-50 w-[360px] rounded-2xl shadow-2xl border border-slate-200 flex flex-col bg-white"
-      style={{ height: 480, boxShadow: "0 24px 64px rgba(26,53,93,0.18)" }}
-    >
+    <div className="fixed bottom-6 right-6 z-50 w-[360px] rounded-2xl shadow-2xl border border-slate-200 flex flex-col bg-white"
+      style={{ height: 480, boxShadow: '0 24px 64px rgba(26,53,93,0.18)' }}>
       <div className="bg-[#1a355d] px-5 py-4 flex items-center gap-3">
         <div className="w-9 h-9 rounded-xl bg-white/10 border border-white/20 flex items-center justify-center text-white font-bold text-sm">
           {clinicName?.[0]?.toUpperCase()}
         </div>
         <div className="flex-1">
-          <p className="text-white font-bold text-sm leading-tight">
-            {clinicName}
-          </p>
-          <p className="text-teal-300 text-[10px] font-semibold uppercase tracking-wide">
-            Direct Message
-          </p>
+          <p className="text-white font-bold text-sm leading-tight">{clinicName}</p>
+          <p className="text-teal-300 text-[10px] font-semibold uppercase tracking-wide">Direct Message</p>
         </div>
-        <button
-          onClick={onClose}
-          className="w-7 h-7 rounded-lg bg-white/10 hover:bg-white/20 flex items-center justify-center text-white/70 hover:text-white transition-all"
-        >
+        <button onClick={onClose}
+          className="w-7 h-7 rounded-lg bg-white/10 hover:bg-white/20 flex items-center justify-center text-white/70 hover:text-white transition-all">
           <ChevronDown size={16} />
         </button>
       </div>
 
-      <div
-        className="flex-1 overflow-y-auto py-4 space-y-3 bg-slate-50/40"
-        style={{ paddingLeft: 16, paddingRight: 10 }}
-      >
+      <div className="flex-1 overflow-y-auto py-4 space-y-3 bg-slate-50/40" style={{ paddingLeft: 16, paddingRight: 10 }}>
         {loading ? (
           <div className="flex items-center justify-center h-full">
             <div className="w-6 h-6 border-2 border-teal-400 border-t-transparent rounded-full animate-spin" />
@@ -318,46 +221,32 @@ function InquiryDrawer({
               <MessageCircle size={24} className="text-[#1a355d]/40" />
             </div>
             <div>
-              <p className="text-sm font-semibold text-slate-600">
-                No messages yet
-              </p>
-              <p className="text-xs text-slate-400 mt-1">
-                Send a message to start your inquiry
-              </p>
+              <p className="text-sm font-semibold text-slate-600">No messages yet</p>
+              <p className="text-xs text-slate-400 mt-1">Send a message to start your inquiry</p>
             </div>
           </div>
         ) : (
           messages.map((m, idx) => {
             const isLast = idx === messages.length - 1;
             return (
-              <div
-                key={m.id}
-                className={`flex flex-col ${m.sender === "patient" ? "items-end" : "items-start"}`}
-              >
-                <div
-                  className={`flex items-end gap-1 w-full ${m.sender === "patient" ? "flex-row-reverse" : "flex-row"}`}
-                >
-                  {m.sender === "clinic" && (
+              <div key={m.id} className={`flex flex-col ${m.sender === 'patient' ? 'items-end' : 'items-start'}`}>
+                <div className={`flex items-end gap-1 w-full ${m.sender === 'patient' ? 'flex-row-reverse' : 'flex-row'}`}>
+                  {m.sender === 'clinic' && (
                     <div className="w-6 h-6 rounded-full bg-[#1a355d] text-white flex items-center justify-center text-[9px] font-bold shrink-0">
                       {clinicName?.[0]?.toUpperCase()}
                     </div>
                   )}
-                  <div
-                    className={`max-w-[calc(100%-16px)] mr-2 px-3.5 py-2.5 rounded-2xl text-sm leading-relaxed
-                    ${
-                      m.sender === "patient"
-                        ? "bg-[#1a355d] text-white rounded-tr-sm"
-                        : "bg-white border border-slate-200 text-slate-700 rounded-tl-sm shadow-sm"
-                    }`}
-                  >
+                  <div className={`max-w-[calc(100%-16px)] mr-2 px-3.5 py-2.5 rounded-2xl text-sm leading-relaxed
+                    ${m.sender === 'patient'
+                      ? 'bg-[#1a355d] text-white rounded-tr-sm'
+                      : 'bg-white border border-slate-200 text-slate-700 rounded-tl-sm shadow-sm'
+                    }`}>
                     {m.text}
                   </div>
                 </div>
-                {m.sender === "patient" && isLast && (
-                  <span className="text-[10px] text-slate-400 mt-1">
-                    ✓ Delivered
-                  </span>
-                )}
+                {m.sender === 'patient' && isLast && (
+                  <span className="text-[10px] text-slate-400 mt-1">✓ Delivered</span>
+                )}  
               </div>
             );
           })
@@ -368,8 +257,8 @@ function InquiryDrawer({
       <div className="px-4 py-3 border-t border-slate-100 bg-white flex items-center gap-2">
         <input
           value={inputText}
-          onChange={(e) => setInputText(e.target.value)}
-          onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && handleSend()}
+          onChange={e => setInputText(e.target.value)}
+          onKeyDown={e => e.key === 'Enter' && !e.shiftKey && handleSend()}
           placeholder="Type a message..."
           className="flex-1 bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:bg-white focus:border-teal-400 transition-all"
         />
@@ -392,14 +281,12 @@ function ReportTypeModal({ onSelect, onClose }) {
       <div className="bg-white rounded-2xl border border-gray-200 w-full max-w-md shadow-xl overflow-hidden">
         <div className="border-b border-gray-100 px-6 py-4">
           <h3 className="font-bold text-[#1a355d] text-center">Report Issue</h3>
-          <p className="text-xs text-gray-500 text-center mt-1">
-            Choose where to send your report
-          </p>
+          <p className="text-xs text-gray-500 text-center mt-1">Choose where to send your report</p>
         </div>
-
+        
         <div className="p-6 space-y-4">
           <button
-            onClick={() => onSelect("clinic")}
+            onClick={() => onSelect('clinic')}
             className="w-full text-left p-4 rounded-xl border border-gray-200 hover:border-blue-300 hover:bg-blue-50/30 transition-all group"
           >
             <div className="flex items-start gap-3">
@@ -408,25 +295,17 @@ function ReportTypeModal({ onSelect, onClose }) {
               </div>
               <div className="flex-1">
                 <div className="flex items-center gap-2 mb-1">
-                  <h4 className="font-semibold text-gray-800 group-hover:text-blue-700">
-                    Report to Clinic
-                  </h4>
-                  <span className="text-[10px] bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full">
-                    Direct
-                  </span>
+                  <h4 className="font-semibold text-gray-800 group-hover:text-blue-700">Report to Clinic</h4>
+                  <span className="text-[10px] bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full">Direct</span>
                 </div>
-                <p className="text-xs text-gray-500">
-                  Send feedback directly to the clinic management.
-                </p>
-                <p className="text-xs text-blue-600 mt-2">
-                  Write freely about your concern →
-                </p>
+                <p className="text-xs text-gray-500">Send feedback directly to the clinic management.</p>
+                <p className="text-xs text-blue-600 mt-2">Write freely about your concern →</p>
               </div>
             </div>
           </button>
 
           <button
-            onClick={() => onSelect("admin")}
+            onClick={() => onSelect('admin')}
             className="w-full text-left p-4 rounded-xl border border-gray-200 hover:border-red-300 hover:bg-red-50/30 transition-all group"
           >
             <div className="flex items-start gap-3">
@@ -435,29 +314,18 @@ function ReportTypeModal({ onSelect, onClose }) {
               </div>
               <div className="flex-1">
                 <div className="flex items-center gap-2 mb-1">
-                  <h4 className="font-semibold text-gray-800 group-hover:text-red-700">
-                    Report to Super Admin
-                  </h4>
-                  <span className="text-[10px] bg-red-100 text-red-600 px-2 py-0.5 rounded-full">
-                    Escalate
-                  </span>
+                  <h4 className="font-semibold text-gray-800 group-hover:text-red-700">Report to Super Admin</h4>
+                  <span className="text-[10px] bg-red-100 text-red-600 px-2 py-0.5 rounded-full">Escalate</span>
                 </div>
-                <p className="text-xs text-gray-500">
-                  Report serious violations to our administrative team.
-                </p>
-                <p className="text-xs text-red-600 mt-2">
-                  Select from violation categories →
-                </p>
+                <p className="text-xs text-gray-500">Report serious violations to our administrative team.</p>
+                <p className="text-xs text-red-600 mt-2">Select from violation categories →</p>
               </div>
             </div>
           </button>
         </div>
 
         <div className="px-6 py-4 border-t border-gray-100 bg-gray-50/30">
-          <button
-            onClick={onClose}
-            className="w-full py-2.5 border border-gray-200 rounded-xl text-sm font-medium text-gray-600 hover:bg-gray-200 transition-all"
-          >
+          <button onClick={onClose} className="w-full py-2.5 border border-gray-200 rounded-xl text-sm font-medium text-gray-600 hover:bg-gray-200 transition-all">
             Cancel
           </button>
         </div>
@@ -467,15 +335,7 @@ function ReportTypeModal({ onSelect, onClose }) {
 }
 
 // ── Report to Clinic Modal (with doctor selection & appointment) ─────────────
-function ReportToClinicModal({
-  clinicID,
-  clinicName,
-  user,
-  onClose,
-  onSuccess,
-  onFetchDoctors,
-  onReportToClinic,
-}) {
+function ReportToClinicModal({ clinicID, clinicName, user, onClose, onSuccess, onFetchDoctors, onReportToClinic }) {
   const [doctors, setDoctors] = useState([]);
   const [loadingDoctors, setLoadingDoctors] = useState(true);
   const [subject, setSubject] = useState("");
@@ -508,7 +368,7 @@ function ReportToClinicModal({
 
   const handleDoctorChange = (e) => {
     const doctorId = e.target.value;
-    const doctor = doctors.find((d) => d.id === doctorId);
+    const doctor = doctors.find(d => d.id === doctorId);
     setSelectedDoctorId(doctorId);
     setSelectedDoctorName(doctor ? doctor.name : "");
   };
@@ -558,21 +418,10 @@ function ReportToClinicModal({
     return (
       <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4">
         <div className="bg-white rounded-2xl border border-gray-200 w-full max-w-md p-8 text-center shadow-xl">
-          <div className="w-16 h-16 rounded-full bg-green-100 text-green-600 flex items-center justify-center text-3xl mx-auto mb-4">
-            ✓
-          </div>
-          <h3 className="text-lg font-bold text-[#1a355d] mb-2">
-            Report Submitted
-          </h3>
-          <p className="text-sm text-gray-500 mb-6">
-            The clinic management has received your report.
-          </p>
-          <button
-            onClick={onClose}
-            className="w-full py-2.5 bg-[#1a355d] text-white rounded-xl text-sm font-bold"
-          >
-            Close
-          </button>
+          <div className="w-16 h-16 rounded-full bg-green-100 text-green-600 flex items-center justify-center text-3xl mx-auto mb-4">✓</div>
+          <h3 className="text-lg font-bold text-[#1a355d] mb-2">Report Submitted</h3>
+          <p className="text-sm text-gray-500 mb-6">The clinic management has received your report.</p>
+          <button onClick={onClose} className="w-full py-2.5 bg-[#1a355d] text-white rounded-xl text-sm font-bold">Close</button>
         </div>
       </div>
     );
@@ -591,25 +440,16 @@ function ReportToClinicModal({
               <p className="text-xs text-gray-400">{clinicName}</p>
             </div>
           </div>
-          <button
-            onClick={onClose}
-            className="text-gray-400 hover:text-gray-600"
-          >
-            ✕
-          </button>
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-600">✕</button>
         </div>
 
         <div className="p-6 space-y-5">
           <div className="bg-blue-50 border-l-4 border-blue-400 rounded-r-xl p-4">
-            <p className="text-xs text-blue-800">
-              This report will be sent directly to the clinic management.
-            </p>
+            <p className="text-xs text-blue-800">This report will be sent directly to the clinic management.</p>
           </div>
 
           <div>
-            <label className="block text-xs font-semibold text-gray-500 mb-2">
-              Subject *
-            </label>
+            <label className="block text-xs font-semibold text-gray-500 mb-2">Subject *</label>
             <input
               type="text"
               value={subject}
@@ -620,9 +460,7 @@ function ReportToClinicModal({
           </div>
 
           <div>
-            <label className="block text-xs font-semibold text-gray-500 mb-2">
-              Message *
-            </label>
+            <label className="block text-xs font-semibold text-gray-500 mb-2">Message *</label>
             <textarea
               value={message}
               onChange={(e) => setMessage(e.target.value)}
@@ -634,8 +472,7 @@ function ReportToClinicModal({
 
           <div>
             <label className="block text-xs font-semibold text-gray-500 mb-2">
-              <Stethoscope size={12} className="inline mr-1" /> Doctor
-              (Optional)
+              <Stethoscope size={12} className="inline mr-1" /> Doctor (Optional)
             </label>
             {loadingDoctors ? (
               <div className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm text-gray-400">
@@ -662,9 +499,7 @@ function ReportToClinicModal({
           </div>
 
           <div>
-            <label className="block text-xs font-semibold text-gray-500 mb-2">
-              Appointment Type (Optional)
-            </label>
+            <label className="block text-xs font-semibold text-gray-500 mb-2">Appointment Type (Optional)</label>
             <select
               value={appointmentType}
               onChange={(e) => setAppointmentType(e.target.value)}
@@ -683,8 +518,7 @@ function ReportToClinicModal({
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="block text-xs font-semibold text-gray-500 mb-2">
-                <Calendar size={12} className="inline mr-1" /> Date of
-                Appointment
+                <Calendar size={12} className="inline mr-1" /> Date of Appointment
               </label>
               <input
                 type="date"
@@ -707,24 +541,16 @@ function ReportToClinicModal({
           </div>
 
           {error && (
-            <p className="text-xs text-red-500 bg-red-50 border border-red-100 rounded-xl px-4 py-3">
-              {error}
-            </p>
+            <p className="text-xs text-red-500 bg-red-50 border border-red-100 rounded-xl px-4 py-3">{error}</p>
           )}
 
           <div className="flex gap-3 pt-2">
-            <button
-              onClick={onClose}
-              className="flex-1 py-2.5 border border-gray-200 rounded-xl text-sm font-bold text-gray-500 hover:bg-gray-200 transition-all"
-            >
+            <button onClick={onClose} className="flex-1 py-2.5 border border-gray-200 rounded-xl text-sm font-bold text-gray-500 hover:bg-gray-200 transition-all">
               Cancel
             </button>
-            <button
-              onClick={handleSubmit}
-              disabled={submitting}
-              className="flex-1 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-sm font-bold disabled:opacity-50"
-            >
-              {submitting ? "Sending..." : "Send Report"}
+            <button onClick={handleSubmit} disabled={submitting}
+              className="flex-1 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-sm font-bold disabled:opacity-50">
+              {submitting ? 'Sending...' : 'Send Report'}
             </button>
           </div>
         </div>
@@ -734,20 +560,13 @@ function ReportToClinicModal({
 }
 
 // ── Report to Admin Modal ─────────────────────────────────────────────
-function ReportToAdminModal({
-  clinicID,
-  clinicName,
-  user,
-  onClose,
-  onSuccess,
-  onReportToAdmin,
-}) {
-  const [selectedReason, setSelectedReason] = useState("");
-  const [customReason, setCustomReason] = useState("");
-  const [description, setDescription] = useState("");
+function ReportToAdminModal({ clinicID, clinicName, user, onClose, onSuccess, onReportToAdmin }) {
+  const [selectedReason, setSelectedReason] = useState('');
+  const [customReason, setCustomReason] = useState('');
+  const [description, setDescription] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
-  const [error, setError] = useState("");
+  const [error, setError] = useState('');
 
   const handleSubmit = async () => {
     if (!user?.uid) {
@@ -758,7 +577,7 @@ function ReportToAdminModal({
       setError("Please select a violation reason.");
       return;
     }
-    if (selectedReason === "other" && !customReason.trim()) {
+    if (selectedReason === 'other' && !customReason.trim()) {
       setError("Please specify the other violation.");
       return;
     }
@@ -768,15 +587,12 @@ function ReportToAdminModal({
     }
 
     setSubmitting(true);
-    setError("");
+    setError('');
 
     try {
-      const reasonText =
-        selectedReason === "other"
-          ? customReason
-          : ADMIN_REPORT_REASONS.find((r) => r.value === selectedReason)
-              ?.label || selectedReason;
-
+      const reasonText = selectedReason === 'other' ? customReason : 
+        ADMIN_REPORT_REASONS.find(r => r.value === selectedReason)?.label || selectedReason;
+      
       await onReportToAdmin({
         clinicID,
         clinicName,
@@ -799,21 +615,10 @@ function ReportToAdminModal({
     return (
       <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4">
         <div className="bg-white rounded-2xl border border-gray-200 w-full max-w-md p-8 text-center shadow-xl">
-          <div className="w-16 h-16 rounded-full bg-green-100 text-green-600 flex items-center justify-center text-3xl mx-auto mb-4">
-            ✓
-          </div>
-          <h3 className="text-lg font-bold text-[#1a355d] mb-2">
-            Report Submitted
-          </h3>
-          <p className="text-sm text-gray-500 mb-6">
-            Our team will review your report.
-          </p>
-          <button
-            onClick={onClose}
-            className="w-full py-2.5 bg-[#1a355d] text-white rounded-xl text-sm font-bold"
-          >
-            Close
-          </button>
+          <div className="w-16 h-16 rounded-full bg-green-100 text-green-600 flex items-center justify-center text-3xl mx-auto mb-4">✓</div>
+          <h3 className="text-lg font-bold text-[#1a355d] mb-2">Report Submitted</h3>
+          <p className="text-sm text-gray-500 mb-6">Our team will review your report.</p>
+          <button onClick={onClose} className="w-full py-2.5 bg-[#1a355d] text-white rounded-xl text-sm font-bold">Close</button>
         </div>
       </div>
     );
@@ -828,50 +633,35 @@ function ReportToAdminModal({
               <Shield size={16} />
             </div>
             <div>
-              <h3 className="font-bold text-[#1a355d]">
-                Report to Super Admin
-              </h3>
+              <h3 className="font-bold text-[#1a355d]">Report to Super Admin</h3>
               <p className="text-xs text-gray-400">{clinicName}</p>
             </div>
           </div>
-          <button
-            onClick={onClose}
-            className="text-gray-400 hover:text-gray-600"
-          >
-            ✕
-          </button>
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-600">✕</button>
         </div>
 
         <div className="p-6 space-y-5">
           <div className="bg-red-50 border-l-4 border-red-400 rounded-r-xl p-4">
-            <p className="text-xs text-red-800">
-              This report goes directly to our administrative team.
-            </p>
+            <p className="text-xs text-red-800">This report goes directly to our administrative team.</p>
           </div>
 
           <div>
-            <label className="block text-xs font-semibold text-gray-500 mb-2">
-              Violation Type *
-            </label>
+            <label className="block text-xs font-semibold text-gray-500 mb-2">Violation Type *</label>
             <select
               value={selectedReason}
               onChange={(e) => setSelectedReason(e.target.value)}
               className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:ring-2 focus:ring-red-100 outline-none"
             >
               <option value="">Select a violation reason...</option>
-              {ADMIN_REPORT_REASONS.map((reason) => (
-                <option key={reason.value} value={reason.value}>
-                  {reason.label}
-                </option>
+              {ADMIN_REPORT_REASONS.map(reason => (
+                <option key={reason.value} value={reason.value}>{reason.label}</option>
               ))}
             </select>
           </div>
 
-          {selectedReason === "other" && (
+          {selectedReason === 'other' && (
             <div>
-              <label className="block text-xs font-semibold text-gray-500 mb-2">
-                Please specify *
-              </label>
+              <label className="block text-xs font-semibold text-gray-500 mb-2">Please specify *</label>
               <input
                 type="text"
                 value={customReason}
@@ -882,9 +672,7 @@ function ReportToAdminModal({
           )}
 
           <div>
-            <label className="block text-xs font-semibold text-gray-500 mb-2">
-              Detailed Description *
-            </label>
+            <label className="block text-xs font-semibold text-gray-500 mb-2">Detailed Description *</label>
             <textarea
               value={description}
               onChange={(e) => setDescription(e.target.value)}
@@ -894,24 +682,16 @@ function ReportToAdminModal({
           </div>
 
           {error && (
-            <p className="text-xs text-red-500 bg-red-50 border border-red-100 rounded-xl px-4 py-3">
-              {error}
-            </p>
+            <p className="text-xs text-red-500 bg-red-50 border border-red-100 rounded-xl px-4 py-3">{error}</p>
           )}
 
           <div className="flex gap-3 pt-2">
-            <button
-              onClick={onClose}
-              className="flex-1 py-2.5 border border-gray-200 rounded-xl text-sm font-bold text-gray-500 hover:bg-gray-200 transition-all"
-            >
+            <button onClick={onClose} className="flex-1 py-2.5 border border-gray-200 rounded-xl text-sm font-bold text-gray-500 hover:bg-gray-200 transition-all">
               Cancel
             </button>
-            <button
-              onClick={handleSubmit}
-              disabled={submitting}
-              className="flex-1 py-2.5 bg-red-600 hover:bg-red-700 text-white rounded-xl text-sm font-bold disabled:opacity-50"
-            >
-              {submitting ? "Submitting..." : "Submit Report"}
+            <button onClick={handleSubmit} disabled={submitting}
+              className="flex-1 py-2.5 bg-red-600 hover:bg-red-700 text-white rounded-xl text-sm font-bold disabled:opacity-50">
+              {submitting ? 'Submitting...' : 'Submit Report'}
             </button>
           </div>
         </div>
@@ -921,19 +701,13 @@ function ReportToAdminModal({
 }
 
 // ── Review Modal ──────────────────────────────────────────────
-function ReviewModal({
-  clinicID,
-  clinicName,
-  user,
-  onClose,
-  onReviewSubmitted,
-  onSubmitReview,
-}) {
-  const [rating, setRating] = useState(0);
-  const [reviewText, setReviewText] = useState("");
+function ReviewModal({ clinicID, clinicName, user, onClose, onReviewSubmitted, onSubmitReview, existingReview }) {
+  const [rating, setRating] = useState(existingReview?.rating || 0);
+  const [reviewText, setReviewText] = useState(existingReview?.review || '');
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
-  const [error, setError] = useState("");
+  const [error, setError] = useState('');
+  const isEdit = !!existingReview;
 
   const handleSubmit = async () => {
     if (!user?.uid) {
@@ -950,7 +724,7 @@ function ReviewModal({
     }
 
     setSubmitting(true);
-    setError("");
+    setError('');
 
     try {
       await onSubmitReview({
@@ -960,6 +734,7 @@ function ReviewModal({
         patientName: user.displayName || user.email,
         rating,
         review: reviewText.trim(),
+        reviewId: existingReview?.id || null,
       });
       setSubmitted(true);
       onReviewSubmitted?.();
@@ -974,21 +749,10 @@ function ReviewModal({
     return (
       <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4">
         <div className="bg-white rounded-2xl border border-gray-200 w-full max-w-md p-8 text-center shadow-xl">
-          <div className="w-16 h-16 rounded-full bg-green-100 text-green-600 flex items-center justify-center text-3xl mx-auto mb-4">
-            ✓
-          </div>
-          <h3 className="text-lg font-bold text-[#1a355d] mb-2">
-            Review Posted
-          </h3>
-          <p className="text-sm text-gray-500 mb-6">
-            Thank you for sharing your experience!
-          </p>
-          <button
-            onClick={onClose}
-            className="w-full py-2.5 bg-[#1a355d] text-white rounded-xl text-sm font-bold"
-          >
-            Close
-          </button>
+          <div className="w-16 h-16 rounded-full bg-green-100 text-green-600 flex items-center justify-center text-3xl mx-auto mb-4">✓</div>
+          <h3 className="text-lg font-bold text-[#1a355d] mb-2">Review Posted</h3>
+          <p className="text-sm text-gray-500 mb-6">Thank you for sharing your experience!</p>
+          <button onClick={onClose} className="w-full py-2.5 bg-[#1a355d] text-white rounded-xl text-sm font-bold">Close</button>
         </div>
       </div>
     );
@@ -1002,36 +766,22 @@ function ReviewModal({
             <div className="w-8 h-8 rounded-full bg-amber-100 text-amber-600 flex items-center justify-center">
               <Star size={16} />
             </div>
-            <h3 className="font-bold text-[#1a355d]">Write a Review</h3>
+            <h3 className="font-bold text-[#1a355d]">{isEdit ? "Edit Your Review" : "Write a Review"}</h3>
           </div>
-          <button
-            onClick={onClose}
-            className="text-gray-400 hover:text-gray-600"
-          >
-            ✕
-          </button>
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-600">✕</button>
         </div>
 
         <div className="p-6 space-y-5">
           <div className="text-center">
-            <p className="text-sm text-gray-600 mb-2">
-              How would you rate your experience at
-            </p>
+            <p className="text-sm text-gray-600 mb-2">How would you rate your experience at</p>
             <p className="font-semibold text-[#1a355d] mb-3">{clinicName}</p>
             <div className="flex justify-center">
-              <StarRating
-                rating={rating}
-                onRatingChange={setRating}
-                interactive={true}
-                size="lg"
-              />
+              <StarRating rating={rating} onRatingChange={setRating} interactive={true} size="lg" />
             </div>
           </div>
 
           <div>
-            <label className="block text-xs font-semibold text-gray-500 mb-2">
-              Your Review *
-            </label>
+            <label className="block text-xs font-semibold text-gray-500 mb-2">Your Review *</label>
             <textarea
               value={reviewText}
               onChange={(e) => setReviewText(e.target.value)}
@@ -1041,24 +791,16 @@ function ReviewModal({
           </div>
 
           {error && (
-            <p className="text-xs text-red-500 bg-red-50 border border-red-100 rounded-xl px-4 py-3">
-              {error}
-            </p>
+            <p className="text-xs text-red-500 bg-red-50 border border-red-100 rounded-xl px-4 py-3">{error}</p>
           )}
 
           <div className="flex gap-3 pt-2">
-            <button
-              onClick={onClose}
-              className="flex-1 py-2.5 border border-gray-200 rounded-xl text-sm font-bold text-gray-500 hover:bg-gray-200 transition-all"
-            >
+            <button onClick={onClose} className="flex-1 py-2.5 border border-gray-200 rounded-xl text-sm font-bold text-gray-500 hover:bg-gray-200 transition-all">
               Cancel
             </button>
-            <button
-              onClick={handleSubmit}
-              disabled={submitting}
-              className="flex-1 py-2.5 bg-amber-500 hover:bg-amber-600 text-white rounded-xl text-sm font-bold disabled:opacity-50"
-            >
-              {submitting ? "Posting..." : "Post Review"}
+            <button onClick={handleSubmit} disabled={submitting}
+              className="flex-1 py-2.5 bg-amber-500 hover:bg-amber-600 text-white rounded-xl text-sm font-bold disabled:opacity-50">
+              {submitting ? 'Saving...' : isEdit ? 'Update Review' : 'Post Review'}
             </button>
           </div>
         </div>
@@ -1083,7 +825,7 @@ function ReviewsSection({ clinicID, clinicName, onFetchReviews }) {
         setTotalReviews(data.totalReviews || 0);
       }
     } catch (error) {
-      console.error("Failed to fetch reviews:", error);
+      console.error('Failed to fetch reviews:', error);
     } finally {
       setLoading(false);
     }
@@ -1112,12 +854,8 @@ function ReviewsSection({ clinicID, clinicName, onFetchReviews }) {
           {totalReviews > 0 && (
             <div className="flex items-center gap-3 mt-1">
               <StarRating rating={averageRating} size="sm" />
-              <span className="text-sm font-medium text-gray-700">
-                {averageRating.toFixed(1)}
-              </span>
-              <span className="text-xs text-gray-400">
-                ({totalReviews} {totalReviews === 1 ? "review" : "reviews"})
-              </span>
+              <span className="text-sm font-medium text-gray-700">{averageRating.toFixed(1)}</span>
+              <span className="text-xs text-gray-400">({totalReviews} {totalReviews === 1 ? 'review' : 'reviews'})</span>
             </div>
           )}
         </div>
@@ -1128,33 +866,24 @@ function ReviewsSection({ clinicID, clinicName, onFetchReviews }) {
           <div className="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center mx-auto mb-3">
             <Star size={24} className="text-gray-300" />
           </div>
-          <p className="text-sm text-gray-500">
-            No reviews yet. Be the first to share your experience!
-          </p>
+          <p className="text-sm text-gray-500">No reviews yet. Be the first to share your experience!</p>
         </div>
       ) : (
         <div className="space-y-4 max-h-[400px] overflow-y-auto pr-2">
           {reviews.map((review, idx) => (
-            <div
-              key={idx}
-              className="border-b border-gray-100 pb-4 last:border-0"
-            >
+            <div key={idx} className="border-b border-gray-100 pb-4 last:border-0">
               <div className="flex items-center justify-between mb-2">
                 <div className="flex items-center gap-2">
                   <div className="w-8 h-8 rounded-full bg-[#1a355d]/10 text-[#1a355d] flex items-center justify-center text-sm font-bold">
-                    {review.patientName?.[0]?.toUpperCase() || "U"}
+                    {review.patientName?.[0]?.toUpperCase() || 'U'}
                   </div>
                   <div>
-                    <p className="text-sm font-semibold text-gray-800">
-                      {review.patientName || "Anonymous Patient"}
-                    </p>
+                    <p className="text-sm font-semibold text-gray-800">{review.patientName || 'Anonymous Patient'}</p>
                     <StarRating rating={review.rating} size="sm" />
                   </div>
                 </div>
                 <span className="text-xs text-gray-400">
-                  {review.createdAt?.toDate
-                    ? new Date(review.createdAt.toDate()).toLocaleDateString()
-                    : ""}
+                  {review.createdAt?.toDate ? new Date(review.createdAt.toDate()).toLocaleDateString() : ''}
                 </span>
               </div>
               <p className="text-sm text-gray-600 ml-10">{review.review}</p>
@@ -1167,50 +896,34 @@ function ReviewsSection({ clinicID, clinicName, onFetchReviews }) {
 }
 
 // ── Booking Modal ────────────────────────────────────────────────
-function BookingModal({
-  doctor,
-  services,
-  clinicID,
-  patientID,
-  onClose,
-  onCreateBooking,
-}) {
+function BookingModal({ doctor, services, clinicID, patientID, onClose, onCreateBooking }) {
   const { userData, loading: authLoading } = useAuth();
 
   const firstName = userData?.firstName || "";
   const lastName = userData?.lastName || "";
   const mi = userData?.middleInitial ? `${userData.middleInitial} ` : "";
-  const uiPatientName = `${firstName} ${mi}${lastName}`
-    .replace(/\s+/g, " ")
-    .trim();
+  const uiPatientName = `${firstName} ${mi}${lastName}`.replace(/\s+/g, ' ').trim();
 
   const databaseDays = doctor?.availability?.days || [];
 
-  const availableShortDays = ALL_DAYS.filter((shortDay) =>
-    databaseDays.includes(DAY_NAME_MAP[shortDay]),
+  const availableShortDays = ALL_DAYS.filter(shortDay =>
+    databaseDays.includes(DAY_NAME_MAP[shortDay])
   );
 
   const validSlots = doctor?.availability
-    ? generateTimeSlots(
-        doctor.availability.startTime,
-        doctor.availability.endTime,
-      )
+    ? generateTimeSlots(doctor.availability.startTime, doctor.availability.endTime)
     : [];
 
   const [selectedDay, setSelectedDay] = useState(availableShortDays[0] ?? null);
   const [selectedTime, setSelectedTime] = useState(null);
-  const [selectedService, setSelectedService] = useState("");
+  const [selectedService, setSelectedService] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [confirmed, setConfirmed] = useState(false);
-  const [error, setError] = useState("");
+  const [error, setError] = useState('');
 
   const selectedDate = selectedDay ? getNextDateForDay(selectedDay) : null;
 
-  const { bookedSlots, loading: slotsLoading } = useBookedSlots(
-    clinicID,
-    doctor.id,
-    selectedDate,
-  );
+  const { bookedSlots, loading: slotsLoading } = useBookedSlots(clinicID, doctor.id, selectedDate);
 
   function handleDayChange(day) {
     setSelectedDay(day);
@@ -1218,22 +931,15 @@ function BookingModal({
   }
 
   async function handleConfirm() {
-    if (!uiPatientName) {
-      setError("Account details not loaded.");
-      return;
-    }
+    if (!uiPatientName) { setError("Account details not loaded."); return; }
     if (!selectedDay || !selectedTime || !selectedService) return;
     setSubmitting(true);
-    setError("");
+    setError('');
     try {
       await onCreateBooking({
-        clinicID,
-        doctorID: doctor.id,
-        patientID,
-        service: selectedService,
-        day: selectedDay,
-        time: selectedTime,
-        date: selectedDate,
+        clinicID, doctorID: doctor.id, patientID,
+        service: selectedService, day: selectedDay,
+        time: selectedTime, date: selectedDate,
       });
       setConfirmed(true);
     } catch (err) {
@@ -1243,35 +949,18 @@ function BookingModal({
     }
   }
 
-  const canConfirm =
-    selectedDay && selectedTime && selectedService && !submitting;
+  const canConfirm = selectedDay && selectedTime && selectedService && !submitting;
 
   if (confirmed) {
     return (
       <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4">
         <div className="bg-white rounded-2xl border border-gray-200 w-full max-w-sm p-8 text-center shadow-xl">
-          <div className="w-16 h-16 rounded-full bg-green-100 text-green-600 flex items-center justify-center text-3xl mx-auto mb-4">
-            ✓
-          </div>
-          <h3 className="text-lg font-bold text-[#1a355d] mb-2">
-            Appointment Requested
-          </h3>
-          <p className="text-sm text-gray-500 mb-1">
-            <span className="font-medium text-gray-700">Dr. {doctor.name}</span>{" "}
-            — {selectedService}
-          </p>
-          <p className="text-sm text-gray-500 mb-1">
-            {formatDate(selectedDate)}
-          </p>
-          <p className="text-sm font-medium text-[#1a355d] mb-6">
-            {selectedTime}
-          </p>
-          <button
-            onClick={onClose}
-            className="w-full py-2.5 bg-[#1a355d] text-white rounded-xl text-sm font-bold"
-          >
-            Done
-          </button>
+          <div className="w-16 h-16 rounded-full bg-green-100 text-green-600 flex items-center justify-center text-3xl mx-auto mb-4">✓</div>
+          <h3 className="text-lg font-bold text-[#1a355d] mb-2">Appointment Requested</h3>
+          <p className="text-sm text-gray-500 mb-1"><span className="font-medium text-gray-700">Dr. {doctor.name}</span> — {selectedService}</p>
+          <p className="text-sm text-gray-500 mb-1">{formatDate(selectedDate)}</p>
+          <p className="text-sm font-medium text-[#1a355d] mb-6">{selectedTime}</p>
+          <button onClick={onClose} className="w-full py-2.5 bg-[#1a355d] text-white rounded-xl text-sm font-bold">Done</button>
         </div>
       </div>
     );
@@ -1288,59 +977,36 @@ function BookingModal({
             <p className="text-white font-bold">Dr. {doctor.name}</p>
             <p className="text-white/60 text-xs">{doctor.specialty}</p>
           </div>
-          <button onClick={onClose} className="text-white/60 hover:text-white">
-            ✕
-          </button>
+          <button onClick={onClose} className="text-white/60 hover:text-white">✕</button>
         </div>
 
         <div className="px-6 py-5 flex flex-col gap-5 max-h-[75vh] overflow-y-auto">
           <div className="bg-blue-50/50 p-4 rounded-xl border border-blue-100">
-            <p className="text-[10px] font-bold text-blue-400 uppercase mb-1 tracking-widest">
-              Booking for
-            </p>
-            {authLoading ? (
-              <div className="h-4 w-32 bg-blue-100 animate-pulse rounded mt-1" />
-            ) : (
-              <p className="text-sm font-bold text-[#1a355d]">
-                {uiPatientName || "Loading profile..."}
-              </p>
-            )}
+            <p className="text-[10px] font-bold text-blue-400 uppercase mb-1 tracking-widest">Booking for</p>
+            {authLoading
+              ? <div className="h-4 w-32 bg-blue-100 animate-pulse rounded mt-1" />
+              : <p className="text-sm font-bold text-[#1a355d]">{uiPatientName || "Loading profile..."}</p>
+            }
           </div>
 
           <div>
-            <label className="block text-xs font-semibold text-gray-500 mb-2">
-              Service
-            </label>
-            <select
-              value={selectedService}
-              onChange={(e) => setSelectedService(e.target.value)}
-              className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:ring-2 focus:ring-blue-100 outline-none"
-            >
+            <label className="block text-xs font-semibold text-gray-500 mb-2">Service</label>
+            <select value={selectedService} onChange={e => setSelectedService(e.target.value)}
+              className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:ring-2 focus:ring-blue-100 outline-none">
               <option value="">Select a service...</option>
-              {services.map((s) => (
-                <option key={s} value={s}>
-                  {s}
-                </option>
-              ))}
+              {services.map(s => <option key={s} value={s}>{s}</option>)}
             </select>
           </div>
 
           <div>
-            <p className="block text-xs font-semibold text-gray-500 mb-2">
-              Select Day
-            </p>
+            <p className="block text-xs font-semibold text-gray-500 mb-2">Select Day</p>
             <div className="grid grid-cols-7 gap-1.5">
-              {ALL_DAYS.map((day) => {
+              {ALL_DAYS.map(day => {
                 const isAvailable = databaseDays.includes(DAY_NAME_MAP[day]);
                 return (
-                  <button
-                    key={day}
-                    type="button"
-                    disabled={!isAvailable}
-                    onClick={() => handleDayChange(day)}
+                  <button key={day} type="button" disabled={!isAvailable} onClick={() => handleDayChange(day)}
                     className={`py-2 rounded-xl text-xs font-bold transition-all
-                      ${selectedDay === day ? "bg-[#1a355d] text-white" : isAvailable ? "border border-gray-200 text-gray-600" : "bg-gray-50 text-gray-200"}`}
-                  >
+                      ${selectedDay === day ? 'bg-[#1a355d] text-white' : isAvailable ? 'border border-gray-200 text-gray-600' : 'bg-gray-50 text-gray-200'}`}>
                     {day}
                   </button>
                 );
@@ -1349,21 +1015,15 @@ function BookingModal({
           </div>
 
           <div>
-            <p className="block text-xs font-semibold text-gray-500 mb-2">
-              Time Slot
-            </p>
+            <p className="block text-xs font-semibold text-gray-500 mb-2">Time Slot</p>
             <div className="grid grid-cols-4 gap-2">
-              {validSlots.map((slot) => {
+              {validSlots.map(slot => {
                 const isBooked = bookedSlots.includes(slot);
                 return (
-                  <button
-                    key={slot}
-                    type="button"
-                    disabled={isBooked || slotsLoading}
+                  <button key={slot} type="button" disabled={isBooked || slotsLoading}
                     onClick={() => setSelectedTime(slot)}
                     className={`py-2 rounded-xl text-xs font-medium border transition-all
-                      ${selectedTime === slot ? "bg-[#1a355d] text-white" : "border-gray-200 text-gray-600"}`}
-                  >
+                      ${selectedTime === slot ? 'bg-[#1a355d] text-white' : 'border-gray-200 text-gray-600'}`}>
                     {slot}
                   </button>
                 );
@@ -1372,31 +1032,21 @@ function BookingModal({
           </div>
 
           {error && (
-            <p className="text-xs text-red-500 bg-red-50 border border-red-100 rounded-xl px-4 py-3">
-              {error}
-            </p>
+            <p className="text-xs text-red-500 bg-red-50 border border-red-100 rounded-xl px-4 py-3">{error}</p>
           )}
 
           <div className="bg-blue-50 border-l-4 border-blue-400 rounded-r-xl px-4 py-3">
-            <p className="text-xs text-blue-700">
-              Booking is subject to clinic confirmation.
-            </p>
+            <p className="text-xs text-blue-700">Booking is subject to clinic confirmation.</p>
           </div>
         </div>
 
         <div className="px-6 py-4 border-t border-gray-100 flex gap-3 bg-gray-50/30">
-          <button
-            onClick={onClose}
-            className="flex-1 py-2.5 border border-gray-200 rounded-xl text-sm font-bold text-gray-500 hover:bg-gray-200 transition-all"
-          >
+          <button onClick={onClose} className="flex-1 py-2.5 border border-gray-200 rounded-xl text-sm font-bold text-gray-500 hover:bg-gray-200 transition-all">
             Cancel
           </button>
-          <button
-            onClick={handleConfirm}
-            disabled={!canConfirm}
-            className="flex-[2] py-2.5 bg-[#1a355d] text-white rounded-xl text-sm font-bold disabled:opacity-30"
-          >
-            {submitting ? "Processing..." : "Confirm Appointment"}
+          <button onClick={handleConfirm} disabled={!canConfirm}
+            className="flex-[2] py-2.5 bg-[#1a355d] text-white rounded-xl text-sm font-bold disabled:opacity-30">
+            {submitting ? 'Processing...' : 'Confirm Appointment'}
           </button>
         </div>
       </div>
@@ -1427,35 +1077,46 @@ function ClinicProfilePageInner() {
   const [showReportToAdmin, setShowReportToAdmin] = useState(false);
   const [showReviewModal, setShowReviewModal] = useState(false);
   const [refreshReviews, setRefreshReviews] = useState(0);
+  const [showFab, setShowFab] = useState(false);
+  const [selectedDoctor, setSelectedDoctor] = useState(null);
+  const [existingReview, setExistingReview] = useState(null);
   const doctorRefs = useRef({});
+
+  // Fetch patient existing review
+  useEffect(() => {
+    if (!user?.uid || !params.clinicID) return;
+    fetch(`/api/reviews?patientID=${user.uid}`)
+      .then(r => r.json())
+      .then(data => {
+        if (data.success) {
+          const found = (data.reviews || []).find(r => r.clinicID === params.clinicID);
+          setExistingReview(found || null);
+        }
+      })
+      .catch(() => {});
+  }, [user, params.clinicID]);
 
   useEffect(() => {
     if (!clinic) return;
-    const doctorID = searchParams.get("doctor");
+    const doctorID = searchParams.get('doctor');
     if (!doctorID) return;
     setHighlightDoctor(doctorID);
     const scrollTimer = setTimeout(() => {
-      doctorRefs.current[doctorID]?.scrollIntoView({
-        behavior: "smooth",
-        block: "center",
-      });
+      doctorRefs.current[doctorID]?.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }, 300);
     const highlightTimer = setTimeout(() => setHighlightDoctor(null), 2000);
-    return () => {
-      clearTimeout(scrollTimer);
-      clearTimeout(highlightTimer);
-    };
+    return () => { clearTimeout(scrollTimer); clearTimeout(highlightTimer); };
   }, [clinic, searchParams]);
 
   const handleReviewSubmitted = () => {
-    setRefreshReviews((prev) => prev + 1);
+    setRefreshReviews(prev => prev + 1);
   };
 
   const handleReportTypeSelect = (type) => {
     setShowReportType(false);
-    if (type === "clinic") {
+    if (type === 'clinic') {
       setShowReportToClinic(true);
-    } else if (type === "admin") {
+    } else if (type === 'admin') {
       setShowReportToAdmin(true);
     }
   };
@@ -1464,10 +1125,7 @@ function ClinicProfilePageInner() {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 flex items-center justify-center">
         <div className="text-center">
-          <Loader2
-            size={32}
-            className="animate-spin text-[#1a355d] mx-auto mb-3"
-          />
+          <Loader2 size={32} className="animate-spin text-[#1a355d] mx-auto mb-3" />
           <p className="text-sm text-gray-400">Loading clinic profile...</p>
         </div>
       </div>
@@ -1479,10 +1137,8 @@ function ClinicProfilePageInner() {
       <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 flex items-center justify-center">
         <div className="text-center">
           <p className="font-semibold text-[#1a355d] mb-4">Clinic not found</p>
-          <button
-            onClick={() => router.push("/clinics")}
-            className="px-4 py-2 bg-[#1a355d] text-white rounded-lg text-sm"
-          >
+          <button onClick={() => router.push('/clinics')}
+            className="px-4 py-2 bg-[#1a355d] text-white rounded-lg text-sm">
             Back to directory
           </button>
         </div>
@@ -1492,6 +1148,7 @@ function ClinicProfilePageInner() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50/30 pb-20">
+
       {/* Booking Modal */}
       {bookingDoctor && (
         <BookingModal
@@ -1557,77 +1214,106 @@ function ClinicProfilePageInner() {
           onClose={() => setShowReviewModal(false)}
           onReviewSubmitted={handleReviewSubmitted}
           onSubmitReview={clinicActions.submitReview}
+          existingReview={existingReview}
         />
       )}
 
-      {/* Floating Action Buttons */}
-      <div className="fixed bottom-6 right-6 z-40 flex flex-col gap-3">
-        <button
-          onClick={() => setShowReportType(true)}
-          className="flex items-center gap-3 bg-red-600 hover:bg-red-700 text-white px-4 py-3 rounded-2xl transition-all hover:scale-105 shadow-lg"
-        >
-          <Flag size={18} />
-          <span className="text-sm font-semibold">Write a Report</span>
-        </button>
+      {/* Floating Action Buttons — collapsible on mobile */}
+      <div className="fixed bottom-6 right-4 sm:right-6 z-40">
+        {/* Mobile: collapsed FAB with expand */}
+        <div className="flex flex-col items-end gap-2">
+          <div className="sm:hidden flex flex-col items-end gap-2">
+            {showFab && (
+              <>
+                <button
+                  onClick={() => { setShowReportType(true); setShowFab(false); }}
+                  className="flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white px-4 py-2.5 rounded-2xl transition-all shadow-lg text-sm font-semibold"
+                >
+                  <Flag size={16} />
+                  <span>Write a Report</span>
+                </button>
+                <button
+                  onClick={() => { setShowReviewModal(true); setShowFab(false); }}
+                  className="flex items-center gap-2 bg-amber-500 hover:bg-amber-600 text-white px-4 py-2.5 rounded-2xl transition-all shadow-lg text-sm font-semibold"
+                >
+                  <Star size={16} />
+                  <span>Write a Review</span>
+                </button>
+                {!showInquiry && (
+                  <button
+                    onClick={() => { setShowInquiry(true); setShowFab(false); }}
+                    className="flex items-center gap-2 bg-[#1a355d] hover:bg-[#22447a] text-white px-4 py-2.5 rounded-2xl transition-all shadow-lg text-sm font-semibold"
+                  >
+                    <MessageCircle size={16} />
+                    <span>Message Clinic</span>
+                  </button>
+                )}
+              </>
+            )}
+            <button
+              onClick={() => setShowFab(prev => !prev)}
+              className="w-12 h-12 bg-[#1a355d] hover:bg-[#22447a] text-white rounded-full shadow-xl flex items-center justify-center transition-all"
+            >
+              {showFab ? <X size={20} /> : <MessageCircle size={20} />}
+            </button>
+          </div>
 
-        <button
-          onClick={() => setShowReviewModal(true)}
-          className="flex items-center gap-3 bg-amber-500 hover:bg-amber-600 text-white px-4 py-3 rounded-2xl transition-all hover:scale-105 shadow-lg"
-        >
-          <Star size={18} />
-          <span className="text-sm font-semibold">Write a Review</span>
-        </button>
-
-        {!showInquiry && (
-          <button
-            onClick={() => setShowInquiry(true)}
-            className="flex items-center gap-3 bg-[#1a355d] hover:bg-[#22447a] text-white px-4 py-3 rounded-2xl transition-all hover:scale-105 shadow-lg"
-          >
-            <MessageCircle size={18} />
-            <span className="text-sm font-semibold">Message Clinic</span>
-          </button>
-        )}
+          {/* Desktop: always visible */}
+          <div className="hidden sm:flex flex-col items-end gap-3">
+            <button
+              onClick={() => setShowReportType(true)}
+              className="flex items-center gap-3 bg-red-600 hover:bg-red-700 text-white px-4 py-3 rounded-2xl transition-all hover:scale-105 shadow-lg"
+            >
+              <Flag size={18} />
+              <span className="text-sm font-semibold">Write a Report</span>
+            </button>
+            <button
+              onClick={() => setShowReviewModal(true)}
+              className="flex items-center gap-3 bg-amber-500 hover:bg-amber-600 text-white px-4 py-3 rounded-2xl transition-all hover:scale-105 shadow-lg"
+            >
+              <Star size={18} />
+              <span className="text-sm font-semibold">Write a Review</span>
+            </button>
+            {!showInquiry && (
+              <button
+                onClick={() => setShowInquiry(true)}
+                className="flex items-center gap-3 bg-[#1a355d] hover:bg-[#22447a] text-white px-4 py-3 rounded-2xl transition-all hover:scale-105 shadow-lg"
+              >
+                <MessageCircle size={18} />
+                <span className="text-sm font-semibold">Message Clinic</span>
+              </button>
+            )}
+          </div>
+        </div>
       </div>
 
       {/* HERO SECTION */}
-      <div className="relative h-80 bg-[#1a355d] overflow-hidden">
+      <div className="relative h-56 sm:h-80 bg-[#1a355d] overflow-hidden">
         {clinic.image && (
-          <img
-            src={clinic.image}
-            alt={clinic.clinicName}
-            className="w-full h-full object-cover opacity-50"
-          />
+          <img src={clinic.image} alt={clinic.clinicName} className="w-full h-full object-cover opacity-50" />
         )}
         <div className="absolute inset-0 bg-gradient-to-t from-[#1a355d] via-[#1a355d]/40 to-transparent" />
         <div className="absolute inset-0 bg-black/20" />
-
+        
         <button
-          onClick={() => router.push("/clinics")}
+          onClick={() => router.push('/clinics')}
           className="absolute top-6 left-6 bg-white/10 backdrop-blur-md text-white text-xs font-medium px-4 py-2 rounded-full flex items-center gap-2 hover:bg-white/20 transition-all border border-white/20"
         >
-          <svg
-            className="w-4 h-4 fill-none stroke-current stroke-2"
-            viewBox="0 0 24 24"
-          >
-            <polyline points="15 18 9 12 15 6" />
+          <svg className="w-4 h-4 fill-none stroke-current stroke-2" viewBox="0 0 24 24">
+            <polyline points="15 18 9 12 15 6"/>
           </svg>
           Back to directory
         </button>
 
-        <div className="absolute bottom-8 left-8 right-8">
-          <div className="flex flex-wrap gap-2 mb-4">
-            {(clinic.specialty ?? []).map((s) => (
-              <span
-                key={s}
-                className="text-xs font-bold bg-blue-400/20 text-blue-100 backdrop-blur-sm border border-blue-100/20 rounded-full px-3 py-1"
-              >
+        <div className="absolute bottom-4 sm:bottom-8 left-4 sm:left-8 right-4 sm:right-8">
+          <div className="flex flex-wrap gap-2 mb-2 sm:mb-4">
+            {(clinic.specialty ?? []).map(s => (
+              <span key={s} className="text-xs font-bold bg-blue-400/20 text-blue-100 backdrop-blur-sm border border-blue-100/20 rounded-full px-3 py-1">
                 {s}
               </span>
             ))}
           </div>
-          <h1 className="text-4xl font-bold text-white leading-tight mb-2 tracking-tight">
-            {clinic.clinicName}
-          </h1>
+          <h1 className="text-2xl sm:text-4xl font-bold text-white leading-tight mb-1 sm:mb-2 tracking-tight">{clinic.clinicName}</h1>
           <div className="flex items-center gap-2 text-white/80 text-sm">
             <MapPin size={14} /> {clinic.address}
           </div>
@@ -1636,15 +1322,8 @@ function ClinicProfilePageInner() {
 
       {/* QUICK INFO */}
       <div className="bg-white/80 backdrop-blur-sm border-b border-gray-200 sticky top-0 z-10 shadow-sm">
-        <div className="max-w-6xl mx-auto px-8 py-4 flex flex-wrap gap-x-8 gap-y-3">
-          <InfoChip
-            icon={<Clock size={14} />}
-            text={
-              todayHours
-                ? `${todayHours.open} to ${todayHours.close}`
-                : "No schedule"
-            }
-          />
+        <div className="max-w-6xl mx-auto px-4 sm:px-8 py-3 flex flex-wrap gap-x-4 sm:gap-x-8 gap-y-2">
+          <InfoChip icon={<Clock size={14} />} text={todayHours ? `${todayHours.open} to ${todayHours.close}` : 'No schedule'} />
           <InfoChip icon={<Phone size={14} />} text={clinic.phone} />
           <InfoChip icon={<Mail size={14} />} text={clinic.email} />
           <InfoChip icon={<MapPin size={14} />} text={clinic.city} />
@@ -1652,20 +1331,19 @@ function ClinicProfilePageInner() {
       </div>
 
       {/* BODY */}
-      <div className="max-w-6xl mx-auto px-8 py-10 grid grid-cols-1 lg:grid-cols-3 gap-10">
+      <div className="max-w-6xl mx-auto px-4 sm:px-8 py-6 sm:py-10 grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-10">
+
         {/* LEFT COLUMN */}
         <div className="lg:col-span-2 space-y-12">
+
           {/* About Section */}
           <section>
             <SectionHeader title="About the Clinic" />
             <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm">
               <p className="text-gray-600 leading-relaxed">{clinic.about}</p>
               <div className="flex flex-wrap gap-2 mt-6 pt-6 border-t border-gray-100">
-                {(clinic.amenities ?? []).map((a) => (
-                  <span
-                    key={a}
-                    className="text-xs font-medium bg-gray-50 border border-gray-200 text-gray-600 rounded-lg px-3 py-1.5 flex items-center gap-1"
-                  >
+                {(clinic.amenities ?? []).map(a => (
+                  <span key={a} className="text-xs font-medium bg-gray-50 border border-gray-200 text-gray-600 rounded-lg px-3 py-1.5 flex items-center gap-1">
                     <Award size={12} /> {a}
                   </span>
                 ))}
@@ -1675,29 +1353,23 @@ function ClinicProfilePageInner() {
 
           {/* Doctors Section */}
           <section>
-            <SectionHeader
-              title="Medical Staff"
-              count={`${doctors.length} Providers`}
-            />
+            <SectionHeader title="Medical Staff" count={`${doctors.length} Providers`} />
             <div className="flex flex-col gap-4">
-              {doctors.map((doctor) => (
+              {doctors.map(doctor => (
                 <div
                   key={doctor.id}
-                  ref={(el) => (doctorRefs.current[doctor.id] = el)}
-                  className={`bg-white rounded-2xl border p-5 flex items-center gap-5 transition-all duration-500 shadow-sm hover:shadow-md
-                    ${
-                      doctor.id === highlightDoctor
-                        ? "border-blue-500 ring-4 ring-blue-50 bg-blue-50/20 scale-[1.01]"
-                        : "border-gray-100 hover:border-blue-200"
-                    }`}
+                  ref={el => (doctorRefs.current[doctor.id] = el)}
+                  onClick={() => setSelectedDoctor(doctor)}
+                  className={`bg-white rounded-2xl border p-4 sm:p-5 flex items-center gap-4 sm:gap-5 transition-all duration-500 shadow-sm hover:shadow-md cursor-pointer
+                    ${doctor.id === highlightDoctor
+                      ? 'border-blue-500 ring-4 ring-blue-50 bg-blue-50/20 scale-[1.01]'
+                      : 'border-gray-100 hover:border-blue-200'}`}
                 >
-                  <div className="w-16 h-16 rounded-full bg-gradient-to-br from-blue-100 to-blue-200 text-blue-700 flex items-center justify-center text-xl font-bold shrink-0">
-                    {doctor.name?.split(" ").pop()?.[0]}
+                  <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-full bg-gradient-to-br from-blue-100 to-blue-200 text-blue-700 flex items-center justify-center text-xl font-bold shrink-0">
+                    {doctor.name?.split(' ').pop()?.[0]}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="font-bold text-gray-900 text-lg">
-                      Dr. {doctor.name}
-                    </p>
+                    <p className="font-bold text-gray-900 text-base sm:text-lg">Dr. {doctor.name}</p>
                     <p className="text-sm text-blue-600 font-medium mb-1 flex items-center gap-1">
                       <Stethoscope size={14} /> {doctor.specialty}
                     </p>
@@ -1707,8 +1379,8 @@ function ClinicProfilePageInner() {
                   </div>
                   <button
                     disabled={!doctor.available}
-                    onClick={() => setBookingDoctor(doctor)}
-                    className="shrink-0 bg-gradient-to-r from-[#1a355d] to-[#22447a] hover:from-[#22447a] hover:to-[#2a558a] text-white text-sm font-bold px-6 py-2.5 rounded-xl transition-all disabled:opacity-20 shadow-md"
+                    onClick={e => { e.stopPropagation(); setBookingDoctor(doctor); }}
+                    className="shrink-0 bg-gradient-to-r from-[#1a355d] to-[#22447a] hover:from-[#22447a] hover:to-[#2a558a] text-white text-sm font-bold px-4 sm:px-6 py-2.5 rounded-xl transition-all disabled:opacity-20 shadow-md"
                   >
                     Book
                   </button>
@@ -1720,6 +1392,7 @@ function ClinicProfilePageInner() {
 
         {/* RIGHT COLUMN */}
         <div className="space-y-8">
+
           {/* Clinic Info Card */}
           <section>
             <SectionHeader title="Clinic Information" />
@@ -1729,7 +1402,7 @@ function ClinicProfilePageInner() {
                 <div>
                   <p className="text-xs text-gray-400 mb-0.5">Specialties</p>
                   <p className="text-sm text-gray-700 font-medium">
-                    {(clinic.specialty ?? []).join(", ") || "General Practice"}
+                    {(clinic.specialty ?? []).join(', ') || 'General Practice'}
                   </p>
                 </div>
               </div>
@@ -1737,9 +1410,7 @@ function ClinicProfilePageInner() {
                 <Award size={18} className="text-[#1a355d] mt-0.5" />
                 <div>
                   <p className="text-xs text-gray-400 mb-0.5">Established</p>
-                  <p className="text-sm text-gray-700 font-medium">
-                    {clinic.established || "Information coming soon"}
-                  </p>
+                  <p className="text-sm text-gray-700 font-medium">{clinic.established || 'Information coming soon'}</p>
                 </div>
               </div>
             </div>
@@ -1750,10 +1421,7 @@ function ClinicProfilePageInner() {
             <SectionHeader title="Services & Treatments" />
             <div className="bg-white rounded-2xl border border-gray-100 p-1 shadow-sm">
               {(clinic.services ?? []).map((service, i) => (
-                <div
-                  key={i}
-                  className="p-3 text-sm text-gray-700 border-b border-gray-50 last:border-0 hover:bg-gray-50 transition-colors rounded-lg flex items-center gap-2"
-                >
+                <div key={i} className="p-3 text-sm text-gray-700 border-b border-gray-50 last:border-0 hover:bg-gray-50 transition-colors rounded-lg flex items-center gap-2">
                   <div className="w-2 h-2 rounded-full bg-blue-400" />
                   {service}
                 </div>
@@ -1763,14 +1431,72 @@ function ClinicProfilePageInner() {
 
           {/* Reviews Section */}
           <section key={refreshReviews}>
-            <ReviewsSection
-              clinicID={params.clinicID}
-              clinicName={clinic.clinicName}
-              onFetchReviews={clinicActions.fetchReviews}
-            />
+            <ReviewsSection clinicID={params.clinicID} clinicName={clinic.clinicName} onFetchReviews={clinicActions.fetchReviews} />
           </section>
         </div>
       </div>
+
+      {/* Doctor Info Modal */}
+      {selectedDoctor && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4" onClick={() => setSelectedDoctor(null)}>
+          <div className="bg-white rounded-2xl border border-gray-200 w-full max-w-sm shadow-xl overflow-hidden" onClick={e => e.stopPropagation()}>
+            <div className="bg-gradient-to-r from-[#1a355d] to-[#22447a] px-6 py-5 flex items-center gap-4">
+              <div className="w-14 h-14 rounded-full bg-white/20 border-2 border-white/30 flex items-center justify-center text-white font-bold text-2xl">
+                {selectedDoctor.name?.split(" ").pop()?.[0]}
+              </div>
+              <div className="flex-1">
+                <p className="text-white font-bold text-lg leading-tight">Dr. {selectedDoctor.name}</p>
+                <p className="text-blue-200 text-sm">{selectedDoctor.specialty}</p>
+              </div>
+              <button onClick={() => setSelectedDoctor(null)} className="text-white/60 hover:text-white transition-colors"><X size={20} /></button>
+            </div>
+            <div className="p-6 space-y-4">
+              {selectedDoctor.schedule && (
+                <div className="flex items-start gap-3">
+                  <Clock size={16} className="text-[#1a355d] mt-0.5 shrink-0" />
+                  <div>
+                    <p className="text-xs font-bold text-gray-400 uppercase mb-0.5">Schedule</p>
+                    <p className="text-sm text-gray-700">{selectedDoctor.schedule}</p>
+                  </div>
+                </div>
+              )}
+              {selectedDoctor.availability?.days?.length > 0 && (
+                <div className="flex items-start gap-3">
+                  <Calendar size={16} className="text-[#1a355d] mt-0.5 shrink-0" />
+                  <div>
+                    <p className="text-xs font-bold text-gray-400 uppercase mb-0.5">Available Days</p>
+                    <p className="text-sm text-gray-700">{selectedDoctor.availability.days.join(", ")}</p>
+                  </div>
+                </div>
+              )}
+              {selectedDoctor.education && (
+                <div className="flex items-start gap-3">
+                  <Award size={16} className="text-[#1a355d] mt-0.5 shrink-0" />
+                  <div>
+                    <p className="text-xs font-bold text-gray-400 uppercase mb-0.5">Education</p>
+                    <p className="text-sm text-gray-700">{selectedDoctor.education}</p>
+                  </div>
+                </div>
+              )}
+              {selectedDoctor.bio && (
+                <div className="bg-gray-50 rounded-xl p-4 border border-gray-100">
+                  <p className="text-sm text-gray-600 leading-relaxed">{selectedDoctor.bio}</p>
+                </div>
+              )}
+              <div className="flex gap-3 pt-2">
+                <button onClick={() => setSelectedDoctor(null)} className="flex-1 py-2.5 border border-gray-200 rounded-xl text-sm font-bold text-gray-500 hover:bg-gray-100 transition-all">Close</button>
+                <button
+                  disabled={!selectedDoctor.available}
+                  onClick={() => { setBookingDoctor(selectedDoctor); setSelectedDoctor(null); }}
+                  className="flex-[2] py-2.5 bg-[#1a355d] text-white rounded-xl text-sm font-bold disabled:opacity-30">
+                  Book Appointment
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }

@@ -153,7 +153,28 @@ function BookingsPageInner() {
       </div>
 
       <section className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-        <div className="overflow-x-auto">
+        {/* Mobile card view */}
+        <div className="sm:hidden divide-y divide-slate-100">
+          {filtered.length > 0 ? (
+            filtered.map((b) => (
+              <div key={b.id} className="p-4 space-y-2">
+                <div className="flex items-start justify-between gap-2">
+                  <div>
+                    <p className="font-bold text-sm text-slate-800">{b.patientName || "Unknown"}</p>
+                    <p className="text-xs text-slate-500">Dr. {b.doctorName || "Unknown"}</p>
+                  </div>
+                  <span className={`text-[10px] font-bold uppercase rounded-full px-2.5 py-1 shrink-0 ${STATUS_STYLE[b.status]}`}>{b.status}</span>
+                </div>
+                <p className="text-xs text-slate-500">{b.clinicName || "Unknown Clinic"}</p>
+                <p className="text-xs font-semibold text-slate-600">{formatDateTime(b.date, b.time)}</p>
+              </div>
+            ))
+          ) : (
+            <div className="py-12 text-center text-slate-400 italic text-sm">No bookings found.</div>
+          )}
+        </div>
+        {/* Desktop table view */}
+        <div className="hidden sm:block overflow-x-auto">
           <table className="w-full text-left">
             <thead className="bg-slate-50 border-b border-slate-100">
               <tr>

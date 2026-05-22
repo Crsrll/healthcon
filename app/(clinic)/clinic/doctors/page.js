@@ -1,5 +1,6 @@
 "use client";
-import { useState } from "react";
+import { useState, useRef } from "react";
+import { uploadImage } from "@/lib/uploadImage";
 import Modal from "@/components/ui/Modal";
 import { Search, UserPlus, Edit, Loader2, Clock, Calendar } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
@@ -12,6 +13,7 @@ const EMPTY_FORM = {
   specialty: "",
   available: true,
   availability: { days: [], startTime: "08:00", endTime: "17:00" },
+  image: "",
 };
 
 export default function DoctorsPage() {
@@ -23,6 +25,8 @@ export default function DoctorsPage() {
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState("All");
   const [formData, setFormData] = useState(EMPTY_FORM);
+  const [uploading, setUploading] = useState(false);
+  const imageInputRef = useRef(null);
 
   const handleToggleDay = (day) => {
     setFormData((prev) => ({
@@ -34,6 +38,21 @@ export default function DoctorsPage() {
           : [...prev.availability.days, day],
       },
     }));
+  };
+
+  const handleImageChange = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    setFormData(prev => ({ ...prev, image: URL.createObjectURL(file) }));
+    try {
+      setUploading(true);
+      const url = await uploadImage(file);
+      setFormData(prev => ({ ...prev, image: url }));
+    } catch (err) {
+      alert("Image upload failed: " + err.message);
+    } finally {
+      setUploading(false);
+    }
   };
 
   const handleSave = async (e) => {
@@ -182,6 +201,29 @@ export default function DoctorsPage() {
 
       <Modal isOpen={isModalOpen} onClose={closeModal} title={editingId ? "Edit Doctor" : "Register Doctor"}>
         <form onSubmit={handleSave} className="space-y-4">
+          {/* Doctor Photo */}
+          <div>
+            <label className="text-xs font-semibold text-slate-600 mb-1.5 block">Photo (optional)</label>
+            <input type="file" ref={imageInputRef} onChange={handleImageChange} accept="image/*" className="hidden" />
+            <div className="flex items-center gap-3">
+              <div
+                onClick={() => imageInputRef.current.click()}
+                className="w-14 h-14 rounded-xl border-2 border-dashed border-slate-200 overflow-hidden cursor-pointer hover:border-teal-400 transition-colors flex items-center justify-center bg-slate-50 shrink-0"
+              >
+                {uploading ? (
+                  <div className="w-4 h-4 border-2 border-teal-400 border-t-transparent rounded-full animate-spin" />
+                ) : formData.image ? (
+                  <img src={formData.image} alt="" className="w-full h-full object-cover" />
+                ) : (
+                  <span className="text-slate-300 text-xs">📷</span>
+                )}
+              </div>
+              <button type="button" onClick={() => imageInputRef.current.click()} disabled={uploading}
+                className="text-xs font-semibold text-teal-600 bg-teal-50 hover:bg-teal-100 px-3 py-1.5 rounded-lg transition-colors disabled:opacity-50">
+                {uploading ? "Uploading..." : formData.image ? "Change" : "Upload"}
+              </button>
+            </div>
+          </div>
           <div>
             <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1">Full Name</label>
             <input

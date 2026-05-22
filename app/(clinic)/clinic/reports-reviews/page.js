@@ -5,11 +5,12 @@ import {
   Star, Calendar, User, Search, AlertTriangle, CheckCircle2, Clock,
   Mail, MessageCircle, Flag, Stethoscope, Send,
 } from "lucide-react";
-import { useAuth } from "@/hooks/useAuth";
+import { useAuth } from "@/context/authContext";
 import { useClinicReports } from "@/hooks/useClinicReports";
 
 export default function ClinicReportsPage() {
   const { user, loading: authLoading } = useAuth();
+  // Clinic users store their clinicId in various fields depending on login flow
   const clinicID = user?.clinicId || user?.clinicID || user?.uid || null;
 
   const {
@@ -137,6 +138,18 @@ export default function ClinicReportsPage() {
         <div className="text-center">
           <div className="w-10 h-10 border-2 border-teal-500 border-t-transparent rounded-full animate-spin mx-auto mb-3" />
           <p className="text-sm text-gray-400">Loading feedback data...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return (
+      <div className="p-6 max-w-5xl mx-auto min-h-screen flex items-center justify-center">
+        <div className="text-center bg-amber-50 border border-amber-200 rounded-2xl p-8 max-w-sm">
+          <AlertTriangle size={32} className="text-amber-500 mx-auto mb-3" />
+          <h3 className="font-bold text-slate-800 mb-1">Not logged in</h3>
+          <p className="text-sm text-slate-500">Please log in to view your clinic's reports and reviews.</p>
         </div>
       </div>
     );

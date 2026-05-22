@@ -1,8 +1,10 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useUser } from '@/hooks/useUpdate';
 import { useClinic } from '@/hooks/useClinic';
 import { useAuth } from '@/context/authContext';
+import { uploadImage } from '@/lib/uploadImage';
+import { Camera, Loader2 } from 'lucide-react';
 
 export default function EditPage() {
 	const { updateUser, saving } = useUser();
@@ -20,6 +22,9 @@ export default function EditPage() {
 	const [serviceInput, setServiceInput] = useState("");
 	const [isClinicOpen, setIsClinicOpen] = useState(true);
 	const [phone, setPhone] = useState("");
+	const [image, setImage] = useState("");
+	const [uploading, setUploading] = useState(false);
+	const imageInputRef = useRef(null);
 	const DEFAULT_HOURS = {
 	  Monday:    { open: "8:00 AM", close: "5:00 PM" },
 	  Tuesday:   { open: "8:00 AM", close: "5:00 PM" },
@@ -49,12 +54,25 @@ export default function EditPage() {
 		  setServices(clinic.services || []);
 		  setIsClinicOpen(clinic.isClinicOpen ?? true);
 		  setPhone(clinic.phone || "");
+		  setImage(clinic.image || "");
 		  if (clinic.hours) setHours({ ...DEFAULT_HOURS, ...clinic.hours });
 	}, [clinic]);
 	
-	console.log(clinic);
-	console.log(user);
-  
+	const handleImageChange = async (e) => {
+	  const file = e.target.files[0];
+	  if (!file) return;
+	  setImage(URL.createObjectURL(file));
+	  try {
+	    setUploading(true);
+	    const url = await uploadImage(file);
+	    setImage(url);
+	  } catch (err) {
+	    alert("Image upload failed: " + err.message);
+	  } finally {
+	    setUploading(false);
+	  }
+	};
+
 	const handleSave = async () => {
 	  await updateUser({
 		clinicName,
@@ -65,7 +83,8 @@ export default function EditPage() {
 		specialty,
 		services,
 		isClinicOpen,
-		hours
+		hours,
+		image,
 	  });
 	  
 	  {saving && alert("saved!");}
@@ -159,6 +178,36 @@ export default function EditPage() {
         </div>
 
         <div className="space-y-4">
+          <section className="bg-white rounded-2xl border border-slate-200 shadow-sm p-5">
+            <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-4">Clinic Photo</h3>
+            <input type="file" ref={imageInputRef} onChange={handleImageChange} accept="image/*" className="hidden" />
+            <div className="flex flex-col items-center gap-3">
+              <div
+                onClick={() => imageInputRef.current.click()}
+                className="w-full h-36 rounded-xl border-2 border-dashed border-slate-200 overflow-hidden cursor-pointer hover:border-teal-400 transition-colors flex items-center justify-center bg-slate-50 relative"
+              >
+                {uploading ? (
+                  <Loader2 size={28} className="animate-spin text-teal-400" />
+                ) : image ? (
+                  <img src={image} alt="Clinic" className="w-full h-full object-cover" />
+                ) : (
+                  <div className="text-center text-slate-400">
+                    <Camera size={24} className="mx-auto mb-1" />
+                    <p className="text-xs">Click to upload photo</p>
+                  </div>
+                )}
+              </div>
+              <button
+                type="button"
+                onClick={() => imageInputRef.current.click()}
+                disabled={uploading}
+                className="w-full text-xs font-semibold text-teal-600 bg-teal-50 hover:bg-teal-100 disabled:opacity-50 py-2 rounded-xl transition-colors"
+              >
+                {uploading ? "Uploading..." : image ? "Change Photo" : "Upload Photo"}
+              </button>
+            </div>
+          </section>
+
           <section className="bg-white rounded-2xl border border-slate-200 shadow-sm p-5">
             <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-4">Specializations</h3>
             <div className="flex flex-wrap gap-2 mb-3">
