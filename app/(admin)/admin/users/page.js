@@ -111,7 +111,7 @@ const getFullName = (user) => {
 
   if (loading) {
     return (
-      <main className="p-6 flex items-center justify-center min-h-[400px]">
+      <main className="p-4 sm:p-6 flex items-center justify-center min-h-[400px]">
         <div className="text-center">
           <Loader2 size={40} className="animate-spin text-teal-500 mx-auto mb-3" />
           <p className="text-slate-500">Loading users...</p>
@@ -122,7 +122,7 @@ const getFullName = (user) => {
 
   return (
     <>
-      <main className="p-6 space-y-6 animate-in fade-in duration-500">
+      <main className="p-4 sm:p-6 space-y-6 animate-in fade-in duration-500">
         
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>

@@ -45,7 +45,7 @@ function DoctorsPageInner() {
   });
 
   return (
-    <main className="p-6 space-y-6 animate-in fade-in duration-500">
+    <main className="p-4 sm:p-6 space-y-6 animate-in fade-in duration-500">
       
       {/* ── HEADER AREA ── */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -192,7 +192,7 @@ function DoctorsPageInner() {
 //   });
 
 //   return (
-//     <main className="p-6 space-y-6">
+//     <main className="p-4 sm:p-6 space-y-6">
 //       <div>
 //         <h2 className="text-lg font-bold text-slate-800">All Doctors</h2>
 //         <p className="text-xs text-slate-400 mt-0.5">Platform-wide doctor registry</p>

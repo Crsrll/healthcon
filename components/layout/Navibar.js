@@ -5,6 +5,7 @@ import { useState, useRef, useEffect } from "react";
 import { useAuth } from "@/context/authContext";
 import { usePathname } from "next/navigation";
 import Avatar from "@/components/ui/Avatar";
+import { Menu, X } from "lucide-react";
 import NotificationBell from "@/components/Notif/NotificationBell";
 import AdminNotificationBell from "@/components/Notif/AdminNotificationBell";
 import { useUnreadMessages } from "@/hooks/useUnreadMessages";
@@ -27,6 +28,7 @@ export default function Navbar({ style }) {
   const { user, logout } = useAuth();
   const [scrolled, setScrolled] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
   const dropdownRef = useRef(null);
 
@@ -83,7 +85,7 @@ export default function Navbar({ style }) {
 
   if (!mounted) return (
     <nav className={`${style} bg-navy-dark py-3`}>
-      <div className="max-w-7xl mx-auto px-12 flex items-center justify-between text-white">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-12 flex items-center justify-between text-white">
         <div className="flex items-center gap-2 font-bold text-[20px]">
           <img src="/logo.png" alt="HealthCon" className="h-9 object-contain" />
           <span>Health<span className="text-cyan-300">con</span></span>
@@ -126,7 +128,7 @@ const markAllReportsAsRead = async () => {
         scrolled ? "py-3 shadow-[0_4px_20px_rgba(0,0,0,0.3)]" : "py-3 shadow-none"
       }`}
     >
-      <div className="max-w-7xl mx-auto px-12 flex items-center justify-between text-white">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-12 flex items-center justify-between text-white">
 
         {/* LEFT: Logo */}
         <div
@@ -138,7 +140,7 @@ const markAllReportsAsRead = async () => {
         </div>
 
         {/* CENTER: Nav links */}
-        <div className="flex items-center gap-8">
+        <div className="hidden md:flex items-center gap-8">
           {links && links.map((link) => (
             <Link
               key={link.name}
@@ -153,6 +155,10 @@ const markAllReportsAsRead = async () => {
 
         {/* RIGHT */}
         <div className="flex items-center gap-4">
+          {/* Mobile hamburger */}
+          <button onClick={() => setMobileMenuOpen(!mobileMenuOpen)} className="md:hidden p-2 rounded-lg hover:bg-white/10 transition-colors" aria-label="Toggle menu">
+            {mobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
+          </button>
 
           {/* ── Public ── */}
           {!user && (
@@ -300,6 +306,30 @@ const markAllReportsAsRead = async () => {
           )}
         </div>
       </div>
+
+      {/* Mobile menu */}
+      {mobileMenuOpen && (
+        <div className="md:hidden bg-navy-dark border-t border-white/10 px-4 py-3 space-y-2">
+          {links && links.map((link) => (
+            <Link key={link.name} href={link.href} onClick={() => setMobileMenuOpen(false)}
+              className="block text-sm font-bold text-white py-2 border-b border-white/10 last:border-0">
+              {link.name}
+            </Link>
+          ))}
+          {!user && (
+            <>
+              <button onClick={() => { setMobileMenuOpen(false); router.push("/auth/register"); }}
+                className="block w-full text-left text-sm font-bold text-white py-2 border-b border-white/10">Sign Up</button>
+              <button onClick={() => { setMobileMenuOpen(false); router.push("/auth/login"); }}
+                className="block w-full text-left text-sm font-bold text-cyan-300 py-2">Log In</button>
+            </>
+          )}
+          {user && (
+            <button onClick={() => { setMobileMenuOpen(false); handleLogout(); }}
+              className="block w-full text-left text-sm font-bold text-red-400 py-2">Log Out</button>
+          )}
+        </div>
+      )}
     </nav>
   );
 }

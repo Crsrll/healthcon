@@ -65,7 +65,7 @@ function BookingsPageInner() {
 
   if (loading) {
     return (
-      <main className="p-6 flex items-center justify-center min-h-[400px]">
+      <main className="p-4 sm:p-6 flex items-center justify-center min-h-[400px]">
         <div className="text-center">
           <Loader2 size={40} className="animate-spin text-teal-500 mx-auto mb-3" />
           <p className="text-slate-500">Loading bookings...</p>
@@ -76,7 +76,7 @@ function BookingsPageInner() {
 
   if (error) {
     return (
-      <main className="p-6">
+      <main className="p-4 sm:p-6">
         <div className="bg-red-50 border border-red-200 rounded-xl p-4 text-center">
           <p className="text-red-600">Error: {error}</p>
           <button
@@ -91,7 +91,7 @@ function BookingsPageInner() {
   }
 
   return (
-    <main className="p-6 space-y-6">
+    <main className="p-4 sm:p-6 space-y-6">
       <div>
         <h2 className="text-lg font-bold text-slate-800">Platform Bookings</h2>
         <p className="text-xs text-slate-400 mt-0.5">

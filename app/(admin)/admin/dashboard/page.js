@@ -120,7 +120,7 @@ export default function AdminDashboard() {
 
   if (loading) {
     return (
-      <div className="p-6 flex items-center justify-center min-h-[400px]">
+      <div className="p-4 sm:p-6 flex items-center justify-center min-h-[400px]">
         <div className="text-center">
           <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-teal-500 mx-auto"></div>
           <p className="text-slate-500 mt-4">Loading dashboard...</p>
@@ -130,7 +130,7 @@ export default function AdminDashboard() {
   }
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="p-4 sm:p-6 space-y-6">
       {/* Welcome Section */}
       {/* Welcome Section */}
 <div className="bg-gradient-to-r from-teal-600 to-blue-600 rounded-2xl p-6 text-white">

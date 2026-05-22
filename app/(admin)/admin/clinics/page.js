@@ -86,7 +86,7 @@ function ClinicsPageInner() {
 
   if (loading) {
     return (
-      <main className="p-6 flex items-center justify-center min-h-[400px]">
+      <main className="p-4 sm:p-6 flex items-center justify-center min-h-[400px]">
         <div className="text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-teal-500 mx-auto"></div>
           <p className="text-slate-500 mt-3">Loading clinics...</p>
@@ -97,7 +97,7 @@ function ClinicsPageInner() {
 
   return (
     <>
-      <main className="p-6 space-y-6 animate-in fade-in duration-500">
+      <main className="p-4 sm:p-6 space-y-6 animate-in fade-in duration-500">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
             <h2 className="text-2xl font-black text-slate-800 tracking-tight">

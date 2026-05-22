@@ -35,7 +35,7 @@ export default function RevenuePage() {
   };
 
   return (
-    <main className="p-6 space-y-6 animate-in fade-in duration-500">
+    <main className="p-4 sm:p-6 space-y-6 animate-in fade-in duration-500">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h2 className="text-2xl font-black text-slate-800 tracking-tight">Platform Revenue</h2>
@@ -43,7 +43,7 @@ export default function RevenuePage() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-1 sm:grid-cols-3 gap-8">
         <div className="lg:col-span-2 space-y-6">
           <section className="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden flex flex-col h-[560px] relative">
             <div className="sticky top-0 z-20 bg-white px-8 py-6 border-b border-slate-100 flex flex-col sm:flex-row justify-between items-center gap-4">
