@@ -1,6 +1,14 @@
 "use client";
-
+import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { ChevronRight } from "lucide-react"; // Added missing import
+
+// Added missing Color tokens
+const C = {
+  navy: "#0f2540",
+  teal: "#2dd4bf",
+  slate: "#64748b",
+};
 
 const sections = [
   { heading: "Acceptance of Terms", body: "By accessing or using HealthCon, you agree to be bound by these Terms of Service. If you do not agree to these terms, please do not use our platform." },
@@ -17,11 +25,13 @@ export default function TermsPage() {
 
   return (
     <div style={{ minHeight: "100vh", backgroundColor: "#fff", fontFamily: "sans-serif" }}>
-      <div style={{ backgroundColor: "#122844", paddingTop: 100, paddingBottom: 60 }}>
+      <div style={{ backgroundColor: "#122844", paddingTop: 50, paddingBottom: 60 }}>
         <div style={{ maxWidth: 1280, margin: "0 auto", paddingLeft: 48, paddingRight: 48 }}>
-          <button onClick={() => router.push("/")} style={{ background: "none", border: "none", color: "#93c5fd", fontSize: 13, cursor: "pointer", marginBottom: 16, padding: 0, fontWeight: 600 }}>
-            ← Back to Home
-          </button>
+          <nav style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 24, fontSize: 13 }}>
+            <Link href="/" style={{ color: C.teal, textDecoration: "none", fontSize: 12, fontWeight: 700, textTransform: "uppercase" }}>Back</Link>
+            <ChevronRight size={14} color="rgba(255,255,255,0.3)" />
+            <span style={{ color: "rgba(255,255,255,0.4)", fontSize: 12, fontWeight: 700, textTransform: "uppercase" }}>Terms of Service</span>
+          </nav>
           <h1 style={{ fontSize: 44, fontWeight: 700, color: "#fff", margin: 0 }}>Terms of Service</h1>
           <p style={{ color: "rgba(219,234,254,0.6)", fontSize: 16, marginTop: 10, marginBottom: 0 }}>Please read these terms carefully before using HealthCon.</p>
         </div>

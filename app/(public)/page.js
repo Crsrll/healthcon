@@ -16,7 +16,7 @@ export default function LandingPage() {
       <Navibar style={`fixed top-0 left-0 right-0 z-50 bg-navy-dark`}/>
 
       {/* HERO - Fixed padding for mobile */}
-      <section className="bg-navy-dark text-white pt-10 sm:pt-32.5 pb-12 sm:pb-22.5">
+      <section className="bg-navy-dark text-white pt-10 sm:pt-23 pb-12 sm:pb-22.5">
         <div className="max-w-7xl mx-auto px-4 sm:px-12 grid grid-cols-1 lg:grid-cols-2 gap-8 sm:gap-10 items-center">
 
           <div className="flex flex-col gap-4 sm:gap-6">
@@ -31,10 +31,9 @@ export default function LandingPage() {
               ANYTIME.
             </h1>
 
-            <p className="animate-[fadeSlideUp_0.7s_ease_both] delay-400 text-blue-100/70 leading-relaxed text-[15px] sm:text-[17px] max-w-110">
-              HealthCon is your smart clinic queue platform — skip the waiting room and get real medical care from licensed doctors, wherever you are.
+            <p className="animate-[fadeSlideUp_0.7s_ease_both] delay-400 text-blue-100/70 leading-relaxed text-[15px] sm:text-[17px] max-w-120">
+              HealthCon is your clinic scheduling platform — find verified doctors, book appointments seamlessly, and manage your healthcare journey from one smart dashboard.
             </p>
-
             <div className="animate-[fadeSlideUp_0.7s_ease_both] delay-550 flex gap-3 flex-wrap pt-1">
 
               <button
@@ -112,10 +111,26 @@ export default function LandingPage() {
           <div className="lg:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5">
 
             {[
-              { icon: "🩺", title: "Virtual Consultations", desc: "Connect with licensed doctors via video, voice, or chat — no waiting rooms, no commute." },
-              { icon: "📅", title: "Easy Scheduling", desc: "Book same-day or future appointments 24/7, fitting your schedule perfectly." },
-              { icon: "🔒", title: "Secure & Private", desc: "End-to-end encrypted records keep your health data safe and fully under control." },
-              { icon: "💊", title: "Digital Prescriptions", desc: "Receive e-prescriptions instantly, sent directly to your preferred pharmacy." },
+              { 
+                icon: "📅", 
+                title: "Flexible Scheduling", 
+                desc: "Seamlessly book or cancel appointments 24/7. Manage your healthcare timeline with real-time availability updates." 
+              },
+              { 
+                icon: "🏥", 
+                title: "Clinic Transparency", 
+                desc: "Explore detailed clinic profiles, browse available doctors, and view specialized services before you book." 
+              },
+              { 
+                icon: "⭐", 
+                title: "Patient Voice", 
+                desc: "Rate your experience and leave reviews. Help the community find the best care while holding clinics accountable." 
+              },
+              { 
+                icon: "🛡️", 
+                title: "Direct Accountability", 
+                desc: "Report issues directly to clinic management or escalate concerns to the Superadmin for system-wide oversight." 
+              },
             ].map((item) => (
               <div
                 key={item.title}
@@ -153,8 +168,8 @@ export default function LandingPage() {
 
             {[
               { num: "01", title: "Create Your Account", desc: "Sign up in under a minute. No paperwork, no insurance headaches — just your basic details." },
-              { num: "02", title: "Choose a Doctor", desc: "Browse verified specialists by specialty, availability, and rating. Filter by language or concern." },
-              { num: "03", title: "Get Seen Instantly", desc: "Join a secure video or chat session. Receive your diagnosis, notes, and prescription right away." },
+              { num: "02", title: "Choose a Clinic", desc: "Browse verified clinics and doctors. Filter by location, specialty, or availability." },
+              { num: "03", title: "Track Your Appointment", desc: "Monitor your dashboard for real-time status updates. After your visit, share your experience by rating the clinic." },
             ].map((step) => (
               <div
                 key={step.num}

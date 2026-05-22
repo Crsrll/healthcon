@@ -232,7 +232,7 @@ export default function RegisterPage() {
               className="cursor-pointer w-full rounded-2xl border-2 border-blue-600 text-blue-600 font-black text-base hover:bg-blue-600 hover:text-white active:scale-[0.98] transition-all duration-300"
               style={{ paddingTop: 16, paddingBottom: 16 }}
             >
-              Are you a Clinic? Register here
+              Register as Clinic
             </button>
 
           </div>

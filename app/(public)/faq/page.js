@@ -1,7 +1,15 @@
 "use client";
-
+import Link from "next/link";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { ChevronRight } from "lucide-react"; // Added missing import
+
+// Added missing Color tokens
+const C = {
+  navy: "#0f2540",
+  teal: "#2dd4bf",
+  slate: "#64748b",
+};
 
 const faqs = [
   { q: "How do I book an appointment?", a: "Simply create a free account, browse available doctors by specialty or availability, and tap 'Book' on their profile. You'll receive a confirmation instantly." },
@@ -20,11 +28,13 @@ export default function FAQPage() {
 
   return (
     <div style={{ minHeight: "100vh", backgroundColor: "#fff", fontFamily: "sans-serif" }}>
-      <div style={{ backgroundColor: "#122844", paddingTop: 100, paddingBottom: 60 }}>
+      <div style={{ backgroundColor: "#122844", paddingTop: 50, paddingBottom: 60 }}>
         <div style={{ maxWidth: 1280, margin: "0 auto", paddingLeft: 48, paddingRight: 48 }}>
-          <button onClick={() => router.push("/")} style={{ background: "none", border: "none", color: "#93c5fd", fontSize: 13, cursor: "pointer", marginBottom: 16, padding: 0, fontWeight: 600 }}>
-            ← Back to Home
-          </button>
+          <nav style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 24, fontSize: 13 }}>
+            <Link href="/" style={{ color: C.teal, textDecoration: "none", fontSize: 12, fontWeight: 700, textTransform: "uppercase" }}>Back</Link>
+            <ChevronRight size={14} color="rgba(255,255,255,0.3)" />
+            <span style={{ color: "rgba(255,255,255,0.4)", fontSize: 12, fontWeight: 700, textTransform: "uppercase" }}>Frequently Asked Questions</span>
+          </nav>
           <h1 style={{ fontSize: 44, fontWeight: 700, color: "#fff", margin: 0 }}>Frequently Asked Questions</h1>
           <p style={{ color: "rgba(219,234,254,0.6)", fontSize: 16, marginTop: 10, marginBottom: 0 }}>Everything you need to know about HealthCon.</p>
         </div>

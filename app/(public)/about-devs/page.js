@@ -179,7 +179,7 @@ export default function AboutDevelopersPage() {
         {/* Decorative elements... */}
         <div style={{ position: "absolute", width: 700, height: 700, borderRadius: "50%", background: "radial-gradient(circle, rgba(45,212,191,0.1) 0%, transparent 65%)", top: -200, right: -100, pointerEvents: "none" }} />
 
-        <div style={{ maxWidth: 1280, margin: "0 auto", padding: "80px 40px 100px", position: "relative" }}>
+        <div style={{ maxWidth: 1280, margin: "0 auto", padding: "50px 40px 100px", position: "relative" }}>
           <nav className="fade-in" style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 48, fontSize: 12, fontWeight: 700, letterSpacing: "0.15em", textTransform: "uppercase" }}>
             <Link href="/" style={{ color: C.teal, textDecoration: "none" }}>Back</Link>
             <ChevronRight size={12} color="rgba(255,255,255,0.3)" />
@@ -262,7 +262,7 @@ export default function AboutDevelopersPage() {
             <MemberCard
               index={0}
               name="Joseph Christian R. Zorrilla"
-              role="Backend Lead · Architect"
+              role="Backend Lead · Firebase Architect"
               initials="JZ"
               image="/joseph.jpg"
               responsibilities={[
@@ -276,12 +276,12 @@ export default function AboutDevelopersPage() {
             <MemberCard
               index={1}
               name="Melissa A. Oria"
-              role="Full-Stack · Dashboard Engineer"
+              role="Full-Stack Dev · Dashboard Engineer"
               initials="MA"
               image="/mels.jpg"
               responsibilities={[
                 "Admin & Clinic Dashboards",
-                "Patient Portal Development",
+                "Data Enrichment Handlers",
                 "Appointment Flow Logic",
                 "System-Wide Debugging Lead",
                 "Full-Stack Data Integration",
@@ -290,7 +290,7 @@ export default function AboutDevelopersPage() {
             <MemberCard
               index={2}
               name="Nova Grace B. Enojo"
-              role="UI/UX Designer · Frontend"
+              role="UI/UX Designer · Frontend Developer"
               initials="NE"
               image="/nova.png"
               responsibilities={[
