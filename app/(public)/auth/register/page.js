@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useRegisterPatient } from "@/hooks/useRegisterPatient";
-import { Mail, CheckCircle, X } from "lucide-react";
+import { Mail, X, ArrowLeft } from "lucide-react";
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -63,10 +63,19 @@ export default function RegisterPage() {
 
   return (
     <div className="flex w-full min-h-screen bg-white font-sans overflow-hidden">
-      
+
       {/* ── LEFT PANEL ── */}
       <div className="relative hidden lg:flex lg:w-[45%] bg-[#0f2035] flex-col justify-center overflow-hidden"
         style={{ paddingLeft: 80, paddingRight: 80 }}>
+        
+        {/* FIXED: Back to Home Button placed in the top left */}
+        <button
+          onClick={() => router.push('/')}
+          className="absolute top-10 left-10 flex items-center gap-2 text-gray-400 hover:text-blue-400 text-sm font-semibold transition-colors group z-20"
+        >
+          <ArrowLeft size={16} className="group-hover:-translate-x-1 transition-transform" />
+          Back to Home
+        </button>
         
         <div className="absolute w-200 h-200 rounded-full bg-blue-600/10 -top-50 -left-50 blur-[120px]" />
         <div className="absolute w-125 h-125 rounded-full bg-blue-400/10 -bottom-25 -right-25 blur-[100px]" />

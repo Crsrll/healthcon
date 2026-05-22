@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/authContext";
+import { ArrowLeft } from "lucide-react"; // Added this import
 
 export default function LoginPage() {
   const router = useRouter();
@@ -44,7 +45,7 @@ export default function LoginPage() {
     setResetLoading(true);
     setResetError("");
 
-    const result = await resetPassword(resetEmail); // ← use this
+    const result = await resetPassword(resetEmail);
     if (result.success) {
       setView("forgot-sent");
     } else {
@@ -113,7 +114,7 @@ export default function LoginPage() {
         .login-btn:active { transform: scale(0.98); }
         .login-btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
-        .back-btn {
+        .view-back-btn {
           background: none;
           border: none;
           color: #6b7280;
@@ -127,7 +128,7 @@ export default function LoginPage() {
           margin-bottom: 24px;
           transition: color 0.2s;
         }
-        .back-btn:hover { color: #374151; }
+        .view-back-btn:hover { color: #374151; }
 
         .sent-icon {
           width: 64px;
@@ -147,6 +148,15 @@ export default function LoginPage() {
           className="relative hidden lg:flex lg:w-[45%] bg-[#0f2035] flex-col justify-center overflow-hidden"
           style={{ paddingLeft: 80, paddingRight: 80 }}
         >
+          {/* BACK TO HOME BUTTON */}
+          <button
+            onClick={() => router.push('/')}
+            className="absolute top-10 left-10 flex items-center gap-2 text-gray-400 hover:text-blue-400 text-sm font-semibold transition-colors group z-20 border-none bg-transparent cursor-pointer"
+          >
+            <ArrowLeft size={16} className="group-hover:-translate-x-1 transition-transform" />
+            Back to Home
+          </button>
+
           <div className="absolute w-200 h-200 rounded-full bg-blue-600/10 -top-50 -left-50 blur-[120px]" />
           <div className="absolute w-125 h-125 rounded-full bg-blue-400/10 -bottom-25 -right-25 blur-[100px]" />
 
@@ -277,7 +287,7 @@ export default function LoginPage() {
             {/* ── FORGOT PASSWORD VIEW ── */}
             {view === "forgot" && (
               <>
-                <button className="back-btn" onClick={() => setView("login")}>
+                <button className="view-back-btn" onClick={() => setView("login")}>
                   ← Back to Sign In
                 </button>
 
