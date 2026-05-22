@@ -142,7 +142,6 @@ export default function LoginPage() {
       `}</style>
 
       <div className="flex w-full min-h-screen bg-white font-sans overflow-hidden">
-
         {/* LEFT PANEL */}
         <div
           className="relative hidden lg:flex lg:w-[45%] bg-[#0f2035] flex-col justify-center overflow-hidden"
@@ -156,7 +155,9 @@ export default function LoginPage() {
               HealthCon Platform
             </p>
             <h2 className="text-white font-black text-5xl uppercase leading-none tracking-tighter mb-4">
-              WELCOME<br />BACK
+              WELCOME
+              <br />
+              BACK
             </h2>
             <div className="w-16 h-1 bg-blue-500 mb-6" />
             <p className="text-white/40 text-base leading-relaxed max-w-sm font-medium">
@@ -164,7 +165,10 @@ export default function LoginPage() {
             </p>
           </div>
 
-          <div className="absolute bottom-12 z-10 flex items-center gap-3" style={{ left: 80 }}>
+          <div
+            className="absolute bottom-12 z-10 flex items-center gap-3"
+            style={{ left: 80 }}
+          >
             <img src="/logo.png" alt="HealthCon" style={{ height: 36 }} />
             <span className="text-white font-bold">
               Health<span className="text-cyan-300">con</span>
@@ -173,15 +177,21 @@ export default function LoginPage() {
         </div>
 
         {/* RIGHT PANEL */}
-        <div className="flex-1 flex items-center justify-center overflow-y-auto bg-white" style={{ padding: 48 }}>
+        <div
+          className="flex-1 flex items-center justify-center overflow-y-auto bg-white"
+          style={{ padding: 48 }}
+        >
           <div className="w-full" style={{ maxWidth: 460 }}>
-
             {/* ── LOGIN VIEW ── */}
             {view === "login" && (
               <>
                 <header className="mb-10 text-left">
-                  <h1 className="text-3xl font-black text-slate-900 mb-2">Sign in</h1>
-                  <p className="text-gray-400 text-base">Welcome back! Please enter your details.</p>
+                  <h1 className="text-3xl font-black text-slate-900 mb-2">
+                    Sign in
+                  </h1>
+                  <p className="text-gray-400 text-base">
+                    Welcome back! Please enter your details.
+                  </p>
                 </header>
 
                 <div className="flex flex-col gap-4">
@@ -210,7 +220,10 @@ export default function LoginPage() {
                       placeholder="Password"
                       className="login-input"
                     />
-                    <button className="show-btn" onClick={() => setShowPass(!showPass)}>
+                    <button
+                      className="show-btn"
+                      onClick={() => setShowPass(!showPass)}
+                    >
                       {showPass ? "Hide" : "Show"}
                     </button>
                   </div>
@@ -227,14 +240,22 @@ export default function LoginPage() {
                       Remember me
                     </label>
                     <button
-                      onClick={() => { setResetEmail(email); setView("forgot"); setResetError(""); }}
+                      onClick={() => {
+                        setResetEmail(email);
+                        setView("forgot");
+                        setResetError("");
+                      }}
                       className="text-sm font-semibold text-blue-600 hover:text-blue-800 cursor-pointer bg-transparent border-none"
                     >
                       Forgot password?
                     </button>
                   </div>
 
-                  <button className="login-btn" onClick={handleLogin} disabled={loading}>
+                  <button
+                    className="login-btn"
+                    onClick={handleLogin}
+                    disabled={loading}
+                  >
                     {loading ? "Signing in..." : "Sign In"}
                   </button>
                 </div>
@@ -261,9 +282,12 @@ export default function LoginPage() {
                 </button>
 
                 <header className="mb-10 text-left">
-                  <h1 className="text-3xl font-black text-slate-900 mb-2">Reset password</h1>
+                  <h1 className="text-3xl font-black text-slate-900 mb-2">
+                    Reset password
+                  </h1>
                   <p className="text-gray-400 text-base">
-                    Enter your email and we'll send you a link to reset your password.
+                    Enter your email and we'll send you a link to reset your
+                    password.
                   </p>
                 </header>
 
@@ -278,7 +302,9 @@ export default function LoginPage() {
                     <input
                       value={resetEmail}
                       onChange={(e) => setResetEmail(e.target.value)}
-                      onKeyDown={(e) => e.key === "Enter" && handleForgotPassword()}
+                      onKeyDown={(e) =>
+                        e.key === "Enter" && handleForgotPassword()
+                      }
                       type="email"
                       placeholder="Email Address"
                       className="login-input"
@@ -301,17 +327,31 @@ export default function LoginPage() {
             {view === "forgot-sent" && (
               <>
                 <div className="sent-icon">
-                  <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#2563eb" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
-                    <polyline points="22,6 12,13 2,6"/>
+                  <svg
+                    width="28"
+                    height="28"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="#2563eb"
+                    strokeWidth="2.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
+                    <polyline points="22,6 12,13 2,6" />
                   </svg>
                 </div>
 
                 <header className="mb-6 text-left">
-                  <h1 className="text-3xl font-black text-slate-900 mb-2">Check your email</h1>
+                  <h1 className="text-3xl font-black text-slate-900 mb-2">
+                    Check your email
+                  </h1>
                   <p className="text-gray-400 text-base">
-                    We sent a password reset link to <span className="font-semibold text-slate-700">{resetEmail}</span>.
-                    Check your inbox and follow the instructions.
+                    We sent a password reset link to{" "}
+                    <span className="font-semibold text-slate-700">
+                      {resetEmail}
+                    </span>
+                    . Check your inbox and follow the instructions.
                   </p>
                 </header>
 
@@ -327,12 +367,13 @@ export default function LoginPage() {
                     disabled={resetLoading}
                     className="w-full py-3 text-sm font-semibold text-blue-600 hover:text-blue-800 bg-transparent border-none cursor-pointer disabled:opacity-50"
                   >
-                    {resetLoading ? "Resending..." : "Didn't get it? Resend email"}
+                    {resetLoading
+                      ? "Resending..."
+                      : "Didn't get it? Resend email"}
                   </button>
                 </div>
               </>
             )}
-
           </div>
         </div>
       </div>
