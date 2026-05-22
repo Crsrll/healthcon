@@ -1,5 +1,5 @@
 "use client";
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import { User, Mail, Phone, Calendar, MapPin, Droplets, AlertCircle, ShieldCheck, Camera, Edit3, Save, X, ChevronRight, Loader2 } from "lucide-react";
 import { useAuth } from "@/context/authContext";
@@ -7,26 +7,79 @@ import { useUser } from "@/hooks/useUpdate";
 import { uploadImage } from "@/lib/uploadImage";
 
 export default function PatientProfilePage() {
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth(); // ✅ Get loading state
   const { updateUser, saving } = useUser();
   const fileInputRef = useRef(null);
   const [isEditing, setIsEditing] = useState(false);
   const [uploading, setUploading] = useState(false);
 
+  // ✅ Initialize with empty values
   const [profile, setProfile] = useState({
-    firstName:        user?.firstName || "",
-    lastName:         user?.lastName  || "",
-    email:            user?.email     || "",
-    phone:            user?.phone     || "",
-    dob:              user?.dob       || "",
-    address:          user?.address   || "",
-    bloodType:        user?.bloodType || "",
-    allergies:        user?.allergies || "",
-    emergencyContact: user?.emergencyContact || "",
-    image:            user?.image     || null,
+    firstName: "",
+    lastName: "",
+    email: "",
+    phone: "",
+    dob: "",
+    address: "",
+    bloodType: "",
+    allergies: "",
+    emergencyContact: "",
+    image: null,
   });
 
   const [tempProfile, setTempProfile] = useState({ ...profile });
+
+  // ✅ Update profile when user data becomes available
+  useEffect(() => {
+    if (user) {
+      console.log("User data received:", user); // Debug: see what's in user
+      setProfile({
+        firstName: user.firstName || "",
+        lastName: user.lastName || "",
+        email: user.email || "",
+        phone: user.phone || "",
+        dob: user.dob || "",
+        address: user.address || "",
+        bloodType: user.bloodType || "",
+        allergies: user.allergies || "",
+        emergencyContact: user.emergencyContact || "",
+        image: user.image || null,
+      });
+      setTempProfile({
+        firstName: user.firstName || "",
+        lastName: user.lastName || "",
+        email: user.email || "",
+        phone: user.phone || "",
+        dob: user.dob || "",
+        address: user.address || "",
+        bloodType: user.bloodType || "",
+        allergies: user.allergies || "",
+        emergencyContact: user.emergencyContact || "",
+        image: user.image || null,
+      });
+    }
+  }, [user]); // Re-run when user object changes
+
+  // Show loading state
+  if (authLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader2 size={32} className="animate-spin text-teal-500" />
+      </div>
+    );
+  }
+
+  // If no user after loading, show error
+  if (!user) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-red-500">Please log in to view your profile</p>
+          <Link href="/auth/login" className="text-teal-500 mt-2 inline-block">Go to Login</Link>
+        </div>
+      </div>
+    );
+  }
 
   const handleImageClick = () => {
     if (isEditing) fileInputRef.current.click();
@@ -35,9 +88,10 @@ export default function PatientProfilePage() {
   const handleImageChange = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
+    
     // Show local preview immediately
     setTempProfile(p => ({ ...p, image: URL.createObjectURL(file) }));
-    // Upload to Cloudinary in background
+    
     try {
       setUploading(true);
       const url = await uploadImage(file);
@@ -51,15 +105,15 @@ export default function PatientProfilePage() {
 
   const handleSave = async () => {
     await updateUser({
-      firstName:        tempProfile.firstName,
-      lastName:         tempProfile.lastName,
-      phone:            tempProfile.phone,
-      dob:              tempProfile.dob,
-      address:          tempProfile.address,
-      bloodType:        tempProfile.bloodType,
-      allergies:        tempProfile.allergies,
+      firstName: tempProfile.firstName,
+      lastName: tempProfile.lastName,
+      phone: tempProfile.phone,
+      dob: tempProfile.dob,
+      address: tempProfile.address,
+      bloodType: tempProfile.bloodType,
+      allergies: tempProfile.allergies,
       emergencyContact: tempProfile.emergencyContact,
-      image:            tempProfile.image,
+      image: tempProfile.image,
     });
     setProfile({ ...tempProfile });
     setIsEditing(false);
@@ -149,7 +203,7 @@ export default function PatientProfilePage() {
           </div>
         </div>
 
-        {/* RIGHT: Info */}
+        {/* RIGHT: Info - Rest of your JSX remains exactly the same */}
         <div className="lg:col-span-2 space-y-5">
           <section className="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
             <h3 className="text-[10px] font-black text-slate-800 uppercase tracking-widest mb-6">Personal Information</h3>
