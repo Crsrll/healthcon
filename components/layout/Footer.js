@@ -1,15 +1,16 @@
 "use client";
 
-import { useRouter } from "next/navigation";
-import { usePathname } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 
 export default function Footer() {
   const router = useRouter();
-  const links = ["privacy", "terms", "contact", "faq"];
+  const pathname = usePathname();
 
-  const pathname = usePathname();                                              // ← inside function
-  const hideOn = ["/auth/login", "/auth/register", "/auth/register-clinic" , "/auth/login-clinic"];  // ← inside function
-  if (hideOn.includes(pathname)) return null; 
+  const hideOn = ["/auth/login", "/auth/register", "/auth/register-clinic", "/auth/login-clinic"];
+  if (hideOn.includes(pathname)) return null;
+
+  const links = ["privacy", "terms", "contact", "faq", "about-devs"];
+
   return (
     <footer style={{
       backgroundColor: "#122844",
@@ -30,17 +31,24 @@ export default function Footer() {
         flexWrap: "wrap",
       }}>
 
-        {/* Logo */}
+        {/* Logo — fixed: img + text in a flex row */}
         <div
           onClick={() => router.push("/")}
-          style={{ color: "#fff", fontWeight: 700, fontSize: 17, cursor: "pointer" }}
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 8,
+            cursor: "pointer",
+          }}
         >
-          <img src="/logo.png" alt="HealthCon" style={{ height: 36, objectFit: "contain" }} /> 
-             <span>Health<span className="text-healthcon-teal">con</span></span>
+          <img src="/logo.png" alt="HealthCon" style={{ height: 36, objectFit: "contain" }} />
+          <span style={{ color: "#fff", fontWeight: 700, fontSize: 17 }}>
+            Health<span style={{ color: "#0ea5e9" }}>con</span>
+          </span>
         </div>
 
         {/* Links */}
-        <div style={{ display: "flex", gap: 24 }}>
+        <div style={{ display: "flex", gap: 24, flexWrap: "wrap" }}>
           {links.map((link) => (
             <span
               key={link}
@@ -54,10 +62,14 @@ export default function Footer() {
                 cursor: "pointer",
                 transition: "color 0.2s ease",
               }}
-              onMouseEnter={(e) => e.target.style.color = "#fff"}
-              onMouseLeave={(e) => e.target.style.color = "#64748b"}
+              onMouseEnter={(e) => (e.target.style.color = "#fff")}
+              onMouseLeave={(e) => (e.target.style.color = "#64748b")}
             >
-              {link === "faq" ? "FAQ" : link.charAt(0).toUpperCase() + link.slice(1)}
+              {link === "faq"
+                ? "FAQ"
+                : link === "about-devs"
+                ? "About Devs"
+                : link.charAt(0).toUpperCase() + link.slice(1)}
             </span>
           ))}
         </div>

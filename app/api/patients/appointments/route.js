@@ -1,5 +1,3 @@
-// app/api/patient/appointments/route.js
-
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/firebase';
 import { collection, query, where, orderBy, getDocs, doc, updateDoc, getDoc } from 'firebase/firestore';
