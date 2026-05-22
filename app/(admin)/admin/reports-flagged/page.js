@@ -1,4 +1,5 @@
-"use client";
+"use client"
+import { Suspense } from "react";;
 import { useState, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 import { Flag, AlertTriangle, TrendingUp, Search, Loader2, Eye, CheckCircle, XCircle, MessageSquare } from "lucide-react";
@@ -23,7 +24,7 @@ const STATUS_STYLE = {
   resolved: "bg-green-50 text-green-600",
 };
 
-export default function ReportsFlaggedPage() {
+function ReportsFlaggedPageInner() {
   const searchParams = useSearchParams();
   const urlQuery = searchParams.get("q") || "";
   
@@ -323,5 +324,12 @@ export default function ReportsFlaggedPage() {
         </div>
       )}
     </main>
+  );
+}
+export default function ReportsFlaggedPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <ReportsFlaggedPageInner />
+    </Suspense>
   );
 }

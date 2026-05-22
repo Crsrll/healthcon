@@ -1,4 +1,5 @@
-"use client";
+"use client"
+import { Suspense } from "react";;
 import { useState, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 import { Search, UserCheck, AlertOctagon, UserMinus } from "lucide-react";
@@ -19,7 +20,7 @@ const STATUS_STYLE = {
   inactive: "bg-slate-50 text-slate-500 border-slate-200",
 };
 
-export default function DoctorsPage() {
+function DoctorsPageInner() {
   const searchParams = useSearchParams();
   const urlQuery = searchParams.get("q") || "";
 
@@ -269,3 +270,10 @@ export default function DoctorsPage() {
 //     </main>
 //   );
 // }
+export default function DoctorsPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <DoctorsPageInner />
+    </Suspense>
+  );
+}

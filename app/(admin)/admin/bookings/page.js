@@ -1,4 +1,5 @@
-"use client";
+"use client"
+import { Suspense } from "react";;
 import { useState, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 import { Search, Loader2 } from "lucide-react";
@@ -12,7 +13,7 @@ const STATUS_STYLE = {
   rejected: "bg-red-50 text-red-700",
 };
 
-export default function BookingsPage() {
+function BookingsPageInner() {
   const searchParams = useSearchParams();
   const urlQuery = searchParams.get("q") || "";
 
@@ -210,5 +211,12 @@ export default function BookingsPage() {
         </div>
       </section>
     </main>
+  );
+}
+export default function BookingsPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <BookingsPageInner />
+    </Suspense>
   );
 }

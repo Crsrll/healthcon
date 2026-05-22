@@ -1,4 +1,5 @@
-"use client";
+"use client"
+import { Suspense } from "react";;
 import { useState, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 import { Search, RefreshCw, Loader2 } from "lucide-react";
@@ -19,7 +20,7 @@ const formatAction = (action) => {
   return action.replace(/_/g, " ").toLowerCase().replace(/\b\w/g, l => l.toUpperCase());
 };
 
-export default function AuditLogPage() {
+function AuditLogPageInner() {
   const searchParams = useSearchParams();
   const urlQuery = searchParams.get("q") || "";
 
@@ -243,5 +244,12 @@ export default function AuditLogPage() {
         </div>
       </section>
     </main>
+  );
+}
+export default function AuditLogPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <AuditLogPageInner />
+    </Suspense>
   );
 }

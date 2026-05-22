@@ -1,4 +1,5 @@
-"use client";
+"use client"
+import { Suspense } from "react";;
 import { useState, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 import {
@@ -19,7 +20,7 @@ const STATUS_STYLE = {
   suspended: "bg-red-50 text-red-600 border-red-200",
 };
 
-export default function ClinicsPage() {
+function ClinicsPageInner() {
   const searchParams = useSearchParams();
   const urlQuery = searchParams.get("q") || "";
 
@@ -486,5 +487,12 @@ export default function ClinicsPage() {
         </div>
       )}
     </>
+  );
+}
+export default function ClinicsPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <ClinicsPageInner />
+    </Suspense>
   );
 }

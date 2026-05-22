@@ -1053,7 +1053,7 @@ function BookingModal({ doctor, services, clinicID, patientID, onClose, onCreate
 }
 
 // ── Main Page ────────────────────────────────────────────────────
-export default function ClinicProfilePage() {
+function ClinicProfilePageInner() {
   const params = useParams();
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -1375,5 +1375,12 @@ export default function ClinicProfilePage() {
         </div>
       </div>
     </div>
+  );
+}
+export default function ClinicProfilePage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <ClinicProfilePageInner />
+    </Suspense>
   );
 }

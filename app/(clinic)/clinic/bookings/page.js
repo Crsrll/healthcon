@@ -1,4 +1,5 @@
-"use client";
+"use client"
+import { Suspense } from "react";;
 import { useState, useEffect, useRef } from "react";
 import { useSearchParams } from "next/navigation";
 import { useAuth } from "@/hooks/useAuth";
@@ -7,7 +8,7 @@ import { Search, MoreHorizontal, Pill, FileUp, User, Send, Upload, Loader2 } fro
 import Modal from "@/components/ui/Modal";
 import Link from "next/link";
 
-export default function BookingHistoryPage() {
+function BookingHistoryPageInner() {
   const { user, loading: authLoading } = useAuth();
   const searchParams = useSearchParams();
 
@@ -251,5 +252,13 @@ export default function BookingHistoryPage() {
         </div>
       </Modal>
     </main>
+  );
+}
+
+export default function BookingHistoryPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <BookingHistoryPageInner />
+    </Suspense>
   );
 }

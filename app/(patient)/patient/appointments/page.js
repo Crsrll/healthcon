@@ -1,11 +1,12 @@
-"use client";
+"use client"
+import { Suspense } from "react";;
 import { useState, useMemo, useEffect } from "react";
 import Modal from "@/components/ui/Modal";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Calendar, Clock,  ChevronRight, Search,Plus,Clipboard } from "lucide-react";
 
-export default function MyAppointmentsPage() {
+function MyAppointmentsPageInner() {
     const searchParams = useSearchParams();
     const urlTimeframe = searchParams.get("timeframe") || "Upcoming";
     const [timeframe, setTimeframe] = useState(urlTimeframe);
@@ -245,5 +246,12 @@ export default function MyAppointmentsPage() {
       </Modal>
 
     </main>
+  );
+}
+export default function MyAppointmentsPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <MyAppointmentsPageInner />
+    </Suspense>
   );
 }

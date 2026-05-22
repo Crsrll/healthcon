@@ -1,4 +1,5 @@
-"use client";
+"use client"
+import { Suspense } from "react";;
 import { useState, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 import { Search, Eye, ShieldMinus, ShieldCheck, Loader2, X, Calendar, Clock, Mail, Phone } from "lucide-react";
@@ -10,7 +11,7 @@ const STATUS_STYLE = {
   suspended: "bg-red-50 text-red-600 border-red-200",
 };
 
-export default function UsersPage() {
+function UsersPageInner() {
   const searchParams = useSearchParams();
   const urlQuery = searchParams.get("q") || "";
 
@@ -360,5 +361,12 @@ const getFullName = (user) => {
         </div>
       )}
     </>
+  );
+}
+export default function UsersPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <UsersPageInner />
+    </Suspense>
   );
 }

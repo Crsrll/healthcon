@@ -1,4 +1,5 @@
-"use client";
+"use client"
+import { Suspense } from "react";;
 import FilterSidebar from "@/components/layout/FilterSidebar";
 import { ClinicCard } from "@/components/ui/ClinicCard";
 import { DoctorCard } from "@/components/clinic/DoctorCard1";
@@ -110,7 +111,7 @@ const CITIES = [
   "Malaybalay",
 ];
 
-export default function ClinicDirectory() {
+function ClinicDirectoryInner() {
   const { clinics, loading: clinicLoading } = useClinics("approved");
   const { doctors, loading: doctorLoading } = useDoctors();
 
@@ -300,5 +301,13 @@ export default function ClinicDirectory() {
         </main>
       </div>
     </div>
+  );
+}
+
+export default function ClinicDirectory() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <ClinicDirectoryInner />
+    </Suspense>
   );
 }

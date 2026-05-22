@@ -30,8 +30,8 @@ export async function POST(req) {
   try {
     const q = query(
       collection(db, "bookings"),
-      where("date",   "==", tomorrowStr),
-      where("status", "==", "confirmed")
+      where("date", "==", tomorrowStr),
+      where("status", "==", "confirmed"),
     );
     const snap = await getDocs(q);
 
@@ -41,18 +41,26 @@ export async function POST(req) {
         const b = d.data();
         await createNotification({
           recipientID: b.patientID,
-          type:   "appointment_reminder",
-          title:  "Appointment Tomorrow 🗓",
-          body:   `Reminder: you have an appointment tomorrow (${b.date}) at ${b.time}. Please arrive on time.`,
+          type: "appointment_reminder",
+          title: "Appointment Tomorrow 🗓",
+          body: `Reminder: you have an appointment tomorrow (${b.date}) at ${b.time}. Please arrive on time.`,
           linkTo: "/patient/bookings",
-          meta:   { bookingID: d.id, date: b.date, time: b.time, service: b.service },
+          meta: {
+            bookingID: d.id,
+            date: b.date,
+            time: b.time,
+            service: b.service,
+          },
         });
         count++;
-      })
+      }),
     );
 
     return NextResponse.json({ success: true, reminders_sent: count });
   } catch (e) {
-    return NextResponse.json({ success: false, error: e.message }, { status: 500 });
+    return NextResponse.json(
+      { success: false, error: e.message },
+      { status: 500 },
+    );
   }
 }
