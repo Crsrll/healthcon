@@ -148,7 +148,7 @@ export default function AdminDashboard() {
 </div>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-5">
         {STAT_CARDS.map((card) => {
           const Icon = card.icon;
           const value = stats[card.key];
@@ -328,7 +328,7 @@ export default function AdminDashboard() {
           <p className="text-xs font-semibold text-slate-700">View Bookings</p>
         </button>
         <button 
-          onClick={() => router.push('/admin/logs')}
+          onClick={() => router.push('/admin/audit-log')}
           className="bg-white border border-slate-200 rounded-xl p-4 text-center hover:shadow-md transition-all hover:border-teal-200 group"
         >
           <Activity size={20} className="text-slate-400 mx-auto mb-2 group-hover:text-teal-500 transition-colors" />

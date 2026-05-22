@@ -132,7 +132,7 @@ function ClinicsPageInner() {
               className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-100 rounded-xl text-sm outline-none focus:bg-white focus:border-teal-400 transition-all"
             />
           </div>
-          <div className="flex bg-slate-100 rounded-xl p-1 gap-1">
+          <div className="flex bg-slate-100 rounded-xl p-1 gap-1 min-w-[280px]">
             {["All", "Approved", "Pending", "Suspended"].map((tab) => (
               <button
                 key={tab}

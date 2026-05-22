@@ -1,5 +1,5 @@
 "use client"
-import { Suspense } from "react";;
+import { Suspense } from "react";
 import { useState, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 import { Search, RefreshCw, Loader2 } from "lucide-react";
@@ -92,8 +92,8 @@ function AuditLogPageInner() {
           <p className="text-xs text-slate-400 mt-0.5">Recent system activities and changes</p>
         </div>
 
-        {/* Activity Legends */}
-        <div className="flex flex-col items-start md:items-end">
+        {/* Activity Legends - Responsive */}
+        <div className="flex flex-col items-start md:items-end w-full md:w-auto">
           <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-2">
             Activity Legends
           </p>
@@ -122,9 +122,10 @@ function AuditLogPageInner() {
         </div>
       </div>
 
-      {/* Search and Filter Bar */}
-      <div className="flex items-center gap-3 flex-wrap bg-white p-2 rounded-2xl border border-slate-200 shadow-sm">
-        <div className="relative flex-1 min-w-[280px]">
+      {/* Search and Filter Bar - FIXED OVERFLOW */}
+      <div className="flex flex-col gap-3 bg-white p-3 rounded-2xl border border-slate-200 shadow-sm">
+        {/* Search input - full width on mobile */}
+        <div className="relative w-full">
           <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
           <input
             value={search}
@@ -133,38 +134,45 @@ function AuditLogPageInner() {
             className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-100 rounded-xl text-sm outline-none focus:bg-white focus:border-teal-400 transition-all"
           />
         </div>
-        <div className="flex bg-slate-100 rounded-xl p-1 gap-1">
+        
+        {/* Filter buttons - responsive grid with scroll on mobile */}
+        <div className="flex items-center gap-2 flex-wrap">
+          <div className="flex-1 overflow-x-auto pb-1">
+            <div className="flex bg-slate-100 rounded-xl p-1 gap-1 min-w-max">
+              <button
+                onClick={() => setFilterAction("")}
+                className={`text-xs font-bold px-3 py-1.5 rounded-lg transition-all uppercase tracking-tighter whitespace-nowrap
+                  ${filterAction === "" ? "bg-white text-slate-800 shadow-sm" : "text-slate-400 hover:text-slate-600"}`}
+              >
+                All
+              </button>
+              {uniqueActions.slice(0, 8).map((action) => (
+                <button
+                  key={action}
+                  onClick={() => setFilterAction(action)}
+                  className={`text-xs font-bold px-3 py-1.5 rounded-lg transition-all uppercase tracking-tighter whitespace-nowrap
+                    ${filterAction === action ? "bg-white text-slate-800 shadow-sm" : "text-slate-400 hover:text-slate-600"}`}
+                >
+                  {action.split("_")[0]}
+                </button>
+              ))}
+            </div>
+          </div>
+          
           <button
-            onClick={() => setFilterAction("")}
-            className={`text-xs font-bold px-4 py-2 rounded-lg transition-all uppercase tracking-tighter
-              ${filterAction === "" ? "bg-white text-slate-800 shadow-sm" : "text-slate-400 hover:text-slate-600"}`}
+            onClick={() => fetchLogs({ action: filterAction })}
+            className="p-2 text-slate-400 hover:text-teal-600 hover:bg-teal-50 rounded-lg transition-all shrink-0"
+            title="Refresh"
           >
-            All
+            <RefreshCw size={18} />
           </button>
-          {uniqueActions.slice(0, 5).map((action) => (
-            <button
-              key={action}
-              onClick={() => setFilterAction(action)}
-              className={`text-xs font-bold px-4 py-2 rounded-lg transition-all uppercase tracking-tighter
-                ${filterAction === action ? "bg-white text-slate-800 shadow-sm" : "text-slate-400 hover:text-slate-600"}`}
-            >
-              {action.split("_")[0]}
-            </button>
-          ))}
         </div>
-        <button
-          onClick={() => fetchLogs({ action: filterAction })}
-          className="p-2 text-slate-400 hover:text-teal-600 hover:bg-teal-50 rounded-lg transition-all"
-          title="Refresh"
-        >
-          <RefreshCw size={18} />
-        </button>
       </div>
 
       {/* Table Section */}
       <section className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="w-full text-left">
+          <table className="w-full text-left min-w-[800px]">
             <thead className="bg-slate-50 border-b border-slate-100">
               <tr>
                 <th className="px-5 py-3 text-[10px] font-bold text-slate-400 uppercase tracking-widest w-10">
@@ -196,7 +204,7 @@ function AuditLogPageInner() {
                         {formatAction(log.action)}
                       </p>
                       {log.details && (
-                        <p className="text-[10px] text-slate-400 mt-0.5">{log.details}</p>
+                        <p className="text-[10px] text-slate-400 mt-0.5 line-clamp-2">{log.details}</p>
                       )}
                     </td>
                     <td className="px-5 py-4">
@@ -204,16 +212,18 @@ function AuditLogPageInner() {
                         <p className="text-sm font-medium text-slate-700">
                           {log.userEmail?.split("@")[0] || "System"}
                         </p>
-                        <p className="text-[9px] text-slate-400 uppercase">{log.userRole}</p>
+                        {log.userRole && (
+                          <p className="text-[9px] text-slate-400 uppercase">{log.userRole}</p>
+                        )}
                       </div>
                     </td>
-                    <td className="px-5 py-4 text-sm text-slate-500 italic">
+                    <td className="px-5 py-4 text-sm text-slate-500 italic whitespace-nowrap">
                       {formatTime(log.timestamp)}
                     </td>
                     <td className="px-5 py-4 text-right">
                       {log.targetType && (
                         <div>
-                          <span className="text-[9px] font-bold bg-slate-100 text-slate-500 rounded-full px-2 py-0.5 uppercase">
+                          <span className="text-[9px] font-bold bg-slate-100 text-slate-500 rounded-full px-2 py-0.5 uppercase whitespace-nowrap">
                             {log.targetType}
                           </span>
                           {log.targetId && (
@@ -223,15 +233,15 @@ function AuditLogPageInner() {
                           )}
                         </div>
                       )}
-                    </td>
-                  </tr>
+                     </td>
+                   </tr>
                 ))
               ) : (
                 <tr>
                   <td colSpan="5" className="px-5 py-12 text-center text-slate-400 italic text-sm">
                     No audit logs found matching your search.
-                   </td>
-                 </tr>
+                  </td>
+                </tr>
               )}
             </tbody>
           </table>
@@ -246,6 +256,7 @@ function AuditLogPageInner() {
     </main>
   );
 }
+
 export default function AuditLogPage() {
   return (
     <Suspense fallback={<div>Loading...</div>}>
