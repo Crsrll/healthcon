@@ -93,7 +93,7 @@ export default function AdminNotificationBell({ adminId }) {
             )}
           </div>
 
-          <div className="max-h-96 overflow-y-auto divide-y divide-slate-50">
+          <div className="max-h-72 overflow-y-auto divide-y divide-slate-50">
             {loading ? (
               <div className="flex justify-center py-8">
                 <div className="w-6 h-6 border-2 border-teal-500 border-t-transparent rounded-full animate-spin" />

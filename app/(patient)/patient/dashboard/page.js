@@ -158,7 +158,7 @@ export default function PatientDashboard() {
         <div className="absolute -top-24 -right-24 w-96 h-96 bg-teal-400/20 rounded-full blur-3xl" />
         <div className="absolute -bottom-24 -left-24 w-96 h-96 bg-blue-400/20 rounded-full blur-3xl" />
 
-        <div className="relative max-w-7xl mx-auto px-6 py-12 lg:py-16">
+        <div className="relative max-w-7xl mx-auto px-6 py-8 sm:py-10">
           <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
             <div>
               <div className="flex items-center gap-2 mb-3">
@@ -177,25 +177,7 @@ export default function PatientDashboard() {
               </p>
             </div>
 
-            {/* Stats Summary */}
-            <div className="flex gap-4">
-              <div className="bg-white/10 backdrop-blur-sm rounded-2xl px-6 py-3 text-center border border-white/20">
-                <p className="text-2xl font-bold text-white">
-                  {stats.upcomingBookings}
-                </p>
-                <p className="text-[10px] text-teal-200 uppercase font-bold tracking-wider">
-                  Upcoming
-                </p>
-              </div>
-              <div className="bg-white/10 backdrop-blur-sm rounded-2xl px-6 py-3 text-center border border-white/20">
-                <p className="text-2xl font-bold text-white">
-                  {stats.totalBookings}
-                </p>
-                <p className="text-[10px] text-teal-200 uppercase font-bold tracking-wider">
-                  All Bookings
-                </p>
-              </div>
-            </div>
+
           </div>
         </div>
       </div>

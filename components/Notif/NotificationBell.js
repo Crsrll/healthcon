@@ -85,7 +85,7 @@ export default function NotificationBell({ uid }) {
 
       {/* ── Dropdown ── */}
       {open && (
-        <div className="absolute right-0 mt-2 w-[380px] bg-white rounded-2xl shadow-2xl border border-slate-200/80 z-50"
+        <div className="absolute right-0 mt-2 w-72 sm:w-80 max-w-[calc(100vw-2rem)] bg-white rounded-2xl shadow-2xl border border-slate-200/80 z-50"
           style={{ boxShadow: "0 16px 48px rgba(0,0,0,0.12)" }}>
 
           {/* Header */}
@@ -110,7 +110,7 @@ export default function NotificationBell({ uid }) {
           </div>
 
           {/* List */}
-          <div className="max-h-[60vh] overflow-y-auto">
+          <div className="max-h-72 overflow-y-auto">
             {loading ? (
               <div className="flex items-center justify-center py-12">
                 <div className="w-6 h-6 border-2 border-[#1a355d] border-t-transparent rounded-full animate-spin" />
