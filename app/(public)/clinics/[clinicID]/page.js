@@ -1378,7 +1378,7 @@ function ClinicProfilePageInner() {
                       : 'border-gray-100 hover:border-blue-200'}`}
                 >
                   <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-full bg-gradient-to-br from-blue-100 to-blue-200 text-blue-700 flex items-center justify-center text-xl font-bold shrink-0">
-                    {doctor.name?.split(' ').pop()?.[0]}
+                    {doctor.image}
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="font-bold text-gray-900 text-base sm:text-lg">Dr. {doctor.name}</p>
@@ -1454,7 +1454,7 @@ function ClinicProfilePageInner() {
           <div className="bg-white rounded-2xl border border-gray-200 w-full max-w-sm shadow-xl overflow-hidden" onClick={e => e.stopPropagation()}>
             <div className="bg-gradient-to-r from-[#1a355d] to-[#22447a] px-6 py-5 flex items-center gap-4">
               <div className="w-14 h-14 rounded-full bg-white/20 border-2 border-white/30 flex items-center justify-center text-white font-bold text-2xl">
-                {selectedDoctor.name?.split(" ").pop()?.[0]}
+                {selectedDoctor.image}
               </div>
               <div className="flex-1">
                 <p className="text-white font-bold text-lg leading-tight">Dr. {selectedDoctor.name}</p>
