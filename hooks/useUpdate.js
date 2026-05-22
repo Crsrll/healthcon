@@ -6,7 +6,7 @@ import Cookies from "js-cookie";
 export function useUser() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState(null);
-  const { user, setUser } = useAuth(); // Make sure setUser is exposed
+  const { user, setUser } = useAuth();
 
   const updateUser = async (data) => {
     if (!user?.uid) {
@@ -29,15 +29,13 @@ export function useUser() {
         throw new Error(errorData.error || "Failed to save");
       }
       
-      // ✅ CRITICAL: Update the user in context and storage
+      // ✅ Update all instances of user data
       const updatedUser = { ...user, ...data };
       
-      // Update context state
       if (setUser) {
         setUser(updatedUser);
       }
       
-      // Update localStorage and cookies
       localStorage.setItem("hc_user", JSON.stringify(updatedUser));
       Cookies.set("hc_user", JSON.stringify(updatedUser));
       

@@ -62,17 +62,9 @@ export function AuthProvider({ children }) {
     Cookies.remove("hc_user");
   };
 
-  return (
-  <AuthContext.Provider value={{ 
-    user, 
-    setUser,  // ← Add this
-    login, 
-    logout, 
-    resetPassword, 
-    loading, 
-    error 
-  }}>
+return (
+  <AuthContext.Provider value={{ user, setUser, login, logout, resetPassword, loading, error }}>
     {children}
   </AuthContext.Provider>
 );
-  }
+}

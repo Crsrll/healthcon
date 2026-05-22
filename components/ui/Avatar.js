@@ -17,10 +17,10 @@ export default function Avatar({ user, size = 40 }) {
 
   const initials = getInitials();
 
-  if (user?.photoURL) {
+  if (user?.image) {
     return (
       <img
-        src={user.photoURL}
+        src={user.image}
         alt={initials}
         width={size}
         height={size}
