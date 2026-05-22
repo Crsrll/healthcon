@@ -6,6 +6,7 @@ import { useClinic } from '@/hooks/useClinic';
 import { useDoctors } from '@/hooks/useDoctors';
 import { useAuth } from '@/hooks/useAuth';
 import { useBookedSlots } from '@/hooks/useBookedSlots';
+import { useClinicActions } from '@/hooks/useClinicActions';
 import { generateTimeSlots } from '@/lib/generateTimeSlots';
 import { 
   MessageCircle, Send, X, ChevronDown, Flag, Star, AlertTriangle, 
@@ -105,7 +106,7 @@ function StarRating({ rating, onRatingChange, interactive = false, size = "md" }
 }
 
 // ── Inquiry Chat Drawer ──────────────────────────────────────────
-function InquiryDrawer({ clinicID, clinicName, user, onClose }) {
+function InquiryDrawer({ clinicID, clinicName, user, onClose, onFetchInquiry, onFetchMessages, onSendInquiry }) {
   const [messages, setMessages] = useState([]);
   const [inputText, setInputText] = useState('');
   const [sending, setSending] = useState(false);
@@ -120,8 +121,7 @@ function InquiryDrawer({ clinicID, clinicName, user, onClose }) {
 
   const fetchMessages = async (id) => {
     try {
-      const msgRes = await fetch(`/api/inquiries?inquiryId=${id}`);
-      const msgJson = await msgRes.json();
+      const msgJson = await onFetchMessages(id);
       if (msgJson.success) setMessages(msgJson.data);
     } catch (e) { console.error(e); }
   };
@@ -130,8 +130,7 @@ function InquiryDrawer({ clinicID, clinicName, user, onClose }) {
     const load = async () => {
       if (!user?.uid) return;
       try {
-        const res = await fetch(`/api/inquiries?patientID=${user.uid}&clinicID=${clinicID}`);
-        const json = await res.json();
+        const json = await onFetchInquiry(user.uid, clinicID);
         if (json.success && json.inquiry) {
           setInquiryId(json.inquiry.id);
           inquiryIdRef.current = json.inquiry.id;
@@ -165,33 +164,23 @@ function InquiryDrawer({ clinicID, clinicName, user, onClose }) {
       let currentInquiryId = inquiryId;
 
       if (!currentInquiryId) {
-        const createRes = await fetch('/api/inquiries', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            action: 'create',
-            clinicID,
-            clinicName,
-            patientID: user.uid,
-            patientName: user.displayName || user.email,
-            firstMessage: text,
-          }),
+        const createJson = await onSendInquiry({
+          action: 'create',
+          clinicID,
+          clinicName,
+          patientID: user.uid,
+          patientName: user.displayName || user.email,
+          firstMessage: text,
         });
-        const createJson = await createRes.json();
-        if (!createJson.success) throw new Error('Failed to create inquiry');
         currentInquiryId = createJson.inquiryId;
         setInquiryId(currentInquiryId);
         inquiryIdRef.current = currentInquiryId;
       } else {
-        await fetch('/api/inquiries', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            action: 'message',
-            inquiryId: currentInquiryId,
-            text,
-            sender: 'patient',
-          }),
+        await onSendInquiry({
+          action: 'message',
+          inquiryId: currentInquiryId,
+          text,
+          sender: 'patient',
         });
       }
 
@@ -346,7 +335,7 @@ function ReportTypeModal({ onSelect, onClose }) {
 }
 
 // ── Report to Clinic Modal (with doctor selection & appointment) ─────────────
-function ReportToClinicModal({ clinicID, clinicName, user, onClose, onSuccess }) {
+function ReportToClinicModal({ clinicID, clinicName, user, onClose, onSuccess, onFetchDoctors, onReportToClinic }) {
   const [doctors, setDoctors] = useState([]);
   const [loadingDoctors, setLoadingDoctors] = useState(true);
   const [subject, setSubject] = useState("");
@@ -364,8 +353,7 @@ function ReportToClinicModal({ clinicID, clinicName, user, onClose, onSuccess })
     const fetchDoctors = async () => {
       if (!clinicID) return;
       try {
-        const res = await fetch(`/api/doctors?clinicID=${clinicID}`);
-        const data = await res.json();
+        const data = await onFetchDoctors(clinicID);
         if (data.success) {
           setDoctors(data.data || []);
         }
@@ -403,27 +391,20 @@ function ReportToClinicModal({ clinicID, clinicName, user, onClose, onSuccess })
     setError("");
 
     try {
-      const res = await fetch("/api/reports/to-clinic", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          clinicID,
-          clinicName,
-          reporterID: user.uid,
-          reporterName: user.displayName || user.email,
-          reporterEmail: user.email,
-          subject: subject.trim(),
-          message: message.trim(),
-          doctorId: selectedDoctorId || null,
-          doctorName: selectedDoctorName || null,
-          preferredDate: preferredDate || null,
-          preferredTime: preferredTime || null,
-          appointmentType: appointmentType || null,
-        }),
+      await onReportToClinic({
+        clinicID,
+        clinicName,
+        reporterID: user.uid,
+        reporterName: user.displayName || user.email,
+        reporterEmail: user.email,
+        subject: subject.trim(),
+        message: message.trim(),
+        doctorId: selectedDoctorId || null,
+        doctorName: selectedDoctorName || null,
+        preferredDate: preferredDate || null,
+        preferredTime: preferredTime || null,
+        appointmentType: appointmentType || null,
       });
-
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Failed to submit report");
       setSubmitted(true);
       onSuccess?.();
     } catch (err) {
@@ -579,7 +560,7 @@ function ReportToClinicModal({ clinicID, clinicName, user, onClose, onSuccess })
 }
 
 // ── Report to Admin Modal ─────────────────────────────────────────────
-function ReportToAdminModal({ clinicID, clinicName, user, onClose, onSuccess }) {
+function ReportToAdminModal({ clinicID, clinicName, user, onClose, onSuccess, onReportToAdmin }) {
   const [selectedReason, setSelectedReason] = useState('');
   const [customReason, setCustomReason] = useState('');
   const [description, setDescription] = useState('');
@@ -612,22 +593,15 @@ function ReportToAdminModal({ clinicID, clinicName, user, onClose, onSuccess }) 
       const reasonText = selectedReason === 'other' ? customReason : 
         ADMIN_REPORT_REASONS.find(r => r.value === selectedReason)?.label || selectedReason;
       
-      const res = await fetch('/api/reports/to-admin', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          clinicID,
-          clinicName,
-          reporterID: user.uid,
-          reporterName: user.displayName || user.email,
-          reporterEmail: user.email,
-          reason: reasonText,
-          description: description.trim(),
-        }),
+      await onReportToAdmin({
+        clinicID,
+        clinicName,
+        reporterID: user.uid,
+        reporterName: user.displayName || user.email,
+        reporterEmail: user.email,
+        reason: reasonText,
+        description: description.trim(),
       });
-      
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Failed to submit report');
       setSubmitted(true);
       onSuccess?.();
     } catch (err) {
@@ -727,7 +701,7 @@ function ReportToAdminModal({ clinicID, clinicName, user, onClose, onSuccess }) 
 }
 
 // ── Review Modal ──────────────────────────────────────────────
-function ReviewModal({ clinicID, clinicName, user, onClose, onReviewSubmitted }) {
+function ReviewModal({ clinicID, clinicName, user, onClose, onReviewSubmitted, onSubmitReview }) {
   const [rating, setRating] = useState(0);
   const [reviewText, setReviewText] = useState('');
   const [submitting, setSubmitting] = useState(false);
@@ -752,21 +726,14 @@ function ReviewModal({ clinicID, clinicName, user, onClose, onReviewSubmitted })
     setError('');
 
     try {
-      const res = await fetch('/api/reviews', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          clinicID,
-          clinicName,
-          patientID: user.uid,
-          patientName: user.displayName || user.email,
-          rating,
-          review: reviewText.trim(),
-        }),
+      await onSubmitReview({
+        clinicID,
+        clinicName,
+        patientID: user.uid,
+        patientName: user.displayName || user.email,
+        rating,
+        review: reviewText.trim(),
       });
-      
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Failed to submit review');
       setSubmitted(true);
       onReviewSubmitted?.();
     } catch (err) {
@@ -841,7 +808,7 @@ function ReviewModal({ clinicID, clinicName, user, onClose, onReviewSubmitted })
 }
 
 // ── Reviews Section Component ──────────────────────────────────────────
-function ReviewsSection({ clinicID, clinicName }) {
+function ReviewsSection({ clinicID, clinicName, onFetchReviews }) {
   const [reviews, setReviews] = useState([]);
   const [loading, setLoading] = useState(true);
   const [averageRating, setAverageRating] = useState(0);
@@ -849,8 +816,7 @@ function ReviewsSection({ clinicID, clinicName }) {
 
   const fetchReviews = async () => {
     try {
-      const res = await fetch(`/api/reviews?clinicID=${clinicID}`);
-      const data = await res.json();
+      const data = await onFetchReviews(clinicID);
       if (data.success) {
         setReviews(data.reviews || []);
         setAverageRating(data.averageRating || 0);
@@ -928,7 +894,7 @@ function ReviewsSection({ clinicID, clinicName }) {
 }
 
 // ── Booking Modal ────────────────────────────────────────────────
-function BookingModal({ doctor, services, clinicID, patientID, onClose }) {
+function BookingModal({ doctor, services, clinicID, patientID, onClose, onCreateBooking }) {
   const { userData, loading: authLoading } = useAuth();
 
   const firstName = userData?.firstName || "";
@@ -968,17 +934,11 @@ function BookingModal({ doctor, services, clinicID, patientID, onClose }) {
     setSubmitting(true);
     setError('');
     try {
-      const res = await fetch('/api/bookings', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          clinicID, doctorID: doctor.id, patientID,
-          service: selectedService, day: selectedDay,
-          time: selectedTime, date: selectedDate,
-        }),
+      await onCreateBooking({
+        clinicID, doctorID: doctor.id, patientID,
+        service: selectedService, day: selectedDay,
+        time: selectedTime, date: selectedDate,
       });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Failed to create booking');
       setConfirmed(true);
     } catch (err) {
       setError(err.message);
@@ -1098,6 +1058,7 @@ export default function ClinicProfilePage() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const { user } = useAuth();
+  const clinicActions = useClinicActions();
 
   const { clinic, loading: clinicLoading } = useClinic(params.clinicID);
   const { doctors, loading: doctorLoading } = useDoctors(params.clinicID);
@@ -1177,6 +1138,7 @@ export default function ClinicProfilePage() {
           clinicID={params.clinicID}
           patientID={user?.uid}
           onClose={() => setBookingDoctor(null)}
+          onCreateBooking={clinicActions.createBooking}
         />
       )}
 
@@ -1187,6 +1149,9 @@ export default function ClinicProfilePage() {
           clinicName={clinic.clinicName}
           user={user}
           onClose={() => setShowInquiry(false)}
+          onFetchInquiry={clinicActions.fetchInquiry}
+          onFetchMessages={clinicActions.fetchInquiryMessages}
+          onSendInquiry={clinicActions.sendInquiry}
         />
       )}
 
@@ -1205,6 +1170,8 @@ export default function ClinicProfilePage() {
           clinicName={clinic.clinicName}
           user={user}
           onClose={() => setShowReportToClinic(false)}
+          onFetchDoctors={clinicActions.fetchDoctors}
+          onReportToClinic={clinicActions.reportToClinic}
         />
       )}
 
@@ -1215,6 +1182,7 @@ export default function ClinicProfilePage() {
           clinicName={clinic.clinicName}
           user={user}
           onClose={() => setShowReportToAdmin(false)}
+          onReportToAdmin={clinicActions.reportToAdmin}
         />
       )}
 
@@ -1226,6 +1194,7 @@ export default function ClinicProfilePage() {
           user={user}
           onClose={() => setShowReviewModal(false)}
           onReviewSubmitted={handleReviewSubmitted}
+          onSubmitReview={clinicActions.submitReview}
         />
       )}
 
@@ -1401,7 +1370,7 @@ export default function ClinicProfilePage() {
 
           {/* Reviews Section */}
           <section key={refreshReviews}>
-            <ReviewsSection clinicID={params.clinicID} clinicName={clinic.clinicName} />
+            <ReviewsSection clinicID={params.clinicID} clinicName={clinic.clinicName} onFetchReviews={clinicActions.fetchReviews} />
           </section>
         </div>
       </div>

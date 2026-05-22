@@ -59,6 +59,20 @@ export function useSystemSettings() {
     }
   }, []);
 
+  const clearLogs = useCallback(async () => {
+    const res = await fetch("/api/logs?all=true", { method: "DELETE" });
+    const json = await res.json();
+    if (!res.ok) throw new Error(json.error || "Failed to clear logs");
+    return json;
+  }, []);
+
+  const clearOldLogs = useCallback(async (days) => {
+    const res = await fetch(`/api/logs?days=${days}`, { method: "DELETE" });
+    const json = await res.json();
+    if (!res.ok) throw new Error(json.error || "Failed to clear old logs");
+    return json;
+  }, []);
+
   useEffect(() => {
     fetchSettings();
   }, [fetchSettings]);
@@ -68,7 +82,9 @@ export function useSystemSettings() {
     loading, 
     error, 
     updateSettings, 
-    resetSettings, 
+    resetSettings,
+    clearLogs,
+    clearOldLogs,
     refreshSettings: fetchSettings 
   };
 }

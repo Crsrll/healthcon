@@ -2,11 +2,13 @@
 import { useState, useEffect, useRef } from "react";
 import { Search, Send, Loader2, MessageSquare, Clock, CheckCheck, Check } from "lucide-react";
 import { useAuth } from "@/context/authContext";
+import { useInquiryActions } from "@/hooks/useInquiryActions";
 import { db } from "@/lib/firebase";
 import { collection, query, where, orderBy, onSnapshot } from "firebase/firestore";
 
 export default function ClinicInquiriesPage() {
   const { user, loading: authLoading } = useAuth();
+  const { markAsRead, sendMessage } = useInquiryActions();
 
   const [inquiries,   setInquiries]   = useState([]);
   const [activeId,    setActiveId]    = useState(null);
@@ -76,26 +78,16 @@ export default function ClinicInquiriesPage() {
 
     const role = user?.role === "clinic" ? "clinic" : "patient";
 
-    fetch("/api/inquiries/read", {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ inquiryId: activeId, role }),
-    }).catch(e => console.error(e));
-  }, [activeId]);
+    markAsRead(activeId, role);
+  }, [activeId, markAsRead]);
 
   const handleSendMessage = async (e) => {
     e.preventDefault();
     if (!replyText.trim() || !activeId) return;
     const tempText = replyText;
     setReplyText("");
-    
-    try {
-      await fetch("/api/inquiries", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "message", inquiryId: activeId, text: tempText, sender: "clinic" }),
-      });
-    } catch (e) { alert("Failed to send"); }
+    const result = await sendMessage("message", { inquiryId: activeId, text: tempText, sender: "clinic" });
+    if (!result.success) alert("Failed to send");
   };
 
   const activeInquiry     = inquiries.find(i => i.id === activeId);

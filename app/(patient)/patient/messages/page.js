@@ -3,11 +3,13 @@ import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { Search, Send, Building2, ChevronRight, Loader2, MessageSquare, Clock, Check, CheckCheck } from "lucide-react";
 import { useAuth } from "@/context/authContext";
+import { useInquiryActions } from "@/hooks/useInquiryActions";
 import { db } from "@/lib/firebase"; // Ensure this points to your firebase config
 import { collection, query, where, orderBy, onSnapshot } from "firebase/firestore";
 
 export default function PatientInquiriesPage() {
   const { user, loading: authLoading } = useAuth();
+  const { markAsRead, sendMessage } = useInquiryActions();
 
   const [inquiries, setInquiries] = useState([]);
   const [activeId, setActiveId] = useState(null);
@@ -82,34 +84,16 @@ export default function PatientInquiriesPage() {
 
     const role = user?.role === "clinic" ? "clinic" : "patient";
 
-    fetch("/api/inquiries/read", {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ inquiryId: activeId, role }),
-    }).catch(e => console.error(e));
-  }, [activeId]);
+    markAsRead(activeId, role);
+  }, [activeId, markAsRead]);
 
-  // ── Send Message logic remains the same (POST to API) ──
   const handleSendMessage = async (e) => {
     e.preventDefault();
     if (!replyText.trim() || !activeId) return;
     const tempText = replyText;
     setReplyText("");
-
-    try {
-      await fetch("/api/inquiries", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          action: "message",
-          inquiryId: activeId,
-          text: tempText,
-          sender: "patient",
-        }),
-      });
-    } catch (e) {
-      alert("Failed to send message");
-    }
+    const result = await sendMessage("message", { inquiryId: activeId, text: tempText, sender: "patient" });
+    if (!result.success) alert("Failed to send message");
   };
 
   const activeInquiry = inquiries.find(i => i.id === activeId);

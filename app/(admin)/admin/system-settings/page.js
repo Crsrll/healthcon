@@ -20,7 +20,7 @@ function Toggle({ value, onChange }) {
 
 export default function SystemSettingsPage() {
   const { user } = useAuth();
-  const { settings, loading, updateSettings, resetSettings } = useSystemSettings();
+  const { settings, loading, updateSettings, resetSettings, clearLogs, clearOldLogs } = useSystemSettings();
   
   // Local state for form values
   const [emailNotifs, setEmailNotifs] = useState(true);
@@ -89,24 +89,18 @@ export default function SystemSettingsPage() {
     
     setClearing(true);
     try {
-      const res = await fetch("/api/logs?all=true", { method: "DELETE" });
-      const json = await res.json();
-      
-      if (res.ok) {
-        await createSystemLog(
-          user,
-          LOG_ACTIONS.SYSTEM_SETTINGS_UPDATE,
-          "logs",
-          "all",
-          "Cleared all audit logs"
-        );
-        alert(json.message || "Audit logs cleared successfully");
-      } else {
-        alert(`Failed to clear logs: ${json.error}`);
-      }
+      const json = await clearLogs();
+      await createSystemLog(
+        user,
+        LOG_ACTIONS.SYSTEM_SETTINGS_UPDATE,
+        "logs",
+        "all",
+        "Cleared all audit logs"
+      );
+      alert(json.message || "Audit logs cleared successfully");
     } catch (err) {
       console.error("Clear logs error:", err);
-      alert("Failed to clear logs");
+      alert(`Failed to clear logs: ${err.message}`);
     } finally {
       setClearing(false);
     }
@@ -128,24 +122,18 @@ export default function SystemSettingsPage() {
     
     setClearing(true);
     try {
-      const res = await fetch(`/api/logs?days=${daysNum}`, { method: "DELETE" });
-      const json = await res.json();
-      
-      if (res.ok) {
-        await createSystemLog(
-          user,
-          LOG_ACTIONS.SYSTEM_SETTINGS_UPDATE,
-          "logs",
-          "old",
-          `Cleared audit logs older than ${daysNum} days`
-        );
-        alert(json.message || `Deleted logs older than ${daysNum} days successfully`);
-      } else {
-        alert(`Failed to clear logs: ${json.error}`);
-      }
+      const json = await clearOldLogs(daysNum);
+      await createSystemLog(
+        user,
+        LOG_ACTIONS.SYSTEM_SETTINGS_UPDATE,
+        "logs",
+        "old",
+        `Cleared audit logs older than ${daysNum} days`
+      );
+      alert(json.message || `Deleted logs older than ${daysNum} days successfully`);
     } catch (err) {
       console.error("Clear old logs error:", err);
-      alert("Failed to clear logs");
+      alert(`Failed to clear logs: ${err.message}`);
     } finally {
       setClearing(false);
     }
