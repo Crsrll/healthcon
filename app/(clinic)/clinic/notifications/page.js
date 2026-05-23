@@ -59,20 +59,20 @@ export default function ClinicNotificationsPage() {
       await markOne(notif.id);
     }
     
-    // Navigate based on notification type (clinic-specific)
+    // Navigate based on notification type (clinic-specific) - CORRECTED PATHS
     switch (notif.type) {
       case "booking_requested":
       case "booking_confirmed":
       case "booking_rejected":
       case "appointment_reminder":
-        router.push("/clinic/appointments");
+        router.push("/clinic/daily-schedule");
         break;
       case "new_rating":
       case "new_review":
-        router.push("/clinic/reviews");
+        router.push("/clinic/reports-reviews");
         break;
       case "new_report":
-        router.push("/clinic/reports");
+        router.push("/clinic/reports-reviews");
         break;
       case "new_patient_response":
       case "clinic_response":
@@ -82,7 +82,7 @@ export default function ClinicNotificationsPage() {
         router.push("/clinic/patients");
         break;
       case "report_resolved":
-        router.push("/clinic/reports");
+        router.push("/clinic/reports-reviews");
         break;
       default:
         if (notif.linkTo) {
