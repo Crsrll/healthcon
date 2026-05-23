@@ -5,19 +5,16 @@ export function useDoctors(clinicID = null) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-       if (!clinicID) {
+    if (!clinicID) {
       setLoading(false);
-      return; 
+      return;
     }
-    
+
     const fetchDoctors = async () => {
       setLoading(true);
 
-      let url = "/api/doctors/getDoctors";
-
-      if (clinicID) {
-        url += `?clinicID=${clinicID}`;
-      }
+      // ✅ activeOnly=true filters out inactive doctors on the API level
+      const url = `/api/doctors/getDoctors?clinicID=${clinicID}&activeOnly=true`;
 
       try {
         const res = await fetch(url);
@@ -29,8 +26,6 @@ export function useDoctors(clinicID = null) {
           return;
         }
 
-        console.log('doctors API raw response:', JSON.stringify(json));
-
         setDoctors(json.data || json || []);
       } catch (err) {
         console.error("Fetch error:", err);
@@ -40,8 +35,7 @@ export function useDoctors(clinicID = null) {
       }
     };
 
-    fetchDoctors(); 
-
+    fetchDoctors();
   }, [clinicID]);
 
   return { doctors, loading };

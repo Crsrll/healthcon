@@ -45,9 +45,26 @@ export function useClinicDoctors(clinicID) {
     [clinicID, fetchDoctors]
   );
 
+  // ✅ Wrapped in useCallback to match the rest of the hook
+  const deleteDoctor = useCallback(
+    async (id) => {
+      try {
+        const res = await fetch(`/api/doctors?id=${id}`, { method: "DELETE" });
+        const json = await res.json();
+        if (!res.ok) return { success: false, error: json.error };
+        setDoctors((prev) => prev.filter((d) => d.id !== id));
+        return { success: true };
+      } catch (err) {
+        console.error("Delete error:", err);
+        return { success: false, error: err.message };
+      }
+    },
+    [] // no dependencies — only uses setDoctors which is stable
+  );
+
   useEffect(() => {
     fetchDoctors();
   }, [fetchDoctors]);
 
-  return { doctors, loading, error, refreshDoctors: fetchDoctors, saveDoctor };
+  return { doctors, loading, error, refreshDoctors: fetchDoctors, saveDoctor, deleteDoctor };
 }

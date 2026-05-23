@@ -13,22 +13,30 @@ import {
   orderBy 
 } from 'firebase/firestore';
 
+// app/api/doctors/route.js — updated GET handler
 export async function GET(req) {
   try {
     const { searchParams } = new URL(req.url);
     const clinicID = searchParams.get('clinicID');
+    const activeOnly = searchParams.get('activeOnly') === 'true'; // ✅ new param
 
     if (!clinicID) {
       return NextResponse.json({ error: 'clinicID is required' }, { status: 400 });
     }
 
-    const q = query(collection(db, 'doctors'), where('clinicID', '==', clinicID));
+    let q = query(collection(db, 'doctors'), where('clinicID', '==', clinicID));
+
+    // ✅ Add available filter when requested
+    if (activeOnly) {
+      q = query(
+        collection(db, 'doctors'),
+        where('clinicID', '==', clinicID),
+        where('available', '==', true)
+      );
+    }
+
     const snap = await getDocs(q);
-    
-    const doctors = snap.docs.map(doc => ({
-      id: doc.id,
-      ...doc.data()
-    }));
+    const doctors = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 
     return NextResponse.json({ success: true, data: doctors });
   } catch (err) {
@@ -75,3 +83,4 @@ export async function POST(req) {
     return NextResponse.json({ error: 'Failed to save doctor' }, { status: 500 });
   }
 }
+

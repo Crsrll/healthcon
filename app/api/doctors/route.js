@@ -1,17 +1,7 @@
 // app/api/doctors/route.js
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/firebase';
-import { 
-  collection, 
-  getDocs, 
-  query, 
-  where, 
-  doc, 
-  setDoc, 
-  updateDoc, 
-  deleteDoc, 
-  orderBy 
-} from 'firebase/firestore';
+import { collection, getDocs, query, where, doc, setDoc, updateDoc, deleteDoc } from 'firebase/firestore';
 
 export async function GET(req) {
   try {
@@ -77,5 +67,23 @@ export async function POST(req) {
   } catch (err) {
     console.error("POST /api/doctors error:", err);
     return NextResponse.json({ error: 'Failed to save doctor' }, { status: 500 });
+  }
+}
+
+// app/api/doctors/route.js — add this
+export async function DELETE(req) {
+  try {
+    const { searchParams } = new URL(req.url);
+    const id = searchParams.get('id');
+
+    if (!id) {
+      return NextResponse.json({ error: 'Doctor ID is required' }, { status: 400 });
+    }
+
+    await deleteDoc(doc(db, 'doctors', id));
+    return NextResponse.json({ success: true, id });
+  } catch (err) {
+    console.error("DELETE /api/doctors error:", err);
+    return NextResponse.json({ error: 'Failed to delete doctor' }, { status: 500 });
   }
 }

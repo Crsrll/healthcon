@@ -2,7 +2,7 @@
 import { useState, useRef } from "react";
 import { uploadImage } from "@/lib/uploadImage";
 import Modal from "@/components/ui/Modal";
-import { Search, UserPlus, Edit, Loader2, Clock, Calendar, Eye, X, Phone, Mail, MapPin, Award, Stethoscope, GraduationCap } from "lucide-react";
+import { Search, UserPlus, Edit, Loader2, Clock, Calendar, Eye, X, Stethoscope, Trash2 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useClinicDoctors } from "@/hooks/useClinicDoctors";
 
@@ -18,8 +18,8 @@ const EMPTY_FORM = {
 
 export default function DoctorsPage() {
   const { user, loading: authLoading } = useAuth();
-  const { doctors, loading, saveDoctor } = useClinicDoctors(user?.uid);
-
+  const { doctors, loading, saveDoctor, deleteDoctor } = useClinicDoctors(user?.uid);
+  const [doctorToDelete, setDoctorToDelete] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
   const [selectedDoctor, setSelectedDoctor] = useState(null);
@@ -64,6 +64,17 @@ export default function DoctorsPage() {
     if (result.success) closeModal();
     else alert("Failed to save doctor");
   };
+
+ const handleDelete = async () => {
+  if (!doctorToDelete) return;
+  const result = await deleteDoctor(doctorToDelete.id);
+  if (result.success) {
+    setDoctorToDelete(null);
+  } else {
+    alert("Failed to delete doctor");
+  }
+};
+
 
   const startEdit = (doc) => {
     setEditingId(doc.id);
@@ -119,7 +130,7 @@ export default function DoctorsPage() {
     return matchSearch && matchTab;
   });
 
-  return (
+ return (
     <main className="max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-8 space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
@@ -174,13 +185,13 @@ export default function DoctorsPage() {
                   <th className="px-4 sm:px-6 py-3 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Doctor</th>
                   <th className="px-4 sm:px-6 py-3 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Specialization</th>
                   <th className="px-4 sm:px-6 py-3 text-[10px] font-bold text-slate-400 uppercase tracking-widest hidden md:table-cell">Schedule</th>
-                  <th className="px-4 sm:px-6 py-3 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Actions</th>
+                  <th className="px-4 sm:px-6 py-3 text-[10px] font-bold text-slate-400 uppercase tracking-widest text-center">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-50">
                 {filteredDoctors.map((doc) => (
-                  <tr 
-                    key={doc.id} 
+                  <tr
+                    key={doc.id}
                     className="hover:bg-slate-50/50 transition-colors cursor-pointer"
                     onClick={() => openDetailsModal(doc)}
                   >
@@ -188,11 +199,7 @@ export default function DoctorsPage() {
                       <div className="flex items-center gap-3">
                         <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-100 to-blue-200 flex items-center justify-center overflow-hidden shrink-0">
                           {doc.image ? (
-                            <img 
-                              src={doc.image} 
-                              alt={doc.name} 
-                              className="w-full h-full object-cover"
-                            />
+                            <img src={doc.image} alt={doc.name} className="w-full h-full object-cover" />
                           ) : (
                             <span className="text-blue-600 font-bold text-sm uppercase">
                               {doc.name?.charAt(0) || 'D'}
@@ -220,24 +227,26 @@ export default function DoctorsPage() {
                     <td className="px-4 sm:px-6 py-4">
                       <div className="flex gap-2">
                         <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            startEdit(doc);
-                          }}
+                          onClick={(e) => { e.stopPropagation(); startEdit(doc); }}
                           className="p-1.5 text-slate-400 hover:text-blue-600 transition-colors"
                           title="Edit Doctor"
                         >
                           <Edit size={16} />
                         </button>
                         <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            openDetailsModal(doc);
-                          }}
+                          onClick={(e) => { e.stopPropagation(); openDetailsModal(doc); }}
                           className="p-1.5 text-slate-400 hover:text-teal-600 transition-colors"
                           title="View Details"
                         >
                           <Eye size={16} />
+                        </button>
+                        {/* ✅ Delete button */}
+                        <button
+                          onClick={(e) => { e.stopPropagation(); setDoctorToDelete(doc); }}
+                          className="p-1.5 text-slate-400 hover:text-red-500 transition-colors"
+                          title="Delete Doctor"
+                        >
+                          <Trash2 size={16} />
                         </button>
                       </div>
                     </td>
@@ -249,32 +258,106 @@ export default function DoctorsPage() {
         )}
       </section>
 
-      {/* Add/Edit Doctor Modal */}
-      <Modal isOpen={isModalOpen} onClose={closeModal} title={editingId ? "Edit Doctor" : "Register Doctor"}>
-        <form onSubmit={handleSave} className="space-y-4">
-          {/* Doctor Photo */}
-          <div>
-            <label className="text-xs font-semibold text-slate-600 mb-1.5 block">Photo (optional)</label>
-            <input type="file" ref={imageInputRef} onChange={handleImageChange} accept="image/*" className="hidden" />
-            <div className="flex items-center gap-3">
-              <div
-                onClick={() => imageInputRef.current.click()}
-                className="w-14 h-14 rounded-xl border-2 border-dashed border-slate-200 overflow-hidden cursor-pointer hover:border-teal-400 transition-colors flex items-center justify-center bg-slate-50 shrink-0"
+      {/* ✅ Delete Confirmation Modal */}
+      {doctorToDelete && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4"
+          onClick={() => setDoctorToDelete(null)}
+        >
+          <div
+            className="bg-white rounded-2xl max-w-sm w-full p-6 shadow-xl space-y-4"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-center w-12 h-12 bg-red-100 rounded-full mx-auto">
+              <Trash2 size={22} className="text-red-500" />
+            </div>
+            <div className="text-center space-y-1">
+              <h3 className="text-base font-black text-slate-800">Delete Doctor?</h3>
+              <p className="text-sm text-slate-500">
+                Are you sure you want to delete{" "}
+                <span className="font-bold text-slate-700">Dr. {doctorToDelete.name}</span>?
+                This is irreversible.
+              </p>
+            </div>
+            <div className="flex gap-3 pt-2">
+              <button
+                onClick={() => setDoctorToDelete(null)}
+                className="flex-1 py-2.5 bg-slate-100 text-slate-700 rounded-xl text-sm font-bold hover:bg-slate-200 transition-colors"
               >
-                {uploading ? (
-                  <div className="w-4 h-4 border-2 border-teal-400 border-t-transparent rounded-full animate-spin" />
-                ) : formData.image ? (
-                  <img src={formData.image} alt="" className="w-full h-full object-cover" />
-                ) : (
-                  <span className="text-slate-300 text-xs">📷</span>
-                )}
-              </div>
-              <button type="button" onClick={() => imageInputRef.current.click()} disabled={uploading}
-                className="text-xs font-semibold text-teal-600 bg-teal-50 hover:bg-teal-100 px-3 py-1.5 rounded-lg transition-colors disabled:opacity-50">
-                {uploading ? "Uploading..." : formData.image ? "Change" : "Upload"}
+                Cancel
+              </button>
+              <button
+                onClick={handleDelete}
+                className="flex-1 py-2.5 bg-red-500 text-white rounded-xl text-sm font-bold hover:bg-red-600 transition-colors"
+              >
+                Yes, Delete
               </button>
             </div>
           </div>
+        </div>
+      )}
+
+      {/* Add/Edit Doctor Modal */}
+      <Modal isOpen={isModalOpen} onClose={closeModal} title={editingId ? "Edit Doctor" : "Register Doctor"}>
+        <form onSubmit={handleSave} className="space-y-4">
+          {/* Doctor Photo + Status */}
+          <div>
+            <label className="text-xs font-semibold text-slate-600 mb-1.5 block">Photo (optional)</label>
+            <input type="file" ref={imageInputRef} onChange={handleImageChange} accept="image/*" className="hidden" />
+            <div className="flex items-center justify-between gap-3">
+              {/* Left: photo upload */}
+              <div className="flex items-center gap-3">
+                <div
+                  onClick={() => imageInputRef.current.click()}
+                  className="w-14 h-14 rounded-xl border-2 border-dashed border-slate-200 overflow-hidden cursor-pointer hover:border-teal-400 transition-colors flex items-center justify-center bg-slate-50 shrink-0"
+                >
+                  {uploading ? (
+                    <div className="w-4 h-4 border-2 border-teal-400 border-t-transparent rounded-full animate-spin" />
+                  ) : formData.image ? (
+                    <img src={formData.image} alt="" className="w-full h-full object-cover" />
+                  ) : (
+                    <span className="text-slate-300 text-xs">📷</span>
+                  )}
+                </div>
+                <button type="button" onClick={() => imageInputRef.current.click()} disabled={uploading}
+                  className="text-xs font-semibold text-teal-600 bg-teal-50 hover:bg-teal-100 px-3 py-1.5 rounded-lg transition-colors disabled:opacity-50">
+                  {uploading ? "Uploading..." : formData.image ? "Change" : "Upload"}
+                </button>
+              </div>
+
+              {/* Right: status toggle (only when editing) */}
+              {editingId && (
+                <div className="flex flex-col items-end gap-1">
+                  <label className="text-[10px] font-bold text-slate-400 uppercase">Status</label>
+                  <div className="flex rounded-xl overflow-hidden border border-slate-200">
+                    <button
+                      type="button"
+                      onClick={() => setFormData({ ...formData, available: true })}
+                      className={`px-4 py-1.5 text-xs font-bold transition-all ${
+                        formData.available
+                          ? "bg-green-500 text-white"
+                          : "bg-white text-slate-400 hover:bg-slate-50"
+                      }`}
+                    >
+                      Active
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setFormData({ ...formData, available: false })}
+                      className={`px-4 py-1.5 text-xs font-bold transition-all border-l border-slate-200 ${
+                        !formData.available
+                          ? "bg-red-500 text-white"
+                          : "bg-white text-slate-400 hover:bg-slate-50"
+                      }`}
+                    >
+                      Inactive
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+
           <div>
             <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1">Full Name</label>
             <input
@@ -284,6 +367,7 @@ export default function DoctorsPage() {
               onChange={(e) => setFormData({ ...formData, name: e.target.value })}
             />
           </div>
+
           <div>
             <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1">Specialty</label>
             <input
@@ -293,6 +377,7 @@ export default function DoctorsPage() {
               onChange={(e) => setFormData({ ...formData, specialty: e.target.value })}
             />
           </div>
+
           <div className="bg-slate-50 p-4 rounded-2xl space-y-3">
             <p className="text-[10px] font-bold text-slate-400 uppercase">Weekly Availability</p>
             <div className="flex flex-wrap gap-2">
@@ -317,10 +402,7 @@ export default function DoctorsPage() {
                 className="w-full border p-2 rounded-lg text-xs"
                 value={formData.availability.startTime}
                 onChange={(e) =>
-                  setFormData({
-                    ...formData,
-                    availability: { ...formData.availability, startTime: e.target.value },
-                  })
+                  setFormData({ ...formData, availability: { ...formData.availability, startTime: e.target.value } })
                 }
               />
               <input
@@ -328,14 +410,12 @@ export default function DoctorsPage() {
                 className="w-full border p-2 rounded-lg text-xs"
                 value={formData.availability.endTime}
                 onChange={(e) =>
-                  setFormData({
-                    ...formData,
-                    availability: { ...formData.availability, endTime: e.target.value },
-                  })
+                  setFormData({ ...formData, availability: { ...formData.availability, endTime: e.target.value } })
                 }
               />
             </div>
           </div>
+
           <button
             type="submit"
             className="w-full bg-teal-600 text-white py-3 rounded-2xl font-bold shadow-lg shadow-teal-600/20"
@@ -349,18 +429,13 @@ export default function DoctorsPage() {
       {selectedDoctor && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4" onClick={closeDetailsModal}>
           <div className="bg-white rounded-2xl max-w-md w-full max-h-[90vh] overflow-y-auto shadow-xl" onClick={e => e.stopPropagation()}>
-            {/* Header with cover image style */}
             <div className="relative">
               <div className="bg-gradient-to-r from-[#1a355d] to-[#22447a] h-24 rounded-t-2xl" />
               <div className="absolute -bottom-10 left-1/2 transform -translate-x-1/2">
                 <div className="w-24 h-24 rounded-full bg-white p-1 shadow-lg">
                   <div className="w-full h-full rounded-full bg-gradient-to-br from-blue-100 to-blue-200 flex items-center justify-center overflow-hidden">
                     {selectedDoctor.image ? (
-                      <img 
-                        src={selectedDoctor.image} 
-                        alt={selectedDoctor.name} 
-                        className="w-full h-full object-cover rounded-full"
-                      />
+                      <img src={selectedDoctor.image} alt={selectedDoctor.name} className="w-full h-full object-cover rounded-full" />
                     ) : (
                       <span className="text-blue-600 font-bold text-3xl uppercase">
                         {selectedDoctor.name?.charAt(0) || 'D'}
@@ -369,15 +444,11 @@ export default function DoctorsPage() {
                   </div>
                 </div>
               </div>
-              <button
-                onClick={closeDetailsModal}
-                className="absolute top-4 right-4 text-white/70 hover:text-white bg-black/20 rounded-full p-1.5 transition-colors"
-              >
+              <button onClick={closeDetailsModal} className="absolute top-4 right-4 text-white/70 hover:text-white bg-black/20 rounded-full p-1.5 transition-colors">
                 <X size={18} />
               </button>
             </div>
 
-            {/* Content */}
             <div className="pt-14 pb-6 px-6">
               <div className="text-center mb-6">
                 <h3 className="text-xl font-bold text-slate-800">Dr. {selectedDoctor.name}</h3>
@@ -386,7 +457,6 @@ export default function DoctorsPage() {
                 </span>
               </div>
 
-              {/* Availability Section */}
               <div className="border-t border-slate-100 pt-4 mb-4">
                 <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-3 flex items-center gap-2">
                   <Clock size={12} /> Availability
@@ -398,9 +468,7 @@ export default function DoctorsPage() {
                         <Calendar size={14} className="text-slate-400 mt-0.5 shrink-0" />
                         <div>
                           <p className="text-[9px] text-slate-400 uppercase">Days</p>
-                          <p className="text-sm font-medium text-slate-700">
-                            {selectedDoctor.availability.days.join(", ")}
-                          </p>
+                          <p className="text-sm font-medium text-slate-700">{selectedDoctor.availability.days.join(", ")}</p>
                         </div>
                       </div>
                       <div className="flex items-start gap-3">
@@ -419,7 +487,6 @@ export default function DoctorsPage() {
                 </div>
               </div>
 
-              {/* Status */}
               <div className="border-t border-slate-100 pt-4 mb-4">
                 <div className="flex items-center justify-between">
                   <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Status</span>
@@ -429,23 +496,16 @@ export default function DoctorsPage() {
                 </div>
               </div>
 
-              {/* Contact Info Placeholder (can be extended) */}
               <div className="border-t border-slate-100 pt-4 mb-4">
                 <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-3 flex items-center gap-2">
                   <Stethoscope size={12} /> About
                 </h4>
-                <p className="text-sm text-slate-600">
-                  {selectedDoctor.bio || "No additional information provided."}
-                </p>
+                <p className="text-sm text-slate-600">{selectedDoctor.bio || "No additional information provided."}</p>
               </div>
 
-              {/* Actions */}
               <div className="flex gap-3 pt-4 border-t border-slate-100">
                 <button
-                  onClick={() => {
-                    closeDetailsModal();
-                    startEdit(selectedDoctor);
-                  }}
+                  onClick={() => { closeDetailsModal(); startEdit(selectedDoctor); }}
                   className="flex-1 py-2.5 border border-blue-600 text-blue-600 rounded-xl text-sm font-bold hover:bg-blue-50 transition-colors"
                 >
                   Edit Doctor
