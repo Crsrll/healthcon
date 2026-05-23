@@ -1,11 +1,10 @@
 "use client";
-
 import { createContext, useContext, useEffect, useState } from "react";
 import Cookies from "js-cookie";
-import { signOut } from "firebase/auth";        // ← remove getAuth
-import { auth } from "@/lib/firebase";          // ← add this
+import { signOut, sendPasswordResetEmail } from "firebase/auth";
+import { doc, getDoc } from "firebase/firestore";
+import { auth, db } from "@/lib/firebase";
 import { useLoginUser } from "@/hooks/useLoginUser";
-import { sendPasswordResetEmail } from "firebase/auth";
 
 const AuthContext = createContext();
 
@@ -14,7 +13,7 @@ export function useAuth() {
 }
 
 export function AuthProvider({ children }) {
-  const { loginUser, loading, error } = useLoginUser(); // ✅ reuse hook state
+  const { loginUser, loading, error } = useLoginUser();
   const [user, setUser] = useState(null);
 
   useEffect(() => {
@@ -26,7 +25,6 @@ export function AuthProvider({ children }) {
 
   const login = async (email, password, rememberMe = false) => {
     const result = await loginUser(email, password, rememberMe);
-
     if (!result.success) return { success: false };
 
     const userData = { uid: result.user.uid, role: result.role, ...result.data };
@@ -36,10 +34,25 @@ export function AuthProvider({ children }) {
     if (rememberMe) {
       Cookies.set("hc_user", JSON.stringify(userData), { expires: 7 });
     } else {
-      Cookies.set("hc_user", JSON.stringify(userData)); // session cookie
+      Cookies.set("hc_user", JSON.stringify(userData));
     }
 
     return { success: true, user: userData };
+  };
+
+  const refreshUser = async () => {
+    if (!user?.uid) return;
+    try {
+      const snap = await getDoc(doc(db, "users", user.uid));
+      if (snap.exists()) {
+        const updated = { uid: user.uid, role: user.role, ...snap.data() };
+        setUser(updated);
+        localStorage.setItem("hc_user", JSON.stringify(updated));
+        Cookies.set("hc_user", JSON.stringify(updated));
+      }
+    } catch (err) {
+      console.error("refreshUser error:", err);
+    }
   };
 
   const resetPassword = async (email) => {
@@ -53,7 +66,7 @@ export function AuthProvider({ children }) {
 
   const logout = async () => {
     try {
-      await signOut(auth);  // ← use imported auth, not getAuth()
+      await signOut(auth);
     } catch (err) {
       console.error("Logout error:", err);
     }
@@ -62,9 +75,9 @@ export function AuthProvider({ children }) {
     Cookies.remove("hc_user");
   };
 
-return (
-  <AuthContext.Provider value={{ user, setUser, login, logout, resetPassword, loading, error }}>
-    {children}
-  </AuthContext.Provider>
-);
+  return (
+    <AuthContext.Provider value={{ user, setUser, login, logout, resetPassword, refreshUser, loading, error }}>
+      {children}
+    </AuthContext.Provider>
+  );
 }

@@ -282,7 +282,7 @@ export default function DoctorsPage() {
             <div className="flex gap-3 pt-2">
               <button
                 onClick={() => setDoctorToDelete(null)}
-                className="flex-1 py-2.5 bg-slate-100 text-slate-700 rounded-xl text-sm font-bold hover:bg-slate-200 transition-colors"
+                className="flex-1 py-2.5 bg-slate-100 text-slate-700 rounded-xl text-sm font-bold hover:bg-slate-200 transition-colors cursor-pointer"
               >
                 Cancel
               </button>
@@ -418,7 +418,7 @@ export default function DoctorsPage() {
 
           <button
             type="submit"
-            className="w-full bg-teal-600 text-white py-3 rounded-2xl font-bold shadow-lg shadow-teal-600/20"
+            className="w-full bg-teal-600 text-white py-3 rounded-2xl font-bold shadow-lg shadow-teal-600/20 cursor-pointer"
           >
             {editingId ? "Update Doctor" : "Save New Doctor"}
           </button>
@@ -506,13 +506,13 @@ export default function DoctorsPage() {
               <div className="flex gap-3 pt-4 border-t border-slate-100">
                 <button
                   onClick={() => { closeDetailsModal(); startEdit(selectedDoctor); }}
-                  className="flex-1 py-2.5 border border-blue-600 text-blue-600 rounded-xl text-sm font-bold hover:bg-blue-50 transition-colors"
+                  className="flex-1 py-2.5 border border-blue-600 text-blue-600 rounded-xl text-sm font-bold hover:bg-blue-50 transition-colors cursor-pointer"
                 >
                   Edit Doctor
                 </button>
                 <button
                   onClick={closeDetailsModal}
-                  className="flex-1 py-2.5 bg-slate-100 text-slate-700 rounded-xl text-sm font-bold hover:bg-slate-200 transition-colors"
+                  className="flex-1 py-2.5 bg-slate-100 text-slate-700 rounded-xl text-sm font-bold hover:bg-slate-200 transition-colors cursor-pointer"
                 >
                   Close
                 </button>

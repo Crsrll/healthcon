@@ -1,17 +1,7 @@
 // app/api/doctors/route.js
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/firebase';
-import { 
-  collection, 
-  getDocs, 
-  query, 
-  where, 
-  doc, 
-  setDoc, 
-  updateDoc, 
-  deleteDoc, 
-  orderBy 
-} from 'firebase/firestore';
+import { collection, getDocs, query, where, doc, setDoc, updateDoc } from 'firebase/firestore';
 
 // app/api/doctors/route.js — updated GET handler
 export async function GET(req) {
