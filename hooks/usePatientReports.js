@@ -5,6 +5,7 @@ export function usePatientReports(patientID) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  // Initial load — sets loading:true so the page spinner shows
   const fetchReports = useCallback(async () => {
     if (!patientID) return;
     setLoading(true);
@@ -21,6 +22,20 @@ export function usePatientReports(patientID) {
       setError(err.message);
     } finally {
       setLoading(false);
+    }
+  }, [patientID]);
+
+  // Silent refresh — never touches loading, so open modals stay open
+  const refreshReports = useCallback(async () => {
+    if (!patientID) return;
+    try {
+      const res = await fetch(`/api/reports/to-clinic?reporterID=${patientID}`);
+      const data = await res.json();
+      if (data.success) {
+        setReports(data.reports || []);
+      }
+    } catch (err) {
+      console.error("Silent refresh failed:", err);
     }
   }, [patientID]);
 
@@ -44,18 +59,50 @@ export function usePatientReports(patientID) {
     }
   }, []);
 
-  const sendReply = useCallback(async ({ replyId, text, sender }) => {
-    try {
-      const res = await fetch("/api/clinic-replies", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ replyId, text, sender }),
-      });
-      return { success: res.ok };
-    } catch (err) {
-      return { success: false, error: err.message };
+  const sendReply = useCallback(async ({
+  replyId,
+  text,
+  sender,
+  senderName,
+  reportId,
+  report,
+}) => {
+  try {
+    let body;
+
+    if (replyId) {
+      body = {
+        action: "message",
+        replyId,
+        text,
+        sender,
+        senderName,
+      };
+    } else {
+      body = {
+        action: "create",
+        clinicID: report?.clinicID || report?.clinicId,
+        clinicName: report?.clinicName,
+        patientID: report?.reporterID,
+        patientName: report?.reporterName,
+        reportId: reportId || report?.id,
+        firstMessage: text,
+      };
     }
-  }, []);
+
+    const res = await fetch("/api/clinic-replies", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
+
+    const data = await res.json();
+    // Always return replyId from response — used by page to skip getReplyThread
+    return { success: res.ok && data.success, data, replyId: data.replyId };
+  } catch (err) {
+    return { success: false, error: err.message };
+  }
+}, []);
 
   const markAsRead = useCallback(async (replyId) => {
     try {
@@ -77,7 +124,7 @@ export function usePatientReports(patientID) {
     reports,
     loading,
     error,
-    refreshReports: fetchReports,
+    refreshReports,
     fetchMessages,
     getReplyThread,
     sendReply,

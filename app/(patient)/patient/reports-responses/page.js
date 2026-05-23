@@ -1,14 +1,14 @@
 "use client";
-import { useState, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useAuth } from "@/context/authContext";
 import { usePatientReports } from "@/hooks/usePatientReports";
+import Modal from "@/components/ui/Modal";
 import { useRealtimeUnreadResponses } from "@/hooks/useRealtimeUnreadResponses";
 import {
-  Flag, MessageCircle, Clock,
+  Flag, MessageCircle,
   ChevronRight, Calendar, User,
   Stethoscope, Send, Bell,
 } from "lucide-react";
-import Modal from "@/components/ui/Modal";
 
 export default function PatientReportsPage() {
   const { user } = useAuth();
@@ -33,68 +33,39 @@ export default function PatientReportsPage() {
   const [hasMarkedAsRead, setHasMarkedAsRead] = useState(false);
   const messagesEndRef = useRef(null);
 
-  const scrollToBottom = () => {
+  useEffect(() => {
     if (messagesEndRef.current) {
       messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
     }
-  };
+  }, [messages]);
 
   const openReport = async (report) => {
     setSelectedReport(report);
     setHasMarkedAsRead(false);
     setReplyText("");
+    setMessages([]);
+    setSelectedReplyId(null);
 
-    const threadData = await getReplyThread(report.id);
-    if (threadData?.reply) {
-      const replyId = threadData.reply.id;
-      setSelectedReplyId(replyId);
-      const msgs = await fetchMessages(replyId);
-      setMessages(msgs);
-      setShowChat(true);
-      if (!hasMarkedAsRead) {
-        setHasMarkedAsRead(true);
-        await markAsRead(replyId);
-      }
-    } else {
-      setMessages([]);
-      setSelectedReplyId(null);
-      setShowChat(true);
-    }
-
-    setTimeout(scrollToBottom, 100);
-  };
-
-  const sendReply = async () => {
-    if (!replyText.trim() || sendingReply || !selectedReport) return;
-    setSendingReply(true);
     try {
-      let replyId = selectedReplyId;
-      if (!replyId) {
-        const threadData = await getReplyThread(selectedReport.id);
-        replyId = threadData?.reply?.id;
-        if (replyId) setSelectedReplyId(replyId);
-      }
-      if (replyId) {
-        await hookSendReply({ replyId, text: replyText.trim(), sender: "patient" });
-      } else {
-        await hookSendReply({
-          reportId: selectedReport.id,
-          text: replyText.trim(),
-          sender: "patient",
-        });
-      }
-      setReplyText("");
-      if (replyId) {
+      const threadData = await getReplyThread(report.id);
+      if (threadData?.reply) {
+        const replyId = threadData.reply.id;
+        setSelectedReplyId(replyId);
         const msgs = await fetchMessages(replyId);
         setMessages(msgs);
+        setShowChat(true);
+        await markAsRead(replyId);
+        setHasMarkedAsRead(true);
+      } else {
+        setShowChat(true);
       }
-      await refreshReports();
-      setTimeout(scrollToBottom, 100);
-    } finally {
-      setSendingReply(false);
+    } catch (err) {
+      console.error("Error opening report:", err);
+      setShowChat(true);
     }
   };
 
+  // ✅ closeChat was missing from the original file
   const closeChat = () => {
     setShowChat(false);
     setSelectedReport(null);
@@ -105,6 +76,56 @@ export default function PatientReportsPage() {
     refreshReports();
   };
 
+ const sendReply = async () => {
+  if (!replyText.trim() || sendingReply || !selectedReport) return;
+  setSendingReply(true);
+
+  const currentReport = selectedReport;
+  const currentReplyId = selectedReplyId;
+
+  try {
+    let replyId = currentReplyId;
+
+    if (!replyId) {
+      const result = await hookSendReply({
+        reportId: currentReport.id,
+        text: replyText.trim(),
+        sender: "patient",
+        senderName: user?.displayName || "Patient",
+        report: {
+          ...currentReport,
+          reporterID: user?.uid,
+          reporterName: user?.displayName || "Patient",
+        },
+      });
+
+      if (result.success) {
+        replyId = result.replyId;
+        setSelectedReplyId(replyId);
+      } else {
+        console.error("Failed to create thread");
+        return;
+      }
+    } else {
+      await hookSendReply({
+        replyId,
+        text: replyText.trim(),
+        sender: "patient",
+        senderName: user?.displayName || "Patient",
+      });
+    }
+
+    setReplyText("");
+
+    if (replyId) {
+      const msgs = await fetchMessages(replyId);
+      setMessages(msgs);
+    }
+
+  } finally {
+    setSendingReply(false);
+  }
+};
   const getStatusBadge = (status) => {
     const statusConfig = {
       pending: { color: "bg-amber-100 text-amber-700", text: "Pending" },
@@ -240,13 +261,13 @@ export default function PatientReportsPage() {
         title={`Conversation with ${selectedReport?.clinicName || "Clinic"}`}
       >
         {selectedReport && (
-          <div className="flex flex-col h-[400px]">
+          <div className="flex flex-col h-[450px]">
             <div className="bg-slate-50 rounded-xl p-3 border border-slate-100 mb-3 shrink-0">
               <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-500">Your Report</p>
               <p className="text-sm font-medium text-slate-700 break-words mt-0.5">{selectedReport.subject}</p>
               <p className="text-xs text-slate-600 mt-1 break-words line-clamp-2">{selectedReport.message}</p>
               {selectedReport.doctorName && (
-                <div className="mt-1.5 pt-1.5 border-t border-slate-200">
+                <div className="mt-1">
                   <p className="text-[10px] text-slate-500 flex items-center gap-1">
                     <Stethoscope size={10} /> Doctor: Dr. {selectedReport.doctorName}
                   </p>
@@ -312,7 +333,10 @@ export default function PatientReportsPage() {
                 className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-teal-200 outline-none resize-none"
               />
               <div className="flex gap-2">
-                <button onClick={closeChat} className="flex-1 py-1.5 border border-slate-200 rounded-xl text-sm font-medium text-slate-600 hover:bg-slate-50 transition">
+                <button
+                  onClick={closeChat}
+                  className="flex-1 py-1.5 border border-slate-200 rounded-xl text-sm font-medium text-slate-600 hover:bg-slate-50 transition"
+                >
                   Close
                 </button>
                 <button

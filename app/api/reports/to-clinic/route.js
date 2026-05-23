@@ -1,10 +1,6 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/firebase";
-import {
-  collection, query, where, getDocs,
-  doc, addDoc, updateDoc, getDoc,
-  serverTimestamp, setDoc
-} from "firebase/firestore";
+import {collection, query, where, getDocs, doc, addDoc, updateDoc, getDoc, serverTimestamp, setDoc } from "firebase/firestore";
 
 // Helper function to create notification
 async function createNotification({ recipientID, type, title, body, linkTo, meta = {} }) {
@@ -16,7 +12,7 @@ async function createNotification({ recipientID, type, title, body, linkTo, meta
   try {
     const notificationId = `${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
     const notificationRef = doc(db, "notifications", recipientID, "items", notificationId);
-    
+      
     await setDoc(notificationRef, {
       id: notificationId,
       type,
