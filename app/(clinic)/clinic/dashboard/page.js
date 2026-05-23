@@ -14,6 +14,9 @@ import {
   Loader2,
   Send,
   Bell,
+  Flag,        // ← ADD THIS
+  Star,        // ← ADD THIS (if used)
+  X,           // ← ADD THIS (if used)
 } from "lucide-react";
 
 const STATUS_STYLE = {
