@@ -116,7 +116,7 @@ export default function DashboardPage() {
                     <th className="px-4 sm:px-6 py-3">Patient</th>
                     <th className="px-4 sm:px-6 py-3 hidden sm:table-cell">Service</th>
                     <th className="px-4 sm:px-6 py-3">Status</th>
-                  </tr>
+                  </table>
                 </thead>
                 <tbody className="divide-y divide-slate-50">
                   {loading ? (
@@ -196,7 +196,12 @@ export default function DashboardPage() {
           <section className="bg-white rounded-2xl border border-slate-200 shadow-sm p-5">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-slate-400 text-xs font-bold uppercase tracking-wider">Upcoming Appointments</h3>
-              <Link href="/clinic/bookings" className="text-[10px] font-bold text-teal-600">View All →</Link>
+              <div className="flex items-center gap-3">
+                <Link href="/clinic/notifications" className="text-[10px] font-bold text-purple-600 hover:text-purple-700">
+                  View Notifications →
+                </Link>
+                <Link href="/clinic/bookings" className="text-[10px] font-bold text-teal-600">View All →</Link>
+              </div>
             </div>
             <div className="space-y-3">
               {loading ? (
