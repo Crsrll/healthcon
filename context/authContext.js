@@ -28,6 +28,28 @@ export function AuthProvider({ children }) {
     if (!result.success) return { success: false };
 
     const userData = { uid: result.user.uid, role: result.role, ...result.data };
+
+    // ── Block deleted accounts from logging in ──
+    if (userData.status === "deleted") {
+      await signOut(auth); // force sign out immediately
+      return { success: false, error: "This account has been deleted." };
+    }
+
+    // ── If account is inactive, auto-reactivate on login ──
+    if (userData.status === "inactive") {
+      try {
+        await fetch("/api/patient/reactivate", {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ patientId: result.user.uid }),
+        });
+        userData.status = "active";
+        userData.reactivatedAt = new Date().toISOString();
+      } catch (err) {
+        console.error("Reactivation on login failed:", err);
+      }
+    }
+
     setUser(userData);
     localStorage.setItem("hc_user", JSON.stringify(userData));
 
