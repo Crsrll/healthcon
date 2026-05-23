@@ -99,7 +99,7 @@ export default function ClinicNotificationsPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#f8fafc] flex items-center justify-center">
+      <div className="flex items-center justify-center min-h-[400px]">
         <div className="text-center">
           <Loader2 size={40} className="animate-spin text-teal-500 mx-auto mb-3" />
           <p className="text-slate-500">Loading notifications...</p>
@@ -109,55 +109,48 @@ export default function ClinicNotificationsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#f8fafc]">
-      {/* Header */}
-      <div className="bg-[#1a365d] text-white pt-10 pb-16 px-6">
-        <nav className="flex items-center gap-2 text-teal-400 text-[10px] font-bold uppercase tracking-[0.2em] mb-4">
-          <Link href="/clinic/dashboard" className="hover:text-white transition-colors">
-            <span>Clinic</span>
-          </Link>
-          <ChevronRight size={10} />
-          <span className="text-white/60">Notifications</span>
-        </nav>
-        <div className="max-w-full mx-auto flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-          <div>
-            <h1 className="text-3xl font-bold">Notifications</h1>
-            <p className="text-teal-300 text-sm mt-1">
-              Stay updated with clinic alerts and updates
-            </p>
-          </div>
-          {unreadCount > 0 && (
-            <button
-              onClick={handleMarkAll}
-              className="bg-white/10 hover:bg-white/20 text-white px-5 py-2.5 rounded-xl text-sm font-bold flex items-center gap-2 transition-all"
-            >
-              <Check size={16} />
-              Mark all as read
-            </button>
-          )}
-        </div>
+    <main className="max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-8 space-y-6 animate-in fade-in duration-500">
+      {/* Header - No hero section, just title */}
+      <div>
+        <h1 className="text-xl sm:text-2xl font-black text-slate-800 tracking-tight">Notifications</h1>
+        <p className="text-sm text-slate-400 font-medium italic mt-1">
+          Stay updated with clinic alerts and updates
+        </p>
       </div>
 
-      {/* Main Content */}
-      <div className="max-w-4xl mx-auto px-6 py-8 -mt-4">
-        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-          {notifications.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-20 gap-4 text-center">
-              <div className="w-20 h-20 rounded-full bg-slate-100 flex items-center justify-center">
-                <Bell size={32} className="text-slate-300" />
-              </div>
-              <div>
-                <p className="text-lg font-semibold text-slate-600">No notifications yet</p>
-                <p className="text-sm text-slate-400 mt-1">When you receive alerts, they'll appear here</p>
-              </div>
-              <button
-                onClick={() => router.push("/clinic/dashboard")}
-                className="mt-4 text-sm text-teal-600 font-semibold hover:underline"
-              >
-                Return to Dashboard →
-              </button>
+      {/* Notifications Content */}
+      <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+        {notifications.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-20 gap-4 text-center">
+            <div className="w-20 h-20 rounded-full bg-slate-100 flex items-center justify-center">
+              <Bell size={32} className="text-slate-300" />
             </div>
-          ) : (
+            <div>
+              <p className="text-lg font-semibold text-slate-600">No notifications yet</p>
+              <p className="text-sm text-slate-400 mt-1">When you receive alerts, they'll appear here</p>
+            </div>
+            <button
+              onClick={() => router.push("/clinic/dashboard")}
+              className="mt-4 text-sm text-teal-600 font-semibold hover:underline"
+            >
+              Return to Dashboard →
+            </button>
+          </div>
+        ) : (
+          <>
+            {/* Mark all read button for header area */}
+            {unreadCount > 0 && (
+              <div className="px-6 py-3 border-b border-slate-100 bg-slate-50/50 flex justify-end">
+                <button
+                  onClick={handleMarkAll}
+                  className="text-[11px] font-bold text-blue-600 hover:text-blue-700 flex items-center gap-1 transition-colors"
+                >
+                  <Check size={12} />
+                  Mark all as read
+                </button>
+              </div>
+            )}
+            
             <div className="divide-y divide-slate-100">
               {notifications.map((notif) => (
                 <div
@@ -194,19 +187,17 @@ export default function ClinicNotificationsPage() {
                 </div>
               ))}
             </div>
-          )}
-        </div>
 
-        {/* Footer Stats */}
-        {notifications.length > 0 && (
-          <div className="mt-6 text-center">
-            <p className="text-[11px] text-slate-400">
-              Showing {notifications.length} notification{notifications.length !== 1 ? "s" : ""}
-              {unreadCount > 0 && ` · ${unreadCount} unread`}
-            </p>
-          </div>
+            {/* Footer Stats */}
+            <div className="px-6 py-3 border-t border-slate-100 bg-slate-50/50">
+              <p className="text-[11px] text-slate-400 text-center">
+                Showing {notifications.length} notification{notifications.length !== 1 ? "s" : ""}
+                {unreadCount > 0 && ` · ${unreadCount} unread`}
+              </p>
+            </div>
+          </>
         )}
       </div>
-    </div>
+    </main>
   );
 }
