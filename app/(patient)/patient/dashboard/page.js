@@ -1,6 +1,7 @@
 "use client";
 import { useAuth } from "@/context/authContext";
 import { usePatientDashboard } from "@/hooks/usePatientDashboard";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import {
   Calendar,
@@ -66,8 +67,40 @@ function formatTimeAgo(timestamp) {
 }
 
 export default function PatientDashboard() {
+  const router = useRouter();
   const { user } = useAuth();
   const { dashboard, loading, error, refresh } = usePatientDashboard(user?.uid);
+
+  // Handle notification click navigation
+  const handleNotificationClick = (notif) => {
+    // Navigate based on notification type
+    switch (notif.type) {
+      case "booking_requested":
+      case "booking_confirmed":
+      case "booking_rejected":
+      case "appointment_reminder":
+        router.push("/patient/appointments");
+        break;
+      case "new_rating":
+      case "new_review":
+        if (notif.clinicId) {
+          router.push(`/clinics/${notif.clinicId}`);
+        } else {
+          router.push("/patient/reviews");
+        }
+        break;
+      case "new_report":
+      case "clinic_response":
+      case "new_patient_response":
+        router.push("/patient/messages");
+        break;
+      default:
+        if (notif.linkTo) {
+          router.push(notif.linkTo);
+        }
+        break;
+    }
+  };
 
   if (loading) {
     return (
@@ -349,7 +382,7 @@ export default function PatientDashboard() {
               </div>
             </div>
 
-            {/* Recent Notifications */}
+            {/* Recent Notifications - CLICKABLE SECTION ONLY */}
             <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
               <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50">
                 <div className="flex items-center gap-2">
@@ -375,18 +408,23 @@ export default function PatientDashboard() {
                   recentNotifications.map((notif) => (
                     <div
                       key={notif.id}
-                      className="px-5 py-3 hover:bg-slate-50 transition-colors"
+                      onClick={() => handleNotificationClick(notif)}
+                      className={`px-5 py-3 transition-all cursor-pointer ${
+                        !notif.read 
+                          ? "hover:bg-blue-50 bg-blue-50/30 border-l-4 border-l-blue-500" 
+                          : "hover:bg-slate-50"
+                      }`}
                     >
                       <div className="flex items-start gap-3">
-                        <div
-                          className={`w-2 h-2 rounded-full mt-1.5 ${!notif.read ? "bg-teal-500" : "bg-slate-300"}`}
-                        />
-                        <div className="flex-1">
-                          <p
-                            className={`text-xs ${!notif.read ? "font-semibold text-slate-800" : "text-slate-600"}`}
-                          >
-                            {notif.title}
-                          </p>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center justify-between gap-2">
+                            <p className={`text-xs ${!notif.read ? "font-semibold text-slate-800" : "text-slate-600"}`}>
+                              {notif.title}
+                            </p>
+                            {!notif.read && (
+                              <div className="w-2 h-2 bg-blue-500 rounded-full shrink-0" />
+                            )}
+                          </div>
                           <p className="text-[10px] text-slate-500 mt-0.5 line-clamp-2">
                             {notif.body}
                           </p>
