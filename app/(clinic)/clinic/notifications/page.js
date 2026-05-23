@@ -65,7 +65,7 @@ export default function ClinicNotificationsPage() {
       case "booking_confirmed":
       case "booking_rejected":
       case "appointment_reminder":
-        router.push("/clinic/daily-schedule");
+        router.push("/clinic/bookings");
         break;
       case "new_rating":
       case "new_review":
