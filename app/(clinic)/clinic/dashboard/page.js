@@ -331,34 +331,36 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* Upcoming Appointments - Full width below both columns */}
+            {/* Upcoming Appointments - Full width below both columns */}
       <div>
-        <section className="bg-white rounded-2xl border border-slate-200 shadow-sm p-5">
-          <div className="flex items-center justify-between mb-4">
+        <section className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+          <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between">
             <h3 className="text-slate-400 text-xs font-bold uppercase tracking-wider">Upcoming Appointments</h3>
             <Link href="/clinic/bookings" className="text-[10px] font-bold text-teal-600">View All →</Link>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+          <div className="divide-y divide-slate-100">
             {loading ? (
-              <div className="col-span-full flex justify-center py-8">
+              <div className="flex justify-center py-8">
                 <Loader2 className="animate-spin text-slate-300" size={24} />
               </div>
             ) : upcomingAppointments.length > 0 ? (
               upcomingAppointments.map((apt) => (
-                <div key={apt.id} className="flex items-center gap-3 p-3 hover:bg-slate-50 rounded-lg border border-slate-100 transition-colors">
-                  <div className="min-w-[54px] text-center shrink-0">
-                    <p className="text-xs font-bold text-slate-700">{apt.shortDate}</p>
-                    <p className="text-[9px] text-slate-400">{apt.dayName}</p>
+                <div key={apt.id} className="flex items-center gap-4 px-5 py-4 hover:bg-slate-50 transition-colors">
+                  <div className="min-w-[70px] text-center">
+                    <p className="text-sm font-bold text-slate-700">{apt.shortDate}</p>
+                    <p className="text-[10px] text-slate-400">{apt.dayName}</p>
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-semibold text-slate-800 truncate">{apt.patientName}</p>
-                    <p className="text-[10px] text-slate-400 truncate">{apt.service}</p>
+                    <p className="text-[11px] text-slate-400 truncate">{apt.service}</p>
                   </div>
-                  <p className="text-[10px] font-medium text-teal-600 shrink-0">{apt.time}</p>
+                  <div className="text-right">
+                    <p className="text-xs font-medium text-teal-600">{apt.time}</p>
+                  </div>
                 </div>
               ))
             ) : (
-              <div className="col-span-full text-center py-8 text-slate-400 text-xs italic">No upcoming appointments</div>
+              <div className="text-center py-8 text-slate-400 text-xs italic">No upcoming appointments</div>
             )}
           </div>
         </section>
