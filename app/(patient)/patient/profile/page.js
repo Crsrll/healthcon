@@ -163,7 +163,7 @@ export default function PatientProfilePage() {
         </div>
       </div>
 
-      <div className="max-w-5xl mx-auto px-4 sm:px-8 -mt-8 grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="max-w-5xl mx-auto px-4 sm:px-8 mt-6 grid grid-cols-1 lg:grid-cols-3 gap-6">
 
         {/* LEFT: Avatar */}
         <div className="space-y-4">
@@ -205,7 +205,7 @@ export default function PatientProfilePage() {
 
         {/* RIGHT: Info - Rest of your JSX remains exactly the same */}
         <div className="lg:col-span-2 space-y-5">
-          <section className="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
+          <section className="bg-white rounded-xl border border-teal-200 shadow-sm p-6">
             <h3 className="text-[10px] font-black text-slate-800 uppercase tracking-widest mb-6">Personal Information</h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {[
@@ -240,7 +240,7 @@ export default function PatientProfilePage() {
             </div>
           </section>
 
-          <section className="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
+          <section className="bg-white rounded-xl border border-teal-200 shadow-sm p-6">
             <h3 className="text-[10px] font-black text-slate-800 uppercase tracking-widest mb-6">Medical Preferences</h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-1">
