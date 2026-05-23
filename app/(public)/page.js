@@ -15,7 +15,7 @@ export default function LandingPage() {
       {/* NAV */}
       <Navibar style={`fixed top-0 left-0 right-0 z-50 bg-navy-dark`}/>
 
-      {/* HERO - Fixed padding for mobile */}
+      {/* HERO */}
       <section className="bg-navy-dark text-white pt-10 sm:pt-23 pb-12 sm:pb-22.5">
         <div className="max-w-7xl mx-auto px-4 sm:px-12 grid grid-cols-1 lg:grid-cols-2 gap-8 sm:gap-10 items-center">
 
