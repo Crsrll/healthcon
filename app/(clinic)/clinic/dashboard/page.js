@@ -2,6 +2,7 @@
 import { useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useClinicDashboard } from "@/hooks/useClinicDashboard";
+import { useNotifications } from "@/hooks/useNotifications";
 import Link from "next/link";
 import Modal from "@/components/ui/Modal";
 import PulseCard from "@/components/ui/PulseCard";
@@ -12,6 +13,7 @@ import {
   CheckCircle2,
   Loader2,
   Send,
+  Bell,
 } from "lucide-react";
 
 const STATUS_STYLE = {
@@ -23,6 +25,45 @@ const STATUS_STYLE = {
   Cancelled: "bg-red-100 text-red-700 border-red-200",
 };
 
+function formatTimeAgo(timestamp) {
+  if (!timestamp) return "";
+  const date = timestamp?.toDate ? timestamp.toDate() : new Date(timestamp);
+  const now = new Date();
+  const diffMins = Math.floor((now - date) / 60000);
+  const diffHours = Math.floor(diffMins / 60);
+  const diffDays = Math.floor(diffHours / 24);
+
+  if (diffMins < 1) return "just now";
+  if (diffMins < 60) return `${diffMins}m ago`;
+  if (diffHours < 24) return `${diffHours}h ago`;
+  if (diffDays < 7) return `${diffDays}d ago`;
+  return date.toLocaleDateString();
+}
+
+function NotifIcon({ type }) {
+  const base = "w-8 h-8 rounded-xl flex items-center justify-center shrink-0 text-white";
+  switch (type) {
+    case "booking_requested":
+      return <div className={`${base} bg-blue-500`}><CalendarCheck size={15} /></div>;
+    case "booking_confirmed":
+      return <div className={`${base} bg-teal-500`}><CheckCircle2 size={15} /></div>;
+    case "booking_rejected":
+      return <div className={`${base} bg-red-400`}><X size={15} /></div>;
+    case "appointment_reminder":
+      return <div className={`${base} bg-amber-400`}><Clock size={15} /></div>;
+    case "new_rating":
+    case "new_review":
+      return <div className={`${base} bg-yellow-400`}><Star size={15} /></div>;
+    case "new_report":
+      return <div className={`${base} bg-red-500`}><Flag size={15} /></div>;
+    case "new_patient_response":
+    case "clinic_response":
+      return <div className={`${base} bg-purple-500`}><MessageCircle size={15} /></div>;
+    default:
+      return <div className={`${base} bg-slate-400`}><Bell size={15} /></div>;
+  }
+}
+
 export default function DashboardPage() {
   const { user, loading: authLoading } = useAuth();
   const {
@@ -33,6 +74,9 @@ export default function DashboardPage() {
     loading,
     sendInquiryReply,
   } = useClinicDashboard(user?.uid);
+  
+  const { notifications, unreadCount } = useNotifications(user?.uid);
+  const recentNotifications = notifications.slice(0, 5);
 
   const [isInquiryModalOpen, setIsInquiryModalOpen] = useState(false);
   const [selectedInquiry, setSelectedInquiry] = useState(null);
@@ -55,6 +99,34 @@ export default function DashboardPage() {
       setIsInquiryModalOpen(false);
     } else {
       alert("Failed to send reply");
+    }
+  };
+
+  const handleNotificationClick = (notif) => {
+    // Navigate based on notification type
+    switch (notif.type) {
+      case "booking_requested":
+      case "booking_confirmed":
+      case "booking_rejected":
+      case "appointment_reminder":
+        window.location.href = "/clinic/appointments";
+        break;
+      case "new_rating":
+      case "new_review":
+        window.location.href = "/clinic/reviews";
+        break;
+      case "new_report":
+        window.location.href = "/clinic/reports";
+        break;
+      case "new_patient_response":
+      case "clinic_response":
+        window.location.href = "/clinic/inquiries";
+        break;
+      default:
+        if (notif.linkTo) {
+          window.location.href = notif.linkTo;
+        }
+        break;
     }
   };
 
@@ -91,10 +163,10 @@ export default function DashboardPage() {
         </Link>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-1 sm:grid-cols-3 gap-6">
-
-        {/* LEFT: TODAY'S QUEUE */}
-        <div className="lg:col-span-2">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        
+        {/* LEFT COLUMN - Today's Queue (full width on mobile, half on desktop) */}
+        <div className="lg:col-span-1">
           <section className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden h-full">
             <div className="px-4 sm:px-6 py-4 border-b border-slate-100 flex items-center justify-between">
               <div className="flex items-center gap-3">
@@ -116,7 +188,7 @@ export default function DashboardPage() {
                     <th className="px-4 sm:px-6 py-3">Patient</th>
                     <th className="px-4 sm:px-6 py-3 hidden sm:table-cell">Service</th>
                     <th className="px-4 sm:px-6 py-3">Status</th>
-                  </table>
+                  </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-50">
                   {loading ? (
@@ -151,20 +223,20 @@ export default function DashboardPage() {
           </section>
         </div>
 
-        {/* RIGHT: INQUIRIES + UPCOMING */}
-        <div className="space-y-5">
-
+        {/* RIGHT COLUMN - Two sections stacked */}
+        <div className="space-y-6">
+          
           {/* Recent Inquiries */}
-          <section className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden flex flex-col">
+          <section className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
             <div className="px-5 py-4 border-b border-slate-100 flex justify-between items-center">
               <h3 className="font-bold text-slate-800 text-sm">Recent Inquiries</h3>
               <span className="text-[10px] font-black text-red-500 uppercase bg-red-50 px-2 py-0.5 rounded-md">
                 {inquiries.filter((i) => i.unreadByClinic).length} NEW
               </span>
             </div>
-            <div className="divide-y divide-slate-50 max-h-[360px] overflow-y-auto">
+            <div className="divide-y divide-slate-50 max-h-[260px] overflow-y-auto">
               {inquiries.length > 0 ? (
-                inquiries.map((inq) => (
+                inquiries.slice(0, 5).map((inq) => (
                   <div
                     key={inq.id}
                     onClick={() => handleOpenReply(inq)}
@@ -192,16 +264,73 @@ export default function DashboardPage() {
             </Link>
           </section>
 
+          {/* Recent Notifications - NEW SECTION like patient dashboard */}
+          <section className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+            <div className="px-5 py-4 border-b border-slate-100 flex justify-between items-center">
+              <div className="flex items-center gap-2">
+                <Bell size={16} className="text-amber-500" />
+                <h3 className="font-bold text-slate-800 text-sm">Recent Notifications</h3>
+                {unreadCount > 0 && (
+                  <span className="bg-red-500 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full">
+                    {unreadCount}
+                  </span>
+                )}
+              </div>
+              <Link href="/clinic/notifications" className="text-[10px] font-bold text-blue-600 hover:text-blue-700">
+                View All
+              </Link>
+            </div>
+            <div className="divide-y divide-slate-100 max-h-[260px] overflow-y-auto">
+              {recentNotifications.length > 0 ? (
+                recentNotifications.map((notif) => (
+                  <div
+                    key={notif.id}
+                    onClick={() => handleNotificationClick(notif)}
+                    className={`px-5 py-3 transition-colors cursor-pointer ${
+                      !notif.read 
+                        ? "hover:bg-blue-50 bg-blue-50/30 border-l-4 border-l-blue-500" 
+                        : "hover:bg-slate-50"
+                    }`}
+                  >
+                    <div className="flex items-start gap-3">
+                      <NotifIcon type={notif.type} />
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center justify-between gap-2">
+                          <p className={`text-xs ${!notif.read ? "font-semibold text-slate-800" : "text-slate-600"}`}>
+                            {notif.title}
+                          </p>
+                          {!notif.read && (
+                            <div className="w-2 h-2 bg-blue-500 rounded-full shrink-0" />
+                          )}
+                        </div>
+                        <p className="text-[10px] text-slate-500 mt-0.5 line-clamp-2">
+                          {notif.body}
+                        </p>
+                        <p className="text-[9px] text-slate-400 mt-1">
+                          {formatTimeAgo(notif.createdAt)}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className="px-5 py-8 text-center">
+                  <Bell size={24} className="text-slate-300 mx-auto mb-2" />
+                  <p className="text-sm text-slate-500">No new notifications</p>
+                  <p className="text-[10px] text-slate-400 mt-1">You're all caught up!</p>
+                </div>
+              )}
+            </div>
+            <Link href="/clinic/notifications" className="block px-5 py-3 border-t border-slate-100 bg-slate-50/50 text-[10px] font-black text-slate-400 hover:text-teal-600 text-center uppercase tracking-widest">
+              View All Notifications
+            </Link>
+          </section>
+
           {/* Upcoming Appointments */}
           <section className="bg-white rounded-2xl border border-slate-200 shadow-sm p-5">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-slate-400 text-xs font-bold uppercase tracking-wider">Upcoming Appointments</h3>
-              <div className="flex items-center gap-3">
-                <Link href="/clinic/notifications" className="text-[10px] font-bold text-purple-600 hover:text-purple-700">
-                  View Notifications →
-                </Link>
-                <Link href="/clinic/bookings" className="text-[10px] font-bold text-teal-600">View All →</Link>
-              </div>
+              <Link href="/clinic/bookings" className="text-[10px] font-bold text-teal-600">View All →</Link>
             </div>
             <div className="space-y-3">
               {loading ? (
