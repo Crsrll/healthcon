@@ -38,63 +38,91 @@ export default function HelpSupportPage() {
   ];
 
   return (
-    <main className="min-h-screen bg-slate-50 font-sans pb-20">
-      
-      {/* ── HEADER ── */}
-      <div className="bg-[#1a365d] text-white pt-10 pb-16 px-6">
-        <div className="max-w-full mx-auto">
-          <nav className="flex items-center gap-2 text-teal-400 text-[10px] font-bold uppercase tracking-widest mb-4">
-            <Link href="/patient/dashboard" className="hover:text-white transition-colors">Patient</Link>
-            <ChevronRight size={10} />
-            <span className="text-white/60">Help & Support</span>
-          </nav>
-          <h1 className="text-3xl font-bold">User Guide</h1>
-          <p className="text-teal-300 text-sm mt-1">Quick tutorials on how to use the Healthcon platform.</p>
+    <main className="min-h-screen bg-[#f8fafc] pb-20 font-sans">
+
+      {/* HEADER — matches AccountSettingsPage exactly */}
+      <div className="bg-[#1a365d] text-white pt-10 pb-14 px-4 sm:px-8">
+        <div className="max-w-5xl mx-auto flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+          <div>
+            <nav className="flex items-center gap-2 text-teal-400 text-[10px] font-bold uppercase tracking-[0.2em] mb-3">
+              <Link href="/patient/dashboard" className="hover:text-white transition-colors">Patient</Link>
+              <ChevronRight size={10} />
+              <span className="text-white/60">Help & Support</span>
+            </nav>
+            <h1 className="text-2xl sm:text-3xl font-bold">Help & Support</h1>
+            <p className="text-blue-200/70 text-sm mt-1">Quick tutorials on how to use the Healthcon platform.</p>
+          </div>
         </div>
       </div>
 
-      {/* ── ACCORDION SECTION ── */}
-      <div className="max-w-full mx-auto px-6 mt-4">
-        <div className="bg-white border-2 border-slate-100 shadow-sm divide-y divide-slate-100">
-          {tutorials.map((item, index) => (
-            <div key={index} className="group">
-              <button 
-                onClick={() => toggleAccordion(index)}
-                className="w-full flex items-center justify-between p-6 text-left hover:bg-slate-50 transition-colors"
-              >
-                <div className="flex items-center gap-4">
-                  <HelpCircle size={18} className={openIndex === index ? "text-teal-500" : "text-slate-300"} />
-                  <span className={`text-sm font-bold ${openIndex === index ? "text-slate-900" : "text-slate-600"}`}>
-                    {item.question}
-                  </span>
-                </div>
-                {openIndex === index ? <ChevronUp size={18} className="text-slate-400" /> : <ChevronDown size={18} className="text-slate-400" />}
-              </button>
-              
-              {openIndex === index && (
-                <div className="px-16 pb-6 animate-in slide-in-from-top-2 duration-200">
-                  <p className="text-sm text-slate-500 leading-relaxed border-l-2 border-teal-500 pl-4 whitespace-pre-line">
-                    {item.answer}
-                  </p>
-                </div>
-              )}
-            </div>
-          ))}
-        </div>
+      {/* CONTENT */}
+      <div className="max-w-5xl mx-auto px-4 sm:px-8 mt-8 space-y-4">
 
-        {/* ── CONTACT ADMIN FOOTER ── */}
-        <div className="mt-12 p-8 bg-white border-2 border-slate-100 text-center">
-          <div className="w-12 h-12 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center mx-auto mb-4">
-            <MessageCircle size={24} />
+        {/* Accordion section */}
+        <section className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+          <div className="px-6 py-4 border-b border-slate-100 bg-slate-50/50 flex items-center gap-3">
+            <HelpCircle className="text-teal-500" size={18} />
+            <h2 className="text-[10px] font-black text-slate-800 uppercase tracking-widest">User Guide</h2>
           </div>
-          <h3 className="text-lg font-black text-slate-800 uppercase tracking-tight">Still confused?</h3>
-          <p className="text-sm text-slate-500 mt-2">Our administrators are here to help you with technical issues.</p>
-        <Link href="/contact"
-            className="mt-6 inline-block bg-[#1a365d] text-white px-8 py-3 font-black uppercase text-[10px] tracking-[0.2em] hover:bg-blue-800 transition-all active:scale-95"
-          >
-            Contact Support
-        </Link>
-        </div>
+
+          <div className="divide-y divide-slate-100">
+            {tutorials.map((item, index) => (
+              <div key={index}>
+                <button
+                  onClick={() => toggleAccordion(index)}
+                  className="w-full flex items-center justify-between px-6 py-4 text-left hover:bg-slate-50 transition-colors"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 transition-colors ${
+                      openIndex === index ? "bg-teal-50 text-teal-600" : "bg-slate-100 text-slate-400"
+                    }`}>
+                      <HelpCircle size={14} />
+                    </div>
+                    <span className={`text-sm font-semibold ${openIndex === index ? "text-slate-900" : "text-slate-600"}`}>
+                      {item.question}
+                    </span>
+                  </div>
+                  {openIndex === index
+                    ? <ChevronUp size={16} className="text-slate-400 shrink-0 ml-3" />
+                    : <ChevronDown size={16} className="text-slate-400 shrink-0 ml-3" />}
+                </button>
+
+                {openIndex === index && (
+                  <div className="px-6 pb-5">
+                    <div className="ml-10 border-l-2 border-teal-500 pl-4">
+                      <p className="text-sm text-slate-500 leading-relaxed whitespace-pre-line">
+                        {item.answer}
+                      </p>
+                    </div>
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* Contact support — matches the info box style from settings */}
+        <section className="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="flex items-center gap-4">
+              <div className="w-11 h-11 rounded-xl bg-blue-50 flex items-center justify-center shrink-0">
+                <MessageCircle size={20} className="text-blue-500" />
+              </div>
+              <div>
+                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-0.5">Still need help?</p>
+                <p className="text-sm font-semibold text-slate-700">Contact our support team</p>
+                <p className="text-xs text-slate-500 mt-0.5">Our administrators are here to help with technical issues.</p>
+              </div>
+            </div>
+            <Link
+              href="/contact"
+              className="shrink-0 bg-[#1a365d] hover:bg-[#1e3f6e] text-white px-5 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all active:scale-95 text-center"
+            >
+              Contact Support
+            </Link>
+          </div>
+        </section>
+
       </div>
     </main>
   );
